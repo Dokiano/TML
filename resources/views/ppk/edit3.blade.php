@@ -2,6 +2,28 @@
 
 @section('content')
 
+    <style>
+        @keyframes blink {
+            0% {
+                background-color: #ffffff;
+            }
+
+            50% {
+                background-color: #e9f3ff;
+            }
+
+            /* Warna merah muda untuk efek berkedip */
+            100% {
+                background-color: #ffffff;
+            }
+        }
+
+        .blinking {
+            animation: blink 1.5s infinite;
+            /* 1 detik per siklus */
+        }
+    </style>
+
     @if (session('error'))
         <div class="alert alert-danger">
             {{ session('error') }}
@@ -287,7 +309,7 @@
                     <div class="row mb-3">
                         <label for="verifikasi" class="col-sm-2 col-form-label"><strong>Catatan</strong></label>
                         <div class="col-sm-10">
-                            <textarea name="verifikasi" class="form-control" placeholder="Masukkan Catatan" rows="7">{{ old('verifikasi', $ppk->verifikasi ?? '') }}</textarea>
+                            <textarea name="verifikasi" required class="form-control" placeholder="Masukkan Catatan" rows="7">{{ old('verifikasi', $ppk->verifikasi ?? '') }}</textarea>
                         </div>
                     </div>
                     <small class="form-text text-muted font-italic">Efektifitas Tindakan Penanggulangan/Pencegahan dapat
@@ -309,7 +331,7 @@
                 <div class="row mb-3">
                     <label for="tinjauan" class="col-sm-2 col-form-label"><strong>Catatan</strong></label>
                     <div class="col-sm-10">
-                        <textarea name="tinjauan" class="form-control" placeholder="Masukkan Tinjauan" rows="7">{{ old('tinjauan', $ppk->tinjauan ?? '') }}</textarea>
+                        <textarea name="tinjauan" class="form-control" required placeholder="Masukkan Tinjauan" rows="7">{{ old('tinjauan', $ppk->tinjauan ?? '') }}</textarea>
                     </div>
                 </div>
 
@@ -455,6 +477,55 @@
                     window.onload = function() {
                         toggleNewPpk();
                     };
+                </script>
+
+                <script>
+                    // Mendapatkan semua elemen textarea
+                    const textareas = document.querySelectorAll('textarea');
+
+                    // Fungsi untuk mengubah tinggi textarea sesuai dengan isi dan memeriksa apakah kosong
+                    function autoResizeTextarea(textarea) {
+                        textarea.style.height = 'auto'; // Reset tinggi terlebih dahulu
+                        textarea.style.height = (textarea.scrollHeight) + 'px'; // Set tinggi sesuai dengan scrollHeight
+
+                        // Jika textarea kosong, tambahkan efek berkedip
+                        if (textarea.value.trim() === '') {
+                            textarea.classList.add('blinking');
+                        } else {
+                            textarea.classList.remove('blinking');
+                        }
+                    }
+
+                    // Fungsi untuk menghapus efek berkedip saat fokus
+                    function removeBlinkingOnFocus(textarea) {
+                        textarea.classList.remove('blinking');
+                    }
+
+                    // Fungsi untuk memeriksa dan menambah efek berkedip saat blur (jika kosong)
+                    function checkBlinkingOnBlur(textarea) {
+                        if (textarea.value.trim() === '') {
+                            textarea.classList.add('blinking');
+                        }
+                    }
+
+                    // Menambahkan event listener untuk setiap textarea
+                    textareas.forEach(textarea => {
+                        // Menambahkan event listener untuk input
+                        textarea.addEventListener('input', function() {
+                            autoResizeTextarea(textarea);
+                        });
+
+                        // Menambahkan event listener untuk focus dan blur
+                        textarea.addEventListener('focus', function() {
+                            removeBlinkingOnFocus(textarea);
+                        });
+                        textarea.addEventListener('blur', function() {
+                            checkBlinkingOnBlur(textarea);
+                        });
+
+                        // Panggil fungsi untuk mengatur tinggi saat halaman pertama kali dimuat
+                        autoResizeTextarea(textarea);
+                    });
                 </script>
 
                 <div class="d-flex justify-content-between align-items-center mt-3">

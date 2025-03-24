@@ -2,8 +2,8 @@
 
 @section('content')
     <!-- Pastikan Bootstrap Icons sudah terpasang. Jika belum, tambahkan link berikut di head layout utama:
-                                                                                                                                                                                                                                                                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-                                                                                                                                                                                                                                                                -->
+                                                                                                                                                                                                                                                                                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+                                                                                                                                                                                                                                                                                    -->
 
     <body>
         <div class="card shadow-lg border-0">
@@ -325,7 +325,8 @@
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <a href="{{ route('ppk.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i>
                             Kembali</a>
-                        <button type="submit" class="btn btn-primary">Save <i class="bi bi-save"></i></button>
+                        <button type="submit" class="btn btn-primary">Create PPK <i
+                                class="bi bi-file-earmark-plus"></i></button>
                     </div>
                 </form>
             </div>
