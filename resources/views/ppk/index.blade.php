@@ -52,15 +52,14 @@
                 </div>
             </form>
             <br>
-
             <table class="table table-bordered">
                 <thead>
                     <tr>
                         <th style="width: 50%; text-align: center;">
                             No. Proses Peningkatan Kinerja
                         </th>
-                        <th style=" text-align: center;">
-                            Action Create
+                        <th style=" text-align: center; width: 20%;">
+                            {{ auth()->id() == $ppks->first()->pembuat ? 'Status' : 'Action Create' }}
                         </th>
                         <th style=" text-align: center;">
                             Action Edit
@@ -126,10 +125,6 @@
                                                         <a href="{{ route('ppk.edit2', $ppk->id) }}" class="btn btn-danger btn-sm"
                                                             title="Edit Identifikasi">
                                                             <i class="bi bi-bell"></i>
-                                                        </a>
-                                                        <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
-                                                            class="btn btn-outline-dark btn-sm" title="Form PPK Usulan">
-                                                            Usulan
                                                         </a>
                                                     @endif
 
@@ -199,7 +194,8 @@
                                             @endif
                                             @if (auth()->id() == $ppk->penerima)
                                                 <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
-                                                    class="btn btn-warning btn-sm" title="Edit Usulan">
+                                                    class="btn btn-warning btn-sm"
+                                                    title="Edit Penanggunlangan & Pencegahan">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </a>
                                             @endif
@@ -214,7 +210,8 @@
 
                                             @if ($isExpired && $ppk->statusppk != 'IDENTIFIKASI ULANG')
                                                 <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
-                                                    class="btn btn-warning btn-sm" title="Edit Usulan">
+                                                    class="btn btn-warning btn-sm"
+                                                    title="Edit Penanggunlangan & Pencegahan">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </a>
                                                 <a href="{{ route('ppk.edit3', $ppk->id) }}" class="btn btn-success btn-sm"

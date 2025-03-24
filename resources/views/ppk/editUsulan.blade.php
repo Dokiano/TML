@@ -414,7 +414,8 @@
                         </div>
                         <div class="col text-start d-flex">
                             <p>Tanda Tangan :<br /><strong>{{ $ppklengkap->penerimaUser->nama_user }}</strong></p>
-                            <img src="{{ $datalengkap['signaturePathPenerima'] }}" alt="Signature" height="70">
+                            <img src="{{ $datalengkap['signaturePathPenerima'] }}" alt="Signature"
+                                style="max-width: 130px; max-height:70px; padding-left: 10px">
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-3">

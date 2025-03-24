@@ -237,7 +237,7 @@
                             {{ $penanggulangan ?? 'Tidak ada data penanggulangan' }}
                         </td>
                         <td style="border: 2px solid black; vertical-align: top;" class="p-3 text-center">
-                            {{ $tgl_penanggulangan ? \Carbon\Carbon::parse($tgl_penanggulangan)->format('d M Y') : 'Tidak ada Tanggal Penanggulangan' }}
+                            {{ $tgl_penanggulangan ? \Carbon\Carbon::parse($tgl_penanggulangan)->isoFormat('D MMMM YYYY') : 'Tidak ada Tanggal Penanggulangan' }}
                         </td>
                         <td style="border: 2px solid black; vertical-align: top;" class="p-3">
                             @if (!empty($pic1))
@@ -266,7 +266,7 @@
                             {{ $pencegahan ?? 'Tidak ada data pencegahan' }}
                         </td>
                         <td style="border: 2px solid black; vertical-align: top;" class="p-3 text-center">
-                            {{ $tgl_pencegahan ? \Carbon\Carbon::parse($tgl_pencegahan)->format('d M Y') : 'Tidak ada Tanggal Pencegahan' }}
+                            {{ $tgl_pencegahan ? \Carbon\Carbon::parse($tgl_pencegahan)->isoFormat('D MMMM YYYY') : 'Tidak ada Tanggal Pencegahan' }}
                         </td>
                         <td style="border: 2px solid black; vertical-align: top;" class="p-3">
                             @if (!empty($pic2))
@@ -294,7 +294,7 @@
             <div class="row mt-3">
                 <div class="col-7 text-center">
                     <p>Tanggal : <span class="ps-5" style="border-bottom: 1px solid #000">
-                            {{ $created_at->format('d/m/Y') }}
+                            {{ $created_at->isoFormat('D MMMM YYYY') }}
                         </span>
                     </p>
                 </div>
@@ -342,7 +342,7 @@
                     </div>
                     <div class="row text-end">
                         <p>Tanggal Verifikasi : <span class="ps-5" style="border-bottom: 1px solid #000">
-                                {{ $created_at_ppkketiga ? \Carbon\Carbon::parse($created_at_ppkketiga)->format('d M Y') : 'Tidak ada Tanggal Verifikasi' }}
+                                {{ $created_at_ppkketiga ? \Carbon\Carbon::parse($created_at_ppkketiga)->isoFormat('D MMMM YYYY') : 'Tidak ada Tanggal Verifikasi' }}
                             </span>
                         </p>
                         <p>Auditor, <strong>{{ $ppk->pembuatUser->nama_user }}.</strong></p>
@@ -420,7 +420,7 @@
                 </div>
                 <div class="col">
                     <p>Date : <span class="ps-5" style="border-bottom: 1px solid #000">
-                            {{ $created_at_ppkketiga ? \Carbon\Carbon::parse($created_at_ppkketiga)->format('d M Y') : 'Tidak ada Tanggal' }}</span>
+                            {{ $created_at_ppkketiga ? \Carbon\Carbon::parse($created_at_ppkketiga)->isoFormat('D MMMM YYYY') : 'Tidak ada Tanggal' }}</span>
                     </p>
                 </div>
             </div>
