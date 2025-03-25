@@ -456,8 +456,8 @@
             <p style="font-size: 2rm;"><strong>6. Close Out (apabila efektif)</strong></p>
             <div class="row align-items-end">
                 <div class="col-7 text-center">
-                    <p>Tanda Tangan : <img src="{{ $signature }}" alt="Signature" width="100"
-                            style="border-bottom: 1px solid #000"></p>
+                    <p>Tanda Tangan : <img src="{{ $signature }}" alt="Signature"
+                            style="border-bottom: 1px solid #000; max-width: 100px; max-height: 70px;"></p>
                     <p>Pembuat/Inisiator: <strong>{{ $ppk->pembuatUser->nama_user }}</strong></p>
                 </div>
                 <div class="col">
