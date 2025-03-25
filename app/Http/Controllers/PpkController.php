@@ -644,6 +644,7 @@ class PpkController extends Controller
             'divisipenerima' => $ppklengkap->divisipenerima,
             'jenisketidaksesuaian' => $ppklengkap->jenisketidaksesuaian,
             'evidence' => json_decode($ppklengkap->evidence, true),
+            'evidencekedua' => json_decode($ppk->evidencekedua, true),
             'created_at' => $ppklengkap->created_at,
             'updated_at' => $ppk->updated_at,
             'signature' => $signatureBase64, // Berisi data base64 dari signature
@@ -1007,6 +1008,7 @@ class PpkController extends Controller
             'evidence' => json_decode($ppksatu->evidence, true),
             'signature' => $signatureBase64,
             'signaturepenerima' => $signatureBase64Penerima,
+            'evidencekedua' => json_decode($ppkdua->evidencekedua, true),
         ];
 
         // dd($ppkdua->picUser);
@@ -1070,6 +1072,7 @@ class PpkController extends Controller
             'divisipenerima' => $ppk->divisipenerima,
             'jenisketidaksesuaian' => $ppk->jenisketidaksesuaian,
             'evidence' => json_decode($ppk->evidence, true),
+            'evidencekedua' => json_decode($ppkkedua->evidencekedua, true),
             'created_at' => $ppk->created_at,
             'signature' => $signatureBase64, // Berisi data base64 dari signature
             'signaturepenerima' => $signaturePenerimaBase64,
@@ -1144,6 +1147,7 @@ class PpkController extends Controller
             'divisipenerima' => $ppk->divisipenerima,
             'jenisketidaksesuaian' => $ppk->jenisketidaksesuaian,
             'evidence' => json_decode($ppk->evidence, true),
+            'evidencekedua' => json_decode($ppkkedua->evidencekedua, true),
             'created_at' => $ppk->created_at,
             'signature' => $signatureBase64, // Berisi data base64 dari signature
             'signaturepenerima' => $signaturePenerimaBase64,

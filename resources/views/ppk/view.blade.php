@@ -134,21 +134,60 @@
         </div>
         <div class="border border-2 border-top-0 border-dark">
             <div class="mb-3 p-3 px-5">
-                <label for="identifikasi" class="form-label fw-bold">
-                    2. Identifikasi, evaluasi & pastikan akar penyebab masalah/Root Cause
-                </label>
-                <br><br>
-                @if ($identifikasi)
-                    <p style="text-align: justify;" class="me-3">
-                        {{ $identifikasi }}
-                    </p>
-                @else
-                    <p>Data tidak tersedia</p>
-                @endif
-                <span style="font-size: 0.750em;">
-                    *Gunakan metode 5WHYS untuk menentukan Root Cause; Fish Bone; Diagram alir; Penilaian situasi; Kendali
-                    proses dan peningkatan.
-                </span>
+                <div class="row">
+                    <label for="identifikasi" class="form-label fw-bold">
+                        2. Identifikasi, evaluasi & pastikan akar penyebab masalah/Root Cause
+                    </label>
+                    <br><br>
+                    @if ($identifikasi)
+                        <p style="text-align: justify;" class="me-3">
+                            {{ $identifikasi }}
+                        </p>
+                    @else
+                        <p>Data tidak tersedia</p>
+                    @endif
+                    <span style="font-size: 0.750em;">
+                        *Gunakan metode 5WHYS untuk menentukan Root Cause; Fish Bone; Diagram alir; Penilaian situasi;
+                        Kendali
+                        proses dan peningkatan.
+                    </span>
+                </div>
+                <div class="row mt-3">
+                    <h6 class="fw-bold">Evidence:</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (!empty($evidencekedua))
+                            @foreach ($evidencekedua as $file)
+                                <?php
+                                $fileExtension = pathinfo($file, PATHINFO_EXTENSION);
+                                $filePath = asset('storage/' . $file);
+                                ?>
+                                <div class="border p-2 rounded bg-light">
+                                    @if (in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg']))
+                                        <img src="{{ asset('storage/' . $file) }}" alt="Evidence" class="img-fluid rounded"
+                                            style="max-width: 150px; max-height: 150px;">
+                                    @else
+                                        <style>
+                                            .hover {
+                                                color: #151515
+                                            }
+
+                                            .hover:hover {
+                                                text-decoration: underline;
+                                                color: #0d6efd !important;
+                                                /* Warna biru Bootstrap */
+                                            }
+                                        </style>
+                                        <a href="{{ $filePath }}" target="_blank" class=" hover"
+                                            title="Download Evidence"
+                                            style="display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis;">{{ basename($file) }}</a>
+                                    @endif
+                                </div>
+                            @endforeach
+                        @else
+                            <p class="text-muted"><i class="bi bi-x-circle"></i> Tidak ada evidence</p>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </div>

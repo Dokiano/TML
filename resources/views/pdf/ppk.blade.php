@@ -55,9 +55,13 @@
 
 <div class="card border-0">
     <div class="border border-2 border-dark">
-        <h5 class="card-title text-center text-uppercase fw-bold text-dark">
-            Proses Peningkatan Kinerja
-        </h5>
+        <div class="d-flex gap-3">
+            <img src="{{ asset('admin/img/TML Logo.jpg') }}" alt="TML Logo" class="p-1 ms-3" style="max-width: 100px;">
+            <h5 class="card-title text-center text-uppercase fw-bold text-dark w-100 align-self-center">
+                Proses Peningkatan Kinerja
+            </h5>
+            <div class="p-1 ms-3" style="width: 100px;"></div>
+        </div>
         <div class="mb-2 border border-1 border-dark"></div>
         <!-- Informasi Utama -->
         <div class="px-5 py-3 pb-5">
@@ -187,22 +191,60 @@
 
     <div class="border border-2 border-top-0 border-dark ">
         <div class="mb-3 p-3 px-5">
-            <label for="identifikasi" class="form-label fw-bold">
-                2. Identifikasi, evaluasi & pastikan akar penyebab masalah/Root Cause
-            </label>
-            <br><br>
-            @if ($identifikasi)
-                <p style="text-align: justify;" class="me-3">
-                    {{ $identifikasi }}
-                </p>
-            @else
-                <p>Data tidak tersedia</p>
-            @endif
-            <span style="font-size: 0.750em;">
-                *Gunakan metode 5WHYS untuk menentukan Root Cause; Fish Bone; Diagram alir; Penilaian situasi;
-                Kendali
-                proses dan peningkatan.
-            </span>
+            <div class="row">
+                <label for="identifikasi" class="form-label fw-bold">
+                    2. Identifikasi, evaluasi & pastikan akar penyebab masalah/Root Cause
+                </label>
+                <br><br>
+                @if ($identifikasi)
+                    <p style="text-align: justify;" class="me-3">
+                        {{ $identifikasi }}
+                    </p>
+                @else
+                    <p>Data tidak tersedia</p>
+                @endif
+                <span style="font-size: 0.750em;">
+                    *Gunakan metode 5WHYS untuk menentukan Root Cause; Fish Bone; Diagram alir; Penilaian situasi;
+                    Kendali
+                    proses dan peningkatan.
+                </span>
+            </div>
+            <div class="row mt-3">
+                <h6 class="fw-bold">Evidence:</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    @if (!empty($evidencekedua))
+                        @foreach ($evidencekedua as $file)
+                            <?php
+                            $fileExtension = pathinfo($file, PATHINFO_EXTENSION);
+                            $filePath = asset('storage/' . $file);
+                            ?>
+                            <div class="border p-2 rounded bg-light">
+                                @if (in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg']))
+                                    <img src="{{ asset('storage/' . $file) }}" alt="Evidence"
+                                        class="img-fluid rounded" style="max-width: 150px; max-height: 150px;">
+                                @else
+                                    <style>
+                                        .hover {
+                                            color: #151515
+                                        }
+
+                                        .hover:hover {
+                                            text-decoration: underline;
+                                            color: #0d6efd !important;
+                                            /* Warna biru Bootstrap */
+                                        }
+                                    </style>
+                                    <a href="{{ $filePath }}" target="_blank" class=" hover"
+                                        title="Download Evidence"
+                                        style="display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis;">{{ basename($file) }}</a>
+                                @endif
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-muted"><i class="bi bi-x-circle"></i> Tidak ada evidence</p>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -309,7 +351,7 @@
 
         <div class="px-5 py-3">
             <!-- Verifikasi -->
-            <p class="my-4" style="font-size: 2rm;"><strong>4. Verifikasi Tindakan , sesuai kolom"Target
+            <p style="font-size: 2rm;"><strong>4. Verifikasi Tindakan , sesuai kolom"Target
                     Tanggal"</strong></p>
 
             <div class="row mb-3">
@@ -357,7 +399,7 @@
 
         <div class="mb-2 border border-1 border-dark"></div>
 
-        <div class="px-5 py-3 pb-5">
+        <div class="px-5 py-3">
 
             <p style="font-size: 2rm;"><strong>5. a) Tinjauan Status penyelesaian Tindakan Penanggulangan</strong>
             </p>
@@ -411,7 +453,7 @@
         <div class="mb-2 border border-1 border-dark"></div>
 
         <div class="px-5 py-3">
-            <p class="my-4" style="font-size: 2rm;"><strong>4. Close Out (apabila efektif)</strong></p>
+            <p style="font-size: 2rm;"><strong>6. Close Out (apabila efektif)</strong></p>
             <div class="row align-items-end">
                 <div class="col-7 text-center">
                     <p>Tanda Tangan : <img src="{{ $signature }}" alt="Signature" width="100"
