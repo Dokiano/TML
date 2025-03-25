@@ -196,6 +196,13 @@
                             Diagram
                             alir; Penilaian situasi; Kendali proses dan peningkatan.</span>
                     </div>
+                    <div class="mb-3">
+                        <label for="evidencekedua">Evidence Kedua (File Upload)</label>
+                        <input type="file" id="evidencekedua" name="evidencekedua[]" class="form-control" multiple>
+                        @error('evidencekedua')
+                            <div class="alert alert-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
             </div>
         </div>

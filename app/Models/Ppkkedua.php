@@ -15,6 +15,7 @@ class Ppkkedua extends Model
         'id_formppk',
         'identifikasi',
         'signaturepenerima',
+        'evidencekedua',
         'penanggulangan',
         'pencegahan',
         'pic1',
@@ -25,6 +26,11 @@ class Ppkkedua extends Model
         'updated_at',
         'tgl_pencegahan',
     ];
+
+    protected $casts = [
+        'evidencekedua' => 'array', // Mengubah kolom 'evidencekedua' menjadi array secara otomatis
+    ];
+
     public function formppk2()
     {
         return $this->hasOne(Ppkkedua::class, 'id_formppk');

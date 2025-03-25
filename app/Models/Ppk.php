@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Ppk extends Model
 {
@@ -34,9 +34,9 @@ class Ppk extends Model
     }
 
     public function penerimaUser()
-{
-    return $this->belongsTo(User::class, 'penerima', 'id');
-}
+    {
+        return $this->belongsTo(User::class, 'penerima', 'id');
+    }
 
 
     public function formppk2()
@@ -45,23 +45,21 @@ class Ppk extends Model
     }
 
     public function formppk3()
-{
-    return $this->hasOne(Ppkketiga::class, 'id_formppk');
-}
+    {
+        return $this->hasOne(Ppkketiga::class, 'id_formppk');
+    }
 
-public function divisi1()
-{
-    return $this->belongsTo(Divisi::class, 'divisipembuat');
-}
-public function divisi2()
-{
-    return $this->belongsTo(Divisi::class, 'divisipenerima');
-}
+    public function divisi1()
+    {
+        return $this->belongsTo(Divisi::class, 'divisipembuat');
+    }
+    public function divisi2()
+    {
+        return $this->belongsTo(Divisi::class, 'divisipenerima');
+    }
 
-public function status()
-{
-    return $this->belongsTo(StatusPpk::class, 'statusppk', 'id');
-}
-
-
+    public function status()
+    {
+        return $this->belongsTo(StatusPpk::class, 'statusppk', 'id');
+    }
 }

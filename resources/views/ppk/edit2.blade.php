@@ -403,6 +403,90 @@
                         </script>
 
                     </div>
+
+                    <div class="mb-3">
+                        <label for=""><strong>Tambah Evidence (jika ada)</strong></label>
+                        <input type="file" name="evidencekedua[]" id="evidencekedua" class="form-control" multiple
+                            onchange="previewEvidenceImages()" accept="image,xls,xlsx,pdf">
+                    </div>
+
+                    <div id="evidencePreview" class="d-flex flex-wrap mt-3">
+                        <!-- Preview images will appear here -->
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="evidencekedua" class="form-label fw-bold">Evidence</label>
+                        @php
+                            $evidences = json_decode($ppk->evidencekedua);
+                        @endphp
+
+                        @if (is_array($evidences) && count($evidences) > 0)
+                            <div id="evidencePreviewContainer" class="d-flex flex-wrap mt-3">
+                                @foreach ($evidences as $index => $evidence)
+                                    @php
+                                        $filePath = asset('storage/' . $evidence);
+                                        $fileExtension = pathinfo($evidence, PATHINFO_EXTENSION);
+                                    @endphp
+                                    <div class="evidence-item text-center me-3 mb-2">
+                                        @if (in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png']))
+                                            <img src="{{ $filePath }}" alt="Evidence Image" class="img-thumbnail"
+                                                style="max-width: 150px; height: auto;">
+                                        @else
+                                            <a href="{{ $filePath }}" target="_blank"
+                                                title="{{ basename($evidence) }}"
+                                                style="display: inline-block; max-width: 150px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                                {{ basename($evidence) }}
+                                            </a>
+                                        @endif
+                                        <br>
+                                        <a href="{{ $filePath }}" download="{{ basename($evidence) }}"
+                                            title="Download Image" class="btn btn-sm btn-primary mt-2">
+                                            <i class="bi bi-cloud-download"></i> Download
+                                        </a>
+                                        <br>
+                                        <input type="checkbox" name="delete_evidencekedua[]" value="{{ $evidence }}"
+                                            id="delete_{{ $index }}">
+                                        <label for="delete_{{ $index }}" class="text-danger">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p>No evidence uploaded.</p>
+                        @endif
+                    </div>
+
+                    <script>
+                        function previewEvidenceImages() {
+                            const fileInput = document.getElementById('evidencekedua');
+                            const previewContainer = document.getElementById('evidencePreview');
+
+                            // Clear previous previews
+                            previewContainer.innerHTML = '';
+
+                            // Loop through the selected files
+                            const files = fileInput.files;
+                            for (let i = 0; i < files.length; i++) {
+                                const file = files[i];
+                                const reader = new FileReader();
+
+                                // Preview the image
+                                reader.onload = function(e) {
+                                    const imgElement = document.createElement('img');
+                                    imgElement.src = e.target.result;
+                                    imgElement.classList.add('img-thumbnail');
+                                    imgElement.style.maxWidth = '150px';
+                                    imgElement.style.height = 'auto';
+                                    previewContainer.appendChild(imgElement);
+                                };
+
+                                // Read the file as a data URL
+                                reader.readAsDataURL(file);
+                            }
+                        }
+                    </script>
+
                     <hr>
 
                     <div class="d-flex justify-content-between align-items-center mt-3">

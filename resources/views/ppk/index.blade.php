@@ -197,10 +197,8 @@
                                                                     $ppk->formppk2->updated_at,
                                                                 );
                                                                 $isExpired = $updated_at->diffInMonths(now()) >= 1;
-                                                                $daysDifference = $updated_at->diffInDays(now()); // Menghitung selisih hari
-                                                                $hoursDifference = $updated_at->diffInHours(now()); // Menghitung selisih jam
-                                                                $remainingDays = 30 - $daysDifference; // Menghitung sisa hari untuk mencapai 1 bulan
-                                                                $remainingHours = 24 - ($hoursDifference % 24);
+                                                                $months = $updated_at->diffInDays(now());
+                                                                $currentMonth = 30 - $months;
                                                             @endphp
                                                             @if ($ppk->pembuat == auth()->id() && $isExpired)
                                                                 <a href="{{ route('ppk.edit3', $ppk->id) }}"
@@ -208,13 +206,11 @@
                                                                     <i class="bi bi-bell"></i>
                                                                 </a>
                                                             @elseif ($ppk->pembuat == auth()->id() && !$isExpired)
-                                                                <span class="text-secondary fw-bold">Verify in
-                                                                    {{ $remainingDays }}d {{ $remainingHours }}h <i
-                                                                        class="bi bi-hourglass-split"></i></span>
-                                                            @else
-                                                                <span class="text-warning fw-bold">
-                                                                    WAITING <i class="bi bi-hourglass-split"></i>
-                                                                </span>
+                                                                <span class="text-secondary fw-bold">Verify in {{ $currentMonth }}d
+                                                                @else
+                                                                    <span class="text-warning fw-bold">
+                                                                        WAITING <i class="bi bi-hourglass-split"></i>
+                                                                    </span>
                                                             @endif
                                                         @endif
 

@@ -97,7 +97,7 @@ class PpkController extends Controller
         // Ambil daftar pengguna untuk dropdown
         $userList = User::orderBy('nama_user', 'asc')->pluck('nama_user', 'id');
 
-       
+
         // Kirim data ke view
         return view('ppk.index2', compact('ppks', 'userList', 'statusPpkList', 'status', 'user'));
     }
@@ -477,6 +477,8 @@ class PpkController extends Controller
             'pic1_other' => 'nullable|string',
             'pic2_other' => 'nullable|string',
             'signaturepenerima' => 'nullable|string',
+            'evidencekedua' => 'nullable|array',
+            'evidencekedua.*' => 'file|mimes:jpg,jpeg,png,xlsx,xls,doc,docx,pdf',
             'signaturepenerima_file' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 
@@ -484,6 +486,15 @@ class PpkController extends Controller
         $signatureFile = $this->handleSignature2($request, 'signaturepenerima', 'signaturepenerima_file');
 
         try {
+            $evidenceskedua = [];
+            if ($request->hasFile('evidencekedua')) {
+                foreach ($request->file('evidencekedua') as $file) {
+                    $filename = time() . '_' . $file->getClientOriginalName();
+                    $file->storeAs('public/evidencekedua', $filename);
+                    $evidenceskedua[] = 'evidencekedua/' . $filename;
+                }
+            }
+
             // Mengubah pic1 dan pic2 menjadi string
             $pic1 = is_array($request->pic1) ? implode(',', $request->pic1) : $request->pic1;
             $pic2 = is_array($request->pic2) ? implode(',', $request->pic2) : $request->pic2;
@@ -499,6 +510,7 @@ class PpkController extends Controller
                 'pic2' => $pic2,  // Menyimpan pic2 sebagai string
                 'pic1_other' => $request->pic1_other,
                 'pic2_other' => $request->pic2_other,
+                'evidencekedua' => json_encode($evidenceskedua), // Menyimpan evidence sebagai JSON
                 'signaturepenerima' => $signatureFile,  // Menyimpan tanda tangan penerima
             ];
 
@@ -661,10 +673,53 @@ class PpkController extends Controller
             'pic2' => 'nullable|array',
             'pic1_other' => 'nullable|string',
             'pic2_other' => 'nullable|string',
+            'evidencekedua' => 'nullable|array',
+            'evidencekedua.*' => 'file|mimes:jpg,jpeg,png,xlsx,xls,doc,docx,pdf',
         ]);
 
         try {
             $ppk = Ppkkedua::findOrFail($id);
+
+            $evidences = json_decode($ppk->evidencekedua ?? '[]', true);
+
+            // Pastikan bahwa $evidences adalah array
+            if (!is_array($evidences)) {
+                $evidences = []; // Mengatur ulang ke array kosong jika hasilnya bukan array
+            }
+
+
+
+            // Hapus file evidence lama jika dipilih
+            if ($request->filled('delete_evidencekedua')) {
+                foreach ($request->delete_evidencekedua as $deleteEvidence) {
+                    // Hapus file dari penyimpanan jika ada
+                    if (Storage::exists('public/' . $deleteEvidence)) {
+                        Storage::delete('public/' . $deleteEvidence);
+                    }
+                    // Hapus path file dari array evidence
+                    $evidences = array_filter($evidences, function ($evidence) use ($deleteEvidence) {
+                        return $evidence !== $deleteEvidence;
+                    });
+                }
+            }
+
+            // Simpan file evidence baru
+            if ($request->hasFile('evidencekedua')) {
+                foreach ($request->file('evidencekedua') as $file) {
+                    // Buat nama file unik dengan timestamp dan nama asli file
+                    $filename = time() . '_' . $file->getClientOriginalName();
+                    // Simpan file ke folder 'public/evidencekedua'
+                    $path = $file->storeAs('public/evidencekedua', $filename);
+                    if (!$path) {
+                        throw new \Exception("Failed to store file: " . $filename);
+                    }
+                    // Tambahkan path file ke array evidence
+                    $evidences[] = 'evidencekedua/' . $filename;
+                }
+            }
+
+            // Update data evidence pada model
+            $ppk->evidencekedua = json_encode(array_values($evidences));
 
             $pic1 = is_array($request->pic1) ? implode(',', $request->pic1) : $request->pic1;
             $pic2 = is_array($request->pic2) ? implode(',', $request->pic2) : $request->pic2;
@@ -679,6 +734,7 @@ class PpkController extends Controller
                 'pic2' => $pic2,
                 'pic1_other' => $request->pic1_other,
                 'pic2_other' => $request->pic2_other,
+                'evidencekedua' => $ppk->evidencekedua
             ];
 
             $ppk->update($updateData);
