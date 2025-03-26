@@ -568,7 +568,7 @@
                 </script>
 
                 <div class="d-flex justify-content-between align-items-center mt-3">
-                    <a href="{{ route('ppk.index') }}" class="btn btn-secondary">Kembali</a>
+                    <a href="javascript:history.back()" class="btn btn-secondary">Kembali</a>
                     <button type="submit" class="btn btn-primary">Update <i class="ri-save-3-fill"></i></button>
                 </div>
                 </form>

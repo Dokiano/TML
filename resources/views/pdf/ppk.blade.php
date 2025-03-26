@@ -380,7 +380,7 @@
                 </div>
                 <div class="col">
                     <div class="row d-flex justify-content-end">
-                        <img src="{{ $signature }}" style="max-width: 130px; max-height:70px; ">
+                        <img src="{{ $signature }}" style="max-width: 100px; max-height: 70px;">
                     </div>
                     <div class="row text-end">
                         <p>Tanggal Verifikasi : <span class="ps-5" style="border-bottom: 1px solid #000">

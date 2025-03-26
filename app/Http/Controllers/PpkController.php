@@ -349,20 +349,6 @@ class PpkController extends Controller
             $ppk->emailpenerima = $request->input('emailpenerima');
             $ppk->divisipenerima = $request->input('divisipenerima');
 
-            // Generate nomor surat
-            $lastPpk = Ppk::latest()->first();
-            $sequence = $lastPpk ? intval(substr($lastPpk->nomor_surat, 0, 3)) + 1 : 1;
-            $nomor = str_pad($sequence, 3, '0', STR_PAD_LEFT);
-            $bulan = date('m');
-            $tahun = date('Y');
-            $semester = ($bulan <= 6) ? 'SEM 1' : 'SEM 2';
-
-            $user = User::find($request->penerima);
-            $divisi = $request->divisipenerima ?? $user->divisi;
-            $nomorSurat = "$nomor/MFG/$divisi/$bulan/$tahun-$semester";
-            // Jika perlu, simpan nomor surat ke model
-            $ppk->nomor_surat = $nomorSurat;
-
             // Simpan perubahan data PPK
             $ppk->save();
 
@@ -632,6 +618,9 @@ class PpkController extends Controller
             $extension = pathinfo($signaturePathPenerima, PATHINFO_EXTENSION);
             $signatureBase64Penerima = "data:image/{$extension};base64,{$imageData}";
         }
+
+        $evidenceskedua = is_string($ppk->evidencekedua) ? json_decode($ppk->evidencekedua, true) : [];
+
         $datalengkap = [
             'ppk' => $ppklengkap,
             'judul' => $ppklengkap->judul,
@@ -644,7 +633,7 @@ class PpkController extends Controller
             'divisipenerima' => $ppklengkap->divisipenerima,
             'jenisketidaksesuaian' => $ppklengkap->jenisketidaksesuaian,
             'evidence' => json_decode($ppklengkap->evidence, true),
-            'evidencekedua' => json_decode($ppk->evidencekedua, true),
+            'evidencekedua' => $evidenceskedua,
             'created_at' => $ppklengkap->created_at,
             'updated_at' => $ppk->updated_at,
             'signature' => $signatureBase64, // Berisi data base64 dari signature
@@ -681,7 +670,7 @@ class PpkController extends Controller
         try {
             $ppk = Ppkkedua::findOrFail($id);
 
-            $evidences = json_decode($ppk->evidencekedua ?? '[]', true);
+            $evidences = is_string($ppk->evidencekedua) ? json_decode($ppk->evidencekedua, true) : [];
 
             // Pastikan bahwa $evidences adalah array
             if (!is_array($evidences)) {
@@ -1258,6 +1247,18 @@ class PpkController extends Controller
 
         // Temukan data PPK berdasarkan ID
         $ppk = Ppk::findOrFail($id);
+
+        // Hapus data Ppkkedua berdasarkan id_formppk
+        $ppkkedua = Ppkkedua::where('id_formppk', $id)->first();
+        if ($ppkkedua) {
+            $ppkkedua->delete();
+        }
+
+        // Hapus data Ppkketiga berdasarkan id_formppk
+        $ppkketiga = Ppkketiga::where('id_formppk', $id)->first();
+        if ($ppkketiga) {
+            $ppkketiga->delete();
+        }
 
         // Hapus data PPK
         $ppk->delete();

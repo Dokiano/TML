@@ -127,7 +127,8 @@
                                         <td style="text-align: center;">{{ $loop->iteration }}</td>
                                         <td>{{ \Carbon\Carbon::parse($ppk->created_at)->format('d / m / Y') }}</td>
                                         <td>
-                                            <a href="{{ route('ppk.pdf', $ppk->id) }}" title="Export to PDF">
+                                            <a href="{{ route('ppk.pdf', $ppk->id) }}" target="_blank"
+                                                title="Export to PDF">
                                                 {{ $ppk->nomor_surat ?? 'Tidak ada nomor surat' }}
                                             </a>
                                         <td>
@@ -256,7 +257,7 @@
                         <table class="table table-striped" style="width: 100%; font-size: 10px;">
                             <thead>
                                 <tr>
-                                    <th style="text-align: center; font-size:20px;">Sending</th>
+                                    <th style="text-align: center; font-size:20px; width: 50%;">Sending</th>
                                     <th style="text-align: center; font-size:20px;">Accepting</th>
                                 </tr>
                             </thead>
@@ -264,26 +265,30 @@
                                 @foreach ($ppks as $ppk)
                                     <tr>
                                         <!-- Kolom Sending -->
-                                        <td style="text-align: center;">
-                                            @if ($ppk->pembuatUser && $ppk->pembuat == $user->id)
-                                                <a href="{{ route('ppk.pdf', $ppk->id) }}" title="Export to PDF">
+                                        @if ($ppk->pembuatUser && $ppk->pembuat == $user->id)
+                                            <td style="text-align: center;">
+                                                <a href="{{ route('ppk.pdf', $ppk->id) }}" target="_blank"
+                                                    title="Export to PDF">
                                                     {{ $ppk->nomor_surat ?? '-' }}
                                                 </a>
-                                            @else
+                                            </td>
+                                            <td style="text-align: center;">
                                                 -
-                                            @endif
-                                        </td>
+                                            </td>
+                                        @endif
 
                                         <!-- Kolom Accepting -->
-                                        <td style="text-align: center;">
-                                            @if ($ppk->penerimaUser && $ppk->penerima == $user->id)
-                                                <a href="{{ route('ppk.pdf', $ppk->id) }}" title="Export to PDF">
+                                        @if ($ppk->penerimaUser && $ppk->penerima == $user->id)
+                                            <td style="text-align: center;">
+                                                -
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <a href="{{ route('ppk.pdf', $ppk->id) }}" target="_blank"
+                                                    title="Export to PDF">
                                                     {{ $ppk->nomor_surat ?? '-' }}
                                                 </a>
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>

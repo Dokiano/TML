@@ -381,8 +381,9 @@
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-3">
-                    <a href="{{ route('ppk.index') }}" class="btn btn-secondary">Kembali</a>
-                    <a href="{{ route('ppk.pdf', ['id' => $ppk->id]) }}" class="btn btn-danger">Print</a>
+                    <a href="javascript:history.back()" class="btn btn-secondary">Kembali</a>
+                    <a href="{{ route('ppk.pdf', ['id' => $ppk->id]) }}" target="_blank"
+                        class="btn btn-danger">Print</a>
                 </div>
                 </form>
             </div>
