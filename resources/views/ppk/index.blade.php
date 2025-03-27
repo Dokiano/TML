@@ -207,10 +207,11 @@
                                                                 </a>
                                                             @elseif ($ppk->pembuat == auth()->id() && !$isExpired)
                                                                 <span class="text-secondary fw-bold">Verify in {{ $currentMonth }}d
-                                                                @else
-                                                                    <span class="text-warning fw-bold">
-                                                                        WAITING <i class="bi bi-hourglass-split"></i>
-                                                                    </span>
+                                                                    <i class="bi bi-stopwatch-fill"></i></span>
+                                                            @else
+                                                                <span class="text-warning fw-bold">
+                                                                    WAITING <i class="bi bi-hourglass-split"></i>
+                                                                </span>
                                                             @endif
                                                         @endif
 

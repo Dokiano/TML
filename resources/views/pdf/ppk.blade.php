@@ -134,9 +134,9 @@
                                     $fileExtension = pathinfo($file, PATHINFO_EXTENSION);
                                     $filePath = asset('storage/' . $file);
                                 @endphp
-                                <div class="border p-2 rounded bg-light">
+                                <div class="">
                                     @if (in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg']))
-                                        <img src="{{ $filePath }}" alt="Evidence" class="img-fluid rounded"
+                                        <img src="{{ $filePath }}" alt="Evidence" class="img-fluid mx-3"
                                             style="max-width: 150px; max-height: 150px;">
                                     @else
                                         <style>
@@ -218,10 +218,10 @@
                             $fileExtension = pathinfo($file, PATHINFO_EXTENSION);
                             $filePath = asset('storage/' . $file);
                             ?>
-                            <div class="border p-2 rounded bg-light">
+                            <div class="">
                                 @if (in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg']))
-                                    <img src="{{ asset('storage/' . $file) }}" alt="Evidence"
-                                        class="img-fluid rounded" style="max-width: 150px; max-height: 150px;">
+                                    <img src="{{ asset('storage/' . $file) }}" alt="Evidence" class="img-fluid mx-3"
+                                        style="max-width: 150px; max-height: 150px;">
                                 @else
                                     <style>
                                         .hover {
