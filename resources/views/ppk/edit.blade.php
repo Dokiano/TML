@@ -155,7 +155,6 @@
                                 // Panggil fungsi untuk mengatur tinggi saat halaman pertama kali dimuat
                                 autoResizeTextarea();
                             </script>
-
                         </div>
 
                         <div class="mb-3" id="pic1-other">
@@ -272,11 +271,6 @@
                                 }
                             }
                         </script>
-
-                        <!-- Jenis Ketidaksesuaian -->
-
-
-
 
                         <script>
                             // Mengisi data pembuat

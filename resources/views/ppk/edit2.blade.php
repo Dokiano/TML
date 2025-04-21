@@ -417,7 +417,9 @@
                     <div class="mb-3">
                         <label for="evidencekedua" class="form-label fw-bold">Evidence</label>
                         @php
-                            $evidences = json_decode($ppk->evidencekedua);
+                            $evidences = is_array($ppk->evidencekedua)
+                                ? $ppk->evidencekedua
+                                : json_decode($ppk->evidencekedua, true);
                         @endphp
 
                         @if (is_array($evidences) && count($evidences) > 0)

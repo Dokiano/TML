@@ -2,8 +2,8 @@
 
 @section('content')
     <!-- Pastikan Bootstrap Icons sudah terpasang. Jika belum, tambahkan link berikut di head layout utama:
-                                                                                                                                                                                                                                                                                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-                                                                                                                                                                                                                                                                                    -->
+                                                                                                                                                                                                                                                                                                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+                                                                                                                                                                                                                                                                                                -->
 
     <body>
         <div class="card shadow-lg border-0">
@@ -291,23 +291,35 @@
                     </script>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold "><i class="bi bi-envelope-plus"></i> CC Email
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-envelope-plus"></i> CC Email
                         </label>
                         <div id="cc-email-container" class="w-100" style="max-width: 400px;">
-                            <div class="input-group mb-2">
-                                <select name="cc_email[]" class="form-select cc-email-select" style="width: 70%;">
-                                    <option value="">Pilih CC Email</option>
-                                    @foreach ($data as $user)
-                                        <option value="{{ $user->email }}">{{ $user->email }}</option>
-                                    @endforeach
-                                </select>
-                                <button type="button" class="btn btn-outline-primary add-cc-email" style="width: 10%;">
-                                    <i class="bi bi-plus"></i>
-                                </button>
+                            <!-- Baris pertama CC Email -->
+                            <div class="cc-email-row mb-2">
+                                <div class="form-check mb-1">
+                                    <input type="checkbox" class="form-check-input cc-toggle-checkbox" id="ccToggle1">
+                                    <label class="form-check-label" for="ccToggle1">Input Manual</label>
+                                </div>
+                                <div class="input-group">
+                                    <!-- Secara default, tampilkan select -->
+                                    <select name="cc_email[]" class="form-select cc-email-select">
+                                        <option value="">Pilih CC Email</option>
+                                        @foreach ($data as $user)
+                                            <option value="{{ $user->email }}">{{ $user->email }}</option>
+                                        @endforeach
+                                    </select>
+                                    <!-- Input email disembunyikan secara default -->
+                                    <input type="email" name="" class="form-control cc-email-input"
+                                        placeholder="Masukkan CC Email" style="display: none;">
+                                    <button type="button" class="btn btn-outline-primary add-cc-email">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div id="cc-email-list" class="mt-2"></div>
                     </div>
+
                     {{-- 
                     <div class="mb-3">
                         <label for="statusppk" class="form-label fw-bold">Status PPK</label>
@@ -337,72 +349,99 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@3.0.0/dist/signature_pad.umd.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Inisialisasi Signature Pad
+            // Inisialisasi Signature Pad (jika diperlukan)
             const canvas = document.getElementById('signature-pad');
-            const signaturePad = new SignaturePad(canvas);
-            const ctx = canvas.getContext('2d');
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            ctx.scale(ratio, ratio);
-
-            // Clear signature pad
-            document.getElementById('clear').addEventListener('click', function() {
-                signaturePad.clear();
-            });
-
-            // Tambah input CC email
-            $('.add-cc-email').click(function() {
-                $('#cc-email-container').append(
-                    `<div class="input-group mb-2">
-                        <input type="email" name="cc_email[]" class="form-control" placeholder="Masukkan CC Email">
-                        <button type="button" class="btn btn-outline-warning remove-cc-email">
-                            <i class="bi bi-dash"></i>
-                        </button>
-                    </div>`
-                );
-            });
-
-            // Hapus input CC email
-            $(document).on('click', '.remove-cc-email', function() {
-                $(this).closest('.input-group').remove();
-            });
-
-            // Simpan tanda tangan sebagai data URL saat form disubmit
-            document.querySelector('form').addEventListener('submit', function(e) {
-                if (!signaturePad.isEmpty()) {
-                    const signatureDataUrl = signaturePad.toDataURL();
-                    document.getElementById('signature').value = signatureDataUrl;
-                } else if (document.getElementById("signature-file").files.length === 0) {
-                    alert("Silakan buat tanda tangan di canvas atau unggah file tanda tangan.");
-                    e.preventDefault();
-                }
-            });
-
-            window.addEventListener('resize', function() {
+            if (canvas) {
+                const signaturePad = new SignaturePad(canvas);
+                const ctx = canvas.getContext('2d');
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
                 canvas.width = canvas.offsetWidth * ratio;
                 canvas.height = canvas.offsetHeight * ratio;
                 ctx.scale(ratio, ratio);
+
+                // Clear signature pad
+                document.getElementById('clear').addEventListener('click', function() {
+                    signaturePad.clear();
+                });
+
+                // Update canvas saat resize window
+                window.addEventListener('resize', function() {
+                    canvas.width = canvas.offsetWidth * ratio;
+                    canvas.height = canvas.offsetHeight * ratio;
+                    ctx.scale(ratio, ratio);
+                });
+
+                // Simpan tanda tangan sebagai data URL saat form disubmit
+                document.querySelector('form').addEventListener('submit', function(e) {
+                    if (!signaturePad.isEmpty()) {
+                        const signatureDataUrl = signaturePad.toDataURL();
+                        document.getElementById('signature').value = signatureDataUrl;
+                    } else if (document.getElementById("signature-file").files.length === 0) {
+                        alert("Silakan buat tanda tangan di canvas atau unggah file tanda tangan.");
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            // Toggle antara input email dan select berdasarkan checkbox
+            $(document).on('change', '.cc-toggle-checkbox', function() {
+                var rowContainer = $(this).closest('.cc-email-row');
+                if ($(this).is(':checked')) {
+                    // Jika dicentang, tampilkan input email dan hapus name dari select
+                    rowContainer.find('.cc-email-select').hide().removeAttr('name');
+                    rowContainer.find('.cc-email-input').show().attr('name', 'cc_email[]');
+                } else {
+                    // Jika tidak dicentang, tampilkan select dan hapus name dari input email
+                    rowContainer.find('.cc-email-select').show().attr('name', 'cc_email[]');
+                    rowContainer.find('.cc-email-input').hide().removeAttr('name');
+                }
             });
 
-            // Mengisi data pembuat
-            document.getElementById("pembuat").addEventListener("change", function() {
+            // Tambah baris CC Email baru dengan struktur yang sama
+            $('.add-cc-email').click(function() {
+                $('#cc-email-container').append(
+                    `<div class="cc-email-row mb-2">
+                <div class="form-check mb-1">
+                    <input type="checkbox" class="form-check-input cc-toggle-checkbox">
+                    <label class="form-check-label">Input Manual</label>
+                </div>
+                <div class="input-group">
+                    <select name="cc_email[]" class="form-select cc-email-select">
+                        <option value="">Pilih CC Email</option>
+                        @foreach ($data as $user)
+                            <option value="{{ $user->email }}">{{ $user->email }}</option>
+                        @endforeach
+                    </select>
+                    <input type="email" name="" class="form-control cc-email-input" placeholder="Masukkan CC Email" style="display: none;">
+                    <button type="button" class="btn btn-outline-danger remove-cc-email">
+                        <i class="bi bi-dash"></i>
+                    </button>
+                </div>
+            </div>`
+                );
+            });
+
+            // Hapus baris CC Email ketika tombol remove diklik
+            $(document).on('click', '.remove-cc-email', function() {
+                $(this).closest('.cc-email-row').remove();
+            });
+
+            // Contoh kode tambahan untuk mengisi data pembuat dan penerima, serta preview gambar,
+            // sesuai dengan kode awal (jika dibutuhkan di form)
+            document.getElementById("pembuat")?.addEventListener("change", function() {
                 const selectedOption = this.options[this.selectedIndex];
                 document.getElementById("emailpembuat").value = selectedOption.getAttribute("data-email");
                 document.getElementById("divisipembuat").value = selectedOption.getAttribute("data-divisi");
             });
 
-            // Mengisi data penerima
-            document.getElementById("penerima").addEventListener("change", function() {
+            document.getElementById("penerima")?.addEventListener("change", function() {
                 const selectedOption = this.options[this.selectedIndex];
                 document.getElementById("emailpenerima").value = selectedOption.getAttribute("data-email");
                 document.getElementById("divisipenerima").value = selectedOption.getAttribute(
                     "data-divisi");
             });
 
-            // Preview image sebelum diunggah
-            document.getElementById("evidence").addEventListener("change", function() {
+            document.getElementById("evidence")?.addEventListener("change", function() {
                 const file = this.files[0];
                 if (file && file.type.match('image.*')) {
                     const reader = new FileReader();

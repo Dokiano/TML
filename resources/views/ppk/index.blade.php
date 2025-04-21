@@ -59,7 +59,7 @@
                             No. Proses Peningkatan Kinerja
                         </th>
                         <th style=" text-align: center; width: 20%;">
-                            {{ auth()->id() == $ppks->first()->pembuat ? 'Status' : 'Action Create' }}
+                            Status
                         </th>
                         <th style=" text-align: center;">
                             Action Edit
@@ -91,10 +91,13 @@
                                         @break
 
                                         @case('IDENTIFIKASI ULANG')
-                                            <a href="{{ route('ppk.edit2', $ppk->id) }}" class="btn btn-secondary btn-sm"
+                                            <span class="text-warning fw-bold">
+                                                IDENTIFIKASI ULANG <i class="bi bi-x-circle"></i>
+                                            </span>
+                                            {{-- <a href="{{ route('ppk.edit2', $ppk->id) }}" class="btn btn-secondary btn-sm"
                                                 title="Edit Identifikasi Ulang">
                                                 <i class="bi bi-pencil"></i> IDENTIFIKASI ULANG
-                                            </a>
+                                            </a> --}}
                                         @break
 
                                         @case('CLOSE (Tidak Efektif)')
@@ -113,10 +116,23 @@
                                                             color: #ffc107 !important;
                                                         }
                                                     </style>
-                                                    <a href="{{ route('ppk.create2', $ppk->id) }}" class="btn btn-warning btn-sm "
+                                                    @if (auth()->id() == $ppk->penerima)
+                                                        @if ($ppk->updated_at->diffInDays(now()) > 1)
+                                                            <span class="text-danger fw-bold"
+                                                                title="Lewat {{ $ppk->updated_at->diffInDays(now()) }} hari">
+                                                                OPEN LEWAT TANGGAL <i class="bi bi-bell"></i>
+                                                            </span>
+                                                        @else
+                                                            <span class="text-warning fw-bold" title="PPK belum dijawab">OPEN <i
+                                                                    class="bi bi-bell"></i>
+                                                            </span>
+                                                        @endif
+                                                    @endif
+
+                                                    {{-- <a href="{{ route('ppk.create2', $ppk->id) }}" class="btn btn-warning btn-sm "
                                                         title="PPK belum dijawab">
                                                         <i class="bi bi-bell"></i>
-                                                    </a>
+                                                    </a> --}}
                                                 @else
                                                     @if (empty($ppk->formppk2->pencegahan) ||
                                                             empty($ppk->formppk2->penanggulangan) ||
@@ -136,12 +152,12 @@
                                                                 !empty($ppk->formppk2->identifikasi))
                                                             @if ($ppk->pembuat == auth()->id())
                                                                 <a href="{{ route('ppk.create3', $ppk->id) }}"
-                                                                    class="btn btn-success btn-sm" title="Form PPK Verifikasi">
+                                                                    class="btn btn-danger btn-sm" title="Form PPK Verifikasi">
                                                                     <i class="bi bi-bell"></i>
                                                                 </a>
                                                             @else
-                                                                <span class="text-warning fw-bold">
-                                                                    WAITING <i class="bi bi-hourglass-split"></i>
+                                                                <span class="text-warning fw-bold" title="Menunggu di verifikasi">
+                                                                    OPEN <i class="bi bi-chat-left-text"></i>
                                                                 </span>
                                                             @endif
                                                         @endif
@@ -150,8 +166,8 @@
                                                             !is_null($ppk->formppk3->verifikasi) &&
                                                                 !empty($ppk->formppk2->penanggulangan) &&
                                                                 !empty($ppk->formppk2->pencegahan))
-                                                            <span class="text-success fw-bold">
-                                                                VERIFIED <i class="bi bi-check-circle-fill"></i>
+                                                            <span class="text-success fw-bold" title="Terverifikasi">
+                                                                CLOSED <i class="bi bi-check-circle-fill"></i>
                                                             </span>
                                                         @endif
                                                     @endif
@@ -182,8 +198,8 @@
                                         @default
                                             @if ($ppk->formppk2)
                                                 @if (is_null($ppk->formppk2->signaturepenerima))
-                                                    <span class="text-warning fw-bold">
-                                                        WAITING <i class="bi bi-hourglass-split"></i>
+                                                    <span class="text-warning fw-bold" title="Menunggu dijawab">
+                                                        OPEN <i class="bi bi-hourglass-split"></i>
                                                     </span>
                                                 @else
                                                     {{-- Kondisi untuk Verifikasi --}}
@@ -201,16 +217,16 @@
                                                                 $currentMonth = 30 - $months;
                                                             @endphp
                                                             @if ($ppk->pembuat == auth()->id() && $isExpired)
-                                                                <a href="{{ route('ppk.edit3', $ppk->id) }}"
-                                                                    class="btn btn-success btn-sm" title="Form PPK Verifikasi">
-                                                                    <i class="bi bi-bell"></i>
-                                                                </a>
+                                                                <span class="text-secondary fw-bold"
+                                                                    title="Verifikasi sekarang">Verify now
+                                                                    <i class="bi bi-check-circle"></i></span>
                                                             @elseif ($ppk->pembuat == auth()->id() && !$isExpired)
-                                                                <span class="text-secondary fw-bold">Verify in {{ $currentMonth }}d
+                                                                <span class="text-secondary fw-bold"
+                                                                    title="Belum saatnya verifikasi">Verify in {{ $currentMonth }}d
                                                                     <i class="bi bi-stopwatch-fill"></i></span>
                                                             @else
                                                                 <span class="text-warning fw-bold">
-                                                                    WAITING <i class="bi bi-hourglass-split"></i>
+                                                                    OPEN <i class="bi bi-hourglass-split"></i>
                                                                 </span>
                                                             @endif
                                                         @endif
@@ -219,8 +235,8 @@
                                                             !is_null($ppk->formppk3->verifikasi) &&
                                                                 !empty($ppk->formppk2->penanggulangan) &&
                                                                 !empty($ppk->formppk2->pencegahan))
-                                                            <span class="text-success fw-bold">
-                                                                VERIFIED <i class="bi bi-check-circle-fill"></i>
+                                                            <span class="text-success fw-bold" title="Terverifikasi">
+                                                                CLOSED <i class="bi bi-check-circle-fill"></i>
                                                             </span>
                                                         @endif
                                                     @endif
@@ -239,54 +255,68 @@
                                     </span>
                                 @else
                                     @if ($ppk->statusppk != 'CANCEL')
-                                        @if (auth()->id() == $ppk->pembuat)
-                                            <a href="{{ route('ppk.edit', $ppk->id) }}" class="btn btn-primary btn-sm"
-                                                title="Edit Judul PPK">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </a>
-                                        @endif
-
-                                        @if (
-                                            !is_null($ppk->formppk2->identifikasi) &&
-                                                !is_null($ppk->formppk2->signaturepenerima) &&
-                                                !is_null($ppk->formppk2->penanggulangan) &&
-                                                !is_null($ppk->formppk2->pencegahan) &&
-                                                !is_null($ppk->formppk2->tgl_penanggulangan) &&
-                                                !is_null($ppk->formppk2->tgl_pencegahan))
-                                            @if (auth()->id() == $ppk->penerima)
-                                                <a href="{{ route('ppk.edit2', $ppk->id) }}" class="btn btn-danger btn-sm"
-                                                    title="Edit Identifikasi">
+                                        @if ($ppk->statusppk != 'CLOSE')
+                                            @if (auth()->id() == $ppk->pembuat && is_null($ppk->formppk2->signaturepenerima))
+                                                <a href="{{ route('ppk.edit', $ppk->id) }}" class="btn btn-primary btn-sm"
+                                                    title="Edit Judul PPK">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </a>
                                             @endif
-                                            @if (auth()->id() == $ppk->penerima)
-                                                <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
-                                                    class="btn btn-warning btn-sm"
-                                                    title="Edit Penanggunlangan & Pencegahan">
-                                                    <i class="bi bi-pencil-fill"></i>
+
+                                            @if (auth()->id() == $ppk->penerima && is_null($ppk->formppk2->signaturepenerima))
+                                                <a href="{{ route('ppk.create2', $ppk->id) }}"
+                                                    class="btn btn-warning btn-sm " title="Jawab PPK">
+                                                    <i class="bi bi-bell"></i>
                                                 </a>
                                             @endif
-                                        @endif
 
-
-                                        @if (auth()->id() == $ppk->pembuat)
-                                            @php
-                                                $updated_at = \Carbon\Carbon::parse($ppk->formppk2->updated_at);
-                                                $isExpired = $updated_at->diffInMinutes(now()) >= 1;
-                                            @endphp
-
-                                            @if ($isExpired && $ppk->statusppk != 'IDENTIFIKASI ULANG' && !is_null($ppk->formppk2->signaturepenerima))
-                                                <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
-                                                    class="btn btn-warning btn-sm"
-                                                    title="Edit Penanggunlangan & Pencegahan">
-                                                    <i class="bi bi-pencil-fill"></i>
-                                                </a>
+                                            @if (
+                                                !is_null($ppk->formppk2->identifikasi) &&
+                                                    !is_null($ppk->formppk2->signaturepenerima) &&
+                                                    !is_null($ppk->formppk2->penanggulangan) &&
+                                                    !is_null($ppk->formppk2->pencegahan) &&
+                                                    !is_null($ppk->formppk2->tgl_penanggulangan) &&
+                                                    !is_null($ppk->formppk2->tgl_pencegahan))
+                                                @if (auth()->id() == $ppk->penerima)
+                                                    <a href="{{ route('ppk.edit2', $ppk->id) }}"
+                                                        class="btn btn-danger btn-sm" title="Edit Identifikasi">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </a>
+                                                    <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
+                                                        class="btn btn-warning btn-sm"
+                                                        title="Edit Penanggunlangan & Pencegahan">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </a>
+                                                @endif
                                             @endif
-                                            @if (!is_null($ppk->formppk3->verifikasi))
-                                                <a href="{{ route('ppk.edit3', $ppk->id) }}"
-                                                    class="btn btn-success btn-sm" title="Edit Verifikasi">
-                                                    <i class="bi bi-pencil-fill"></i>
-                                                </a>
+
+
+                                            @if (auth()->id() == $ppk->pembuat)
+                                                @php
+                                                    $updated_at = \Carbon\Carbon::parse($ppk->formppk2->updated_at);
+                                                    $isExpired = $updated_at->diffInMonths(now()) >= 1;
+                                                    $months = $updated_at->diffInDays(now());
+                                                    $currentMonth = 30 - $months;
+                                                @endphp
+                                                @if ($ppk->statusppk != 'IDENTIFIKASI ULANG' && !is_null($ppk->formppk2->signaturepenerima))
+                                                    <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
+                                                        class="btn btn-warning btn-sm"
+                                                        title="Edit Penanggunlangan & Pencegahan">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </a>
+                                                    @if ($isExpired && is_null($ppk->formppk3->verifikasi))
+                                                        <a href="{{ route('ppk.edit3', $ppk->id) }}"
+                                                            class="btn btn-danger btn-sm" title="Form PPK Verifikasi">
+                                                            <i class="bi bi-bell"></i>
+                                                        </a>
+                                                    @endif
+                                                @endif
+                                                @if (!is_null($ppk->formppk3->verifikasi))
+                                                    <a href="{{ route('ppk.edit3', $ppk->id) }}"
+                                                        class="btn btn-success btn-sm" title="Edit Verifikasi">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </a>
+                                                @endif
                                             @endif
                                         @endif
                                     @else

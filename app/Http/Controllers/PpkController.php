@@ -184,7 +184,7 @@ class PpkController extends Controller
             }
 
             $lastPpk = Ppk::latest()->first();
-            $lastYear = $lastPpk ? substr($lastPpk->nomor_surat, -9, 4) : ''; // Mendapatkan tahun dari nomor surat terakhir
+            $lastYear = $lastPpk ? substr($lastPpk->nomor_surat, -10, 4) : ''; // Mendapatkan tahun dari nomor surat terakhir
             $currentYear = date('Y'); // Tahun saat ini
 
             // Jika tahun terakhir berbeda dengan tahun saat ini, reset urutan ke 1
@@ -206,8 +206,10 @@ class PpkController extends Controller
             // Menentukan penerima dan divisi
             $user = User::find($request->penerima);
             $divisi = $request->divisipenerima ?? $user->divisi;
+
             // Membuat nomor surat
             $nomorSurat = "$nomor/MFG/$divisi/$bulan/$tahun-$semester";
+
 
             // Pastikan nomor surat unik
             while (Ppk::where('nomor_surat', $nomorSurat)->exists()) {

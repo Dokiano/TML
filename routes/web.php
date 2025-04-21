@@ -110,7 +110,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/formidentifikasi/{id}', [PpkController::class, 'create2'])->name('ppk.create2');
     Route::post('/ppk/store-2', [PpkController::class, 'store2'])->name('ppk.store2');
     Route::get('/formusulan/{id}', [PpkController::class, 'create3'])->name('ppk.create3');
-    Route::get('/formverifikasi/{id}', [PpkController::class, 'create4'])->name('ppk.create4');
     Route::post('/ppk/store-3', [PpkController::class, 'store3'])->name('ppk.store3');
     Route::get('/ppk/export/{id}', [PpkController::class, 'exportSingle'])->name('ppk.export');
     Route::get('/kirimemail', [PpkController::class, 'email'])->name('ppk.email');

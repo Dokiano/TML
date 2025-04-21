@@ -318,7 +318,8 @@
                     </div>
                     <div class="col text-start d-flex">
                         <p>Tanda Tangan :<br /><strong>{{ $ppksatu->penerimaUser->nama_user }}</strong></p>
-                        <img src="{{ $data['signaturepenerima'] }}" alt="Signature" height="70">
+                        <img src="{{ $data['signaturepenerima'] }}" alt="Signature"
+                            style="max-height:70px; max-width:130px;" class="ms-3">
                     </div>
                 </div>
             </div>
@@ -346,9 +347,19 @@
                     <p class="my-4" style="font-size: 2rm;"><strong>4. Verifikasi Tindakan</strong></p>
 
                     <div class="row mb-3">
-                        <label for="verifikasi" class="col-sm-2 col-form-label"><strong>Catatan</strong></label>
-                        <div class="col-sm-10">
-                            <textarea name="verifikasi" required class="form-control" placeholder="Masukkan Catatan" rows="7">{{ old('verifikasi', $ppk->verifikasi ?? '') }}</textarea>
+                        <div class="col-8">
+                            <label for="verifikasi" class="col col-form-label"><strong>Catatan</strong></label>
+                            <div class="col">
+                                <textarea name="verifikasi" required class="form-control" placeholder="Masukkan Catatan" rows="7">{{ old('verifikasi', $ppk->verifikasi ?? '') }}</textarea>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <img src="{{ $data['signature'] }}" style="max-height:70px;" class="w-full">
+                            <p class="mt-2">Tgl. Verifikasi :
+                                <span class="ps-5"
+                                    style="border-bottom: 1px solid #000">{{ \Carbon\Carbon::parse(today())->translatedFormat('d F Y') }}</span>
+                            </p>
+                            <p>Auditor, <strong>{{ $ppksatu->pembuatUser->nama_user }}</strong></p>
                         </div>
                     </div>
                     <small class="form-text text-muted font-italic">Efektifitas Tindakan Penanggulangan/Pencegahan dapat

@@ -264,33 +264,39 @@
                             <tbody>
                                 @foreach ($ppks as $ppk)
                                     <tr>
-                                        <!-- Kolom Sending -->
-                                        @if ($ppk->pembuatUser && $ppk->pembuat == $user->id)
-                                            <td style="text-align: center;">
-                                                <a href="{{ route('ppk.pdf', $ppk->id) }}" target="_blank"
-                                                    title="Export to PDF">
-                                                    {{ $ppk->nomor_surat ?? '-' }}
-                                                </a>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                -
-                                            </td>
-                                        @endif
-
-                                        <!-- Kolom Accepting -->
-                                        @if ($ppk->penerimaUser && $ppk->penerima == $user->id)
-                                            <td style="text-align: center;">
-                                                -
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <a href="{{ route('ppk.pdf', $ppk->id) }}" target="_blank"
-                                                    title="Export to PDF">
-                                                    {{ $ppk->nomor_surat ?? '-' }}
-                                                </a>
-                                            </td>
+                                        @if (auth()->id() == $ppk->pembuat || auth()->id() == $ppk->penerima)
+                                            <!-- Kolom Sending -->
+                                            @if ($ppk->pembuatUser && $ppk->pembuat == $user->id)
+                                                <td style="text-align: center;">
+                                                    <a href="{{ route('ppk.pdf', $ppk->id) }}" target="_blank"
+                                                        title="Export to PDF">
+                                                        {{ $ppk->nomor_surat ?? '-' }}
+                                                    </a>
+                                                </td>
+                                                <td style="text-align: center;">-</td>
+                                            @elseif ($ppk->penerimaUser && $ppk->penerima == $user->id)
+                                                <td style="text-align: center;">-</td>
+                                                <td style="text-align: center;">
+                                                    <a href="{{ route('ppk.pdf', $ppk->id) }}" target="_blank"
+                                                        title="Export to PDF">
+                                                        {{ $ppk->nomor_surat ?? '-' }}
+                                                    </a>
+                                                </td>
+                                            @else
+                                                <td style="text-align: center;">-</td>
+                                                <td style="text-align: center;">-</td>
+                                            @endif
+                                        @else
+                                            <!-- Jika bukan pembuat atau penerima, tampilkan tanda minus hanya sekali -->
+                                            @if ($loop->first)
+                                                <!-- Kondisi ini memastikan hanya sekali menampilkan tanda minus -->
+                                                <td style="text-align: center;">-</td>
+                                                <td style="text-align: center;">-</td>
+                                            @endif
                                         @endif
                                     </tr>
                                 @endforeach
+
                             </tbody>
                         </table>
                     </div>
