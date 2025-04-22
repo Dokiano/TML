@@ -157,7 +157,7 @@
                                                                 </a>
                                                             @else
                                                                 <span class="text-warning fw-bold" title="Menunggu di verifikasi">
-                                                                    OPEN <i class="bi bi-chat-left-text"></i>
+                                                                    OPEN <i class="bi bi-stopwatch-fill"></i>
                                                                 </span>
                                                             @endif
                                                         @endif
@@ -413,9 +413,9 @@
                                     <select id="status" name="status" class="form-select">
                                         <option value="">Pilih Status</option>
                                         <option value="VERIFIED" {{ request('status') == 'VERIFIED' ? 'selected' : '' }}>
-                                            VERIFIED</option>
+                                            CLOSE</option>
                                         <option value="WAITING" {{ request('status') == 'WAITING' ? 'selected' : '' }}>
-                                            WAITING</option>
+                                            OPEN</option>
                                     </select>
                                 </div>
                             </div>

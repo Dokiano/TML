@@ -293,33 +293,42 @@
                             <label class="form-label fw-bold">CC Email</label>
                             <div id="cc-email-container">
                                 @php
+                                    // Mengambil cc_email yang sudah ada, atau set default jika kosong
                                     $ccEmails = explode(',', $ppk->cc_email ?? '');
                                 @endphp
-                                <div id="cc-email-container">
+
+                                @foreach ($ccEmails as $cc)
                                     @php
-                                        $ccEmails = explode(',', $ppk->cc_email ?? ''); // Mengambil cc email yang sudah ada
+                                        // Tentukan apakah email cc ada dalam daftar user->email
+                                        $isEmailValid = $users->contains('email', $cc); // Cek apakah cc ada di user email
                                     @endphp
 
-                                    @foreach ($ccEmails as $cc)
-                                        @if ($cc)
-                                            <div class="input-group mb-2">
+                                    @if ($cc)
+                                        <div class="input-group mb-2">
+                                            @if ($isEmailValid)
+                                                <!-- Jika email ada di user->email, tampilkan dropdown -->
                                                 <select name="cc_email[]" class="form-select">
                                                     <option value="">Pilih Email</option> <!-- Opsi default -->
                                                     @foreach ($users as $user)
-                                                        <!-- Daftar pengguna -->
                                                         <option value="{{ $user->email }}"
                                                             {{ $user->email == $cc ? 'selected' : '' }}>
                                                             {{ $user->email }}
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <button type="button"
-                                                    class="btn btn-outline-danger remove-cc-email">-</button>
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                </div>
+                                            @else
+                                                <!-- Jika email tidak ada di user->email, tampilkan text input -->
+                                                <input type="email" name="cc_email[]" value="{{ $cc }}"
+                                                    class="form-control">
+                                            @endif
+                                            <button type="button"
+                                                class="btn btn-outline-danger remove-cc-email">-</button>
+                                        </div>
+                                    @endif
+                                @endforeach
                             </div>
+
+
                             <div style="text-align: right;">
                                 <button type="button" class="btn btn-outline-primary add-cc-email"><i
                                         class="fa fa-plus"></i></button>

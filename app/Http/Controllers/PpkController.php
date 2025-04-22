@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Ppk;
 use App\Models\User;
+use App\Models\Divisi;
 use App\Mail\KirimEmail;
 use App\Models\Ppkkedua;
 use App\Mail\KirimEmail2;
@@ -75,8 +76,12 @@ class PpkController extends Controller
         $user = $request->input('user'); // Ambil ID pengguna
         $keyword = $request->input('keyword');
         $status = $request->input('status');
+        $divisiPenerima = $request->input('divisi_penerima');
+        $divisiPengirim = $request->input('divisi_pengirim');
 
         $statusPpkList = StatusPpk::all();
+
+        // dd(request()->all());
 
         // Query data PPK berdasarkan filter
         $ppks = Ppk::query()
@@ -91,15 +96,21 @@ class PpkController extends Controller
             })
             ->when($keyword, fn($query) => $query->where('nomor_surat', 'like', "%$keyword%"))
             ->when($status, fn($query) => $query->where('statusppk', $status))
+            ->when($divisiPenerima, fn($query) => $query->where('divisipenerima', '=', $divisiPenerima))
+            ->when($divisiPengirim, fn($query) => $query->where('divisipembuat', '=', $divisiPengirim))
             ->get();
+
+
 
         $user = auth()->user();
         // Ambil daftar pengguna untuk dropdown
         $userList = User::orderBy('nama_user', 'asc')->pluck('nama_user', 'id');
+        // Ambil daftar divisi untuk dropdown
+        $divisiList = Divisi::orderBy('nama_divisi', 'asc')->pluck('nama_divisi', 'id');
 
 
         // Kirim data ke view
-        return view('ppk.index2', compact('ppks', 'userList', 'statusPpkList', 'status', 'user'));
+        return view('ppk.index2', compact('ppks', 'userList', 'divisiList', 'statusPpkList', 'status', 'user'));
     }
 
 

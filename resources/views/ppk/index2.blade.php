@@ -358,54 +358,83 @@
                                         </select>
                                     </div>
 
-                                    <!-- Status PPK -->
+                                    {{-- Divisi Penerima --}}
                                     <div class="col-md-4">
-                                        <label for="status" class="form-label"><strong>Status PPK</strong></label>
-                                        <select id="status" name="status" class="form-select">
-                                            <option value="">Pilih Status</option>
-                                            @foreach ($statusPpkList as $statusItem)
-                                                <option value="{{ $statusItem->nama_statusppk }}"
-                                                    {{ request('status') == $statusItem->nama_statusppk ? 'selected' : '' }}>
-                                                    {{ $statusItem->nama_statusppk }}
+                                        <label for="divisi_penerima" class="form-label"><strong>Divisi
+                                                Penerima</strong></label>
+                                        <select id="divisi_penerima" name="divisi_penerima" class="form-select">
+                                            <option value="">Pilih Divisi</option>
+                                            @foreach ($divisiList as $id => $divisi)
+                                                <option value="{{ $divisi }}"
+                                                    {{ request('divisi_penerima') == $divisi ? 'selected' : '' }}>
+                                                    {{ $divisi }}
+                                                </option>
+                                            @endforeach
+
+                                        </select>
+                                    </div>
+
+                                    {{-- Divisi Pembuat --}}
+                                    <div class="col-md-4">
+                                        <label for="divisi_pengirim" class="form-label"><strong>Divisi
+                                                Pembuat</strong></label>
+                                        <select id="divisi_pengirim" name="divisi_pengirim" class="form-select">
+                                            <option value="">Pilih Divisi</option>
+                                            @foreach ($divisiList as $id => $divisi)
+                                                <option value="{{ $divisi }}"
+                                                    {{ request('divisi_pengirim') == $divisi ? 'selected' : '' }}>
+                                                    {{ $divisi }}
                                                 </option>
                                             @endforeach
                                         </select>
                                     </div>
-
-                                    <!-- Nomor PPK -->
-                                    <div class="col-md-4">
-                                        <label for="keyword" class="form-label"><strong>Cari Nomor PPK</strong></label>
-                                        <textarea name="keyword" id="keyword" class="form-control" placeholder="Masukkan nomor PPK" rows="3">{{ request('keyword') }}</textarea>
-                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-4">
+                                <!-- Status PPK -->
+                                <div class="col-md-4">
+                                    <label for="status" class="form-label"><strong>Status PPK</strong></label>
+                                    <select id="status" name="status" class="form-select">
+                                        <option value="">Pilih Status</option>
+                                        @foreach ($statusPpkList as $statusItem)
+                                            <option value="{{ $statusItem->nama_statusppk }}"
+                                                {{ request('status') == $statusItem->nama_statusppk ? 'selected' : '' }}>
+                                                {{ $statusItem->nama_statusppk }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
-
-
+                                <!-- Nomor PPK -->
+                                <div class="col-md-4">
+                                    <label for="keyword" class="form-label"><strong>Cari Nomor PPK</strong></label>
+                                    <textarea name="keyword" id="keyword" class="form-control" placeholder="Masukkan nomor PPK" rows="3">{{ request('keyword') }}</textarea>
+                                </div>
                             </div>
+
+
+                            <!-- Tombol Filter -->
+                            <div class="row">
+                                <div class="col-md-12 d-flex justify-content-between">
+                                    <button type="button" class="btn btn-warning px-4 d-flex align-items-center"
+                                        onclick="resetForm()">
+                                        <i class="bi bi-arrow-clockwise me-2"></i> Reset
+                                    </button>
+
+                                    <script>
+                                        function resetForm() {
+                                            const form = document.querySelector('form');
+                                            form.reset();
+                                            window.location.href = "{{ route('ppk.index2') }}";
+                                        }
+                                    </script>
+                                    <button type="submit" class="btn btn-primary px-4 d-flex align-items-center">
+                                        <i class="fa fa-filter"></i> Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-
-                    <!-- Tombol Filter -->
-                    <div class="row">
-                        <div class="col-md-12 d-flex justify-content-between">
-                            <button type="button" class="btn btn-warning px-4 d-flex align-items-center"
-                                onclick="resetForm()">
-                                <i class="bi bi-arrow-clockwise me-2"></i> Reset
-                            </button>
-
-                            <script>
-                                function resetForm() {
-                                    const form = document.querySelector('form');
-                                    form.reset();
-                                    window.location.href = "{{ route('ppk.index2') }}";
-                                }
-                            </script>
-                            <button type="submit" class="btn btn-primary px-4 d-flex align-items-center">
-                                <i class="fa fa-filter"></i> Filter
-                            </button>
-
-                        </div>
-                    </div>
-                    </form>
                 </div>
             </div>
         </div>
