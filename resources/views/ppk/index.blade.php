@@ -117,7 +117,7 @@
                                                         }
                                                     </style>
                                                     @if (auth()->id() == $ppk->penerima)
-                                                        @if ($ppk->updated_at->diffInDays(now()) > 1)
+                                                        @if ($ppk->updated_at->diffInDays(now()) >= 1)
                                                             <span class="text-danger fw-bold"
                                                                 title="Lewat {{ $ppk->updated_at->diffInDays(now()) }} hari">
                                                                 OPEN LEWAT TANGGAL <i class="bi bi-bell"></i>

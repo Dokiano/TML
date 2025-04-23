@@ -2,8 +2,8 @@
 
 @section('content')
     <!-- Pastikan Bootstrap Icons sudah terpasang. Jika belum, tambahkan link berikut di head layout utama:
-                                                                                                                                                                                                                                                                                                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-                                                                                                                                                                                                                                                                                                -->
+                                                                                                                                                                                                                                                                                                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+                                                                                                                                                                                                                                                                                                    -->
 
     <body>
         <div class="card shadow-lg border-0">
@@ -399,8 +399,10 @@
 
             // Tambah baris CC Email baru dengan struktur yang sama
             $('.add-cc-email').click(function() {
-                $('#cc-email-container').append(
-                    `<div class="cc-email-row mb-2">
+                // Check if the current number of cc-email-row elements is less than 10
+                if ($('#cc-email-container .cc-email-row').length < 10) {
+                    $('#cc-email-container').append(
+                        `<div class="cc-email-row mb-2">
                 <div class="form-check mb-1">
                     <input type="checkbox" class="form-check-input cc-toggle-checkbox">
                     <label class="form-check-label">Input Manual</label>
@@ -418,8 +420,12 @@
                     </button>
                 </div>
             </div>`
-                );
+                    );
+                } else {
+                    alert('Maksimal 10 email CC yang dapat ditambahkan.');
+                }
             });
+
 
             // Hapus baris CC Email ketika tombol remove diklik
             $(document).on('click', '.remove-cc-email', function() {

@@ -225,8 +225,16 @@
                                         <strong>{{ $ppk->penerimaUser->nama_user }}</strong>
                                     </div>
                                     <div class="col">
-                                        <img src="{{ asset('admin/img/' . $ppkkedua->signaturepenerima) }}"
-                                            alt="Signature" class="img-fluid" style="max-width: 150px; height: auto;">
+                                        @if (!is_null($ppkkedua->signaturepenerima))
+                                            <img src="{{ asset('admin/img/' . $ppkkedua->signaturepenerima) }}"
+                                                alt="Signature" class="img-fluid"
+                                                style="max-width: 150px; height: auto;">
+                                        @else
+                                            <small class="text-secondary fst-italic">
+                                                <i class="bi bi-exclamation-circle me-1"></i>
+                                                No signature yet
+                                            </small>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -291,7 +299,7 @@
                         <!-- CC Email -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">CC Email</label>
-                            <div id="cc-email-container">
+                            <div id="cc-email-container" class="w-100">
                                 @php
                                     // Mengambil cc_email yang sudah ada, atau set default jika kosong
                                     $ccEmails = explode(',', $ppk->cc_email ?? '');
@@ -304,32 +312,35 @@
                                     @endphp
 
                                     @if ($cc)
-                                        <div class="input-group mb-2">
-                                            @if ($isEmailValid)
-                                                <!-- Jika email ada di user->email, tampilkan dropdown -->
-                                                <select name="cc_email[]" class="form-select">
-                                                    <option value="">Pilih Email</option> <!-- Opsi default -->
-                                                    @foreach ($users as $user)
-                                                        <option value="{{ $user->email }}"
-                                                            {{ $user->email == $cc ? 'selected' : '' }}>
-                                                            {{ $user->email }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            @else
-                                                <!-- Jika email tidak ada di user->email, tampilkan text input -->
-                                                <input type="email" name="cc_email[]" value="{{ $cc }}"
-                                                    class="form-control">
-                                            @endif
-                                            <button type="button"
-                                                class="btn btn-outline-danger remove-cc-email">-</button>
+                                        <div class="cc-email-row mb-2">
+                                            <div class="input-group">
+                                                @if ($isEmailValid)
+                                                    <!-- Jika email ada di user->email, tampilkan dropdown -->
+                                                    <select name="cc_email[]" class="form-select">
+                                                        <option value="">Pilih Email</option> <!-- Opsi default -->
+                                                        @foreach ($users as $user)
+                                                            <option value="{{ $user->email }}"
+                                                                {{ $user->email == $cc ? 'selected' : '' }}>
+                                                                {{ $user->email }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                @else
+                                                    <!-- Jika email tidak ada di user->email, tampilkan text input -->
+                                                    <input type="email" name="cc_email[]" value="{{ $cc }}"
+                                                        class="form-control" placeholder="Masukkan email CC">
+                                                @endif
+                                                <button type="button" class="btn btn-outline-danger remove-cc-email ms-2"
+                                                    aria-label="Remove CC">-
+                                                </button>
+                                            </div>
                                         </div>
                                     @endif
                                 @endforeach
                             </div>
 
 
-                            <div style="text-align: right;">
+                            <div style="text-align: left;">
                                 <button type="button" class="btn btn-outline-primary add-cc-email"><i
                                         class="fa fa-plus"></i></button>
                             </div>
@@ -363,15 +374,24 @@
                                 // Prevent adding more than 5 CC emails
                                 if (container.querySelectorAll('.input-group').length < 10) {
                                     const inputGroup = document.createElement('div');
-                                    inputGroup.className = 'input-group mb-2';
+                                    inputGroup.className = 'cc-email-row mb-2';
                                     inputGroup.innerHTML = `
-                                    <select name="cc_email[]" class="form-select">
-                <option value="">Pilih Email</option>
-                @foreach ($users as $user) <!-- Daftar pengguna -->
-                    <option value="{{ $user->email }}">{{ $user->email }}</option>
-                @endforeach
-            </select>
-            <button type="button" class="btn btn-outline-danger remove-cc-email">-</button>
+                <div class="form-check mb-1">
+                    <input type="checkbox" class="form-check-input cc-toggle-checkbox">
+                    <label class="form-check-label">Input Manual</label>
+                </div>
+                <div class="input-group">
+                    <select name="cc_email[]" class="form-select cc-email-select">
+                        <option value="">Pilih CC Email</option>
+                        @foreach ($users as $user)
+                            <option value="{{ $user->email }}">{{ $user->email }}</option>
+                        @endforeach
+                    </select>
+                    <input type="email" name="" class="form-control cc-email-input" placeholder="Masukkan CC Email" style="display: none;">
+            <button type="button" class="btn btn-outline-danger remove-cc-email ms-2"
+                                                aria-label="Remove CC">-
+                                            </button>
+                                            </div>
                                 `;
                                     container.appendChild(inputGroup);
 
@@ -383,13 +403,28 @@
                                     alert('You can add a maximum of 10 CC emails.');
                                 }
                             });
-
+                            document.addEventListener("DOMContentLoaded", function() {
+                                $(document).on('change', '.cc-toggle-checkbox', function() {
+                                    var rowContainer = $(this).closest('.cc-email-row');
+                                    if ($(this).is(':checked')) {
+                                        // Jika dicentang, tampilkan input email dan hapus name dari select
+                                        rowContainer.find('.cc-email-select').hide().removeAttr('name');
+                                        rowContainer.find('.cc-email-input').show().attr('name', 'cc_email[]');
+                                    } else {
+                                        // Jika tidak dicentang, tampilkan select dan hapus name dari input email
+                                        rowContainer.find('.cc-email-select').show().attr('name', 'cc_email[]');
+                                        rowContainer.find('.cc-email-input').hide().removeAttr('name');
+                                    }
+                                });
+                            });
                             // Attach event listener to existing remove buttons (for CC emails pre-loaded into the form)
                             document.querySelectorAll('.remove-cc-email').forEach(function(button) {
                                 button.addEventListener('click', function() {
-                                    const container = document.getElementById('cc-email-container');
-                                    const inputGroup = button.closest('.input-group');
-                                    container.removeChild(inputGroup);
+                                    // Pilih elemen terdekat dengan tombol yang diklik (input-group)
+                                    const rowContainer = button.closest('.cc-email-row');
+
+                                    // Hapus baris .cc-email-row yang sesuai dengan tombol yang diklik
+                                    rowContainer.remove();
                                 });
                             });
                         </script>
