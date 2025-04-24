@@ -102,33 +102,18 @@
                     <!-- HAPUS TEKS: d-none untuk menampilkan PPK PERSIS DIBAWAH -->
                     <div class="col-xxl-4 col-md-6 mb-4">
                         <div class="card info-card sales-card">
-                            @if (auth()->user()->role === 'admin')
-                                <button class="card-body btn btn-light animate-card"
-                                    style="border: none; padding: 0; text-align: left;"
-                                    onclick="window.location.href='{{ route('ppk.index2') }}'">
-                                    <div class="d-flex align-items-center">
-                                        <div class="card-icon">
-                                            <i class="bi bi-bar-chart-fill"></i>
-                                        </div>
-                                        <div class="ps-3">
-                                            <h6>Proses Peningkatan <br>Kinerja (PPK)</h6>
-                                        </div>
+                            <button class="card-body btn btn-light animate-card"
+                                style="border: none; padding: 0; text-align: left;"
+                                onclick="window.location.href='{{ route('ppk.index') }}'">
+                                <div class="d-flex align-items-center">
+                                    <div class="card-icon">
+                                        <i class="bi bi-bar-chart-fill"></i>
                                     </div>
-                                </button>
-                            @else
-                                <button class="card-body btn btn-light animate-card"
-                                    style="border: none; padding: 0; text-align: left;"
-                                    onclick="window.location.href='{{ route('ppk.index') }}'">
-                                    <div class="d-flex align-items-center">
-                                        <div class="card-icon">
-                                            <i class="bi bi-bar-chart-fill"></i>
-                                        </div>
-                                        <div class="ps-3">
-                                            <h6>Proses Peningkatan <br>Kinerja (PPK)</h6>
-                                        </div>
+                                    <div class="ps-3">
+                                        <h6>Proses Peningkatan <br>Kinerja (PPK)</h6>
                                     </div>
-                                </button>
-                            @endif
+                                </div>
+                            </button>
                         </div>
                     </div>
                     <!-- End PPK Card -->
@@ -223,9 +208,9 @@
                     </thead>
                     <tbody>
                         ${data.map((resiko, index) => `<tr>
-                                                                            <td>${index + 1}</td>
-                                                                            <td>${resiko.nama_resiko}</td>
-                                                                            </tr>`
+                                                                                            <td>${index + 1}</td>
+                                                                                            <td>${resiko.nama_resiko}</td>
+                                                                                            </tr>`
                         ).join('')}
                     </tbody>
                 </table>

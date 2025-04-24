@@ -306,30 +306,12 @@
                                 @endphp
 
                                 @foreach ($ccEmails as $cc)
-                                    @php
-                                        // Tentukan apakah email cc ada dalam daftar user->email
-                                        $isEmailValid = $users->contains('email', $cc); // Cek apakah cc ada di user email
-                                    @endphp
-
                                     @if ($cc)
                                         <div class="cc-email-row mb-2">
                                             <div class="input-group">
-                                                @if ($isEmailValid)
-                                                    <!-- Jika email ada di user->email, tampilkan dropdown -->
-                                                    <select name="cc_email[]" class="form-select">
-                                                        <option value="">Pilih Email</option> <!-- Opsi default -->
-                                                        @foreach ($users as $user)
-                                                            <option value="{{ $user->email }}"
-                                                                {{ $user->email == $cc ? 'selected' : '' }}>
-                                                                {{ $user->email }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                @else
-                                                    <!-- Jika email tidak ada di user->email, tampilkan text input -->
-                                                    <input type="email" name="cc_email[]" value="{{ $cc }}"
-                                                        class="form-control" placeholder="Masukkan email CC">
-                                                @endif
+                                                <!-- Jika email tidak ada di user->email, tampilkan text input -->
+                                                <input type="email" name="cc_email[]" value="{{ $cc }}"
+                                                    class="form-control" placeholder="Masukkan email CC">
                                                 <button type="button" class="btn btn-outline-danger remove-cc-email ms-2"
                                                     aria-label="Remove CC">-
                                                 </button>
@@ -357,25 +339,22 @@
                                     @endforeach
                                 </select>
                             </div>
-
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <a href="javascript:history.back()" class="btn btn-secondary">Kembali</a>
                                 <button type="submit" class="btn btn-primary">Update <i
                                         class="ri-save-3-fill"></i></button>
                             </div>
 
-                        </div>
+                            <script>
+                                // Add CC Email functionality
+                                document.querySelector('.add-cc-email').addEventListener('click', function() {
+                                    const container = document.getElementById('cc-email-container');
 
-                        <script>
-                            // Add CC Email functionality
-                            document.querySelector('.add-cc-email').addEventListener('click', function() {
-                                const container = document.getElementById('cc-email-container');
-
-                                // Prevent adding more than 5 CC emails
-                                if (container.querySelectorAll('.input-group').length < 10) {
-                                    const inputGroup = document.createElement('div');
-                                    inputGroup.className = 'cc-email-row mb-2';
-                                    inputGroup.innerHTML = `
+                                    // Prevent adding more than 5 CC emails
+                                    if (container.querySelectorAll('.input-group').length < 10) {
+                                        const inputGroup = document.createElement('div');
+                                        inputGroup.className = 'cc-email-row mb-2';
+                                        inputGroup.innerHTML = `
                 <div class="form-check mb-1">
                     <input type="checkbox" class="form-check-input cc-toggle-checkbox">
                     <label class="form-check-label">Input Manual</label>
@@ -393,41 +372,41 @@
                                             </button>
                                             </div>
                                 `;
-                                    container.appendChild(inputGroup);
+                                        container.appendChild(inputGroup);
 
-                                    // Add event listener to the remove button
-                                    inputGroup.querySelector('.remove-cc-email').addEventListener('click', function() {
-                                        container.removeChild(inputGroup);
-                                    });
-                                } else {
-                                    alert('You can add a maximum of 10 CC emails.');
-                                }
-                            });
-                            document.addEventListener("DOMContentLoaded", function() {
-                                $(document).on('change', '.cc-toggle-checkbox', function() {
-                                    var rowContainer = $(this).closest('.cc-email-row');
-                                    if ($(this).is(':checked')) {
-                                        // Jika dicentang, tampilkan input email dan hapus name dari select
-                                        rowContainer.find('.cc-email-select').hide().removeAttr('name');
-                                        rowContainer.find('.cc-email-input').show().attr('name', 'cc_email[]');
+                                        // Add event listener to the remove button
+                                        inputGroup.querySelector('.remove-cc-email').addEventListener('click', function() {
+                                            container.removeChild(inputGroup);
+                                        });
                                     } else {
-                                        // Jika tidak dicentang, tampilkan select dan hapus name dari input email
-                                        rowContainer.find('.cc-email-select').show().attr('name', 'cc_email[]');
-                                        rowContainer.find('.cc-email-input').hide().removeAttr('name');
+                                        alert('You can add a maximum of 10 CC emails.');
                                     }
                                 });
-                            });
-                            // Attach event listener to existing remove buttons (for CC emails pre-loaded into the form)
-                            document.querySelectorAll('.remove-cc-email').forEach(function(button) {
-                                button.addEventListener('click', function() {
-                                    // Pilih elemen terdekat dengan tombol yang diklik (input-group)
-                                    const rowContainer = button.closest('.cc-email-row');
-
-                                    // Hapus baris .cc-email-row yang sesuai dengan tombol yang diklik
-                                    rowContainer.remove();
+                                document.addEventListener("DOMContentLoaded", function() {
+                                    $(document).on('change', '.cc-toggle-checkbox', function() {
+                                        var rowContainer = $(this).closest('.cc-email-row');
+                                        if ($(this).is(':checked')) {
+                                            // Jika dicentang, tampilkan input email dan hapus name dari select
+                                            rowContainer.find('.cc-email-select').hide().removeAttr('name');
+                                            rowContainer.find('.cc-email-input').show().attr('name', 'cc_email[]');
+                                        } else {
+                                            // Jika tidak dicentang, tampilkan select dan hapus name dari input email
+                                            rowContainer.find('.cc-email-select').show().attr('name', 'cc_email[]');
+                                            rowContainer.find('.cc-email-input').hide().removeAttr('name');
+                                        }
+                                    });
                                 });
-                            });
-                        </script>
+                                // Attach event listener to existing remove buttons (for CC emails pre-loaded into the form)
+                                document.querySelectorAll('.remove-cc-email').forEach(function(button) {
+                                    button.addEventListener('click', function() {
+                                        // Pilih elemen terdekat dengan tombol yang diklik (input-group)
+                                        const rowContainer = button.closest('.cc-email-row');
+
+                                        // Hapus baris .cc-email-row yang sesuai dengan tombol yang diklik
+                                        rowContainer.remove();
+                                    });
+                                });
+                            </script>
                     </form>
                 </div>
             </div>
