@@ -208,9 +208,9 @@
                     </thead>
                     <tbody>
                         ${data.map((resiko, index) => `<tr>
-                                                                                            <td>${index + 1}</td>
-                                                                                            <td>${resiko.nama_resiko}</td>
-                                                                                            </tr>`
+                                                                                                            <td>${index + 1}</td>
+                                                                                                            <td>${resiko.nama_resiko}</td>
+                                                                                                            </tr>`
                         ).join('')}
                     </tbody>
                 </table>
