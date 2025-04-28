@@ -117,16 +117,9 @@
                                                         }
                                                     </style>
                                                     @if (auth()->id() == $ppk->penerima)
-                                                        @if ($ppk->updated_at->diffInDays(now()) >= 1)
-                                                            <span class="text-danger fw-bold"
-                                                                title="Lewat {{ $ppk->updated_at->diffInDays(now()) }} hari">
-                                                                OPEN LEWAT TANGGAL <i class="bi bi-bell"></i>
-                                                            </span>
-                                                        @else
-                                                            <span class="text-warning fw-bold" title="PPK belum dijawab">OPEN <i
-                                                                    class="bi bi-bell"></i>
-                                                            </span>
-                                                        @endif
+                                                        <span class="text-danger fw-bold" title="PPK belum dijawab">Belum Dijawab
+                                                            <i class="bi bi-bell-fill"></i>
+                                                        </span>
                                                     @endif
 
                                                     {{-- <a href="{{ route('ppk.create2', $ppk->id) }}" class="btn btn-warning btn-sm "
@@ -157,7 +150,7 @@
                                                                 </a>
                                                             @else
                                                                 <span class="text-warning fw-bold" title="Menunggu di verifikasi">
-                                                                    OPEN <i class="bi bi-stopwatch-fill"></i>
+                                                                    Menunggu di verifikasi <i class="bi bi-stopwatch"></i>
                                                                 </span>
                                                             @endif
                                                         @endif
@@ -198,8 +191,8 @@
                                         @default
                                             @if ($ppk->formppk2)
                                                 @if (is_null($ppk->formppk2->signaturepenerima))
-                                                    <span class="text-warning fw-bold" title="Menunggu dijawab">
-                                                        OPEN <i class="bi bi-hourglass-split"></i>
+                                                    <span class="text-danger fw-bold" title="Menunggu dijawab">
+                                                        Belum Dijawab <i class="bi bi-hourglass-split"></i>
                                                     </span>
                                                 @else
                                                     {{-- Kondisi untuk Verifikasi --}}
@@ -215,11 +208,17 @@
                                                                 $isExpired = $updated_at->diffInMonths(now()) >= 1;
                                                                 $months = $updated_at->diffInDays(now());
                                                                 $currentMonth = 30 - $months;
+                                                                $daysPassed = $updated_at->diffInDays(now());
                                                             @endphp
-                                                            @if ($ppk->pembuat == auth()->id() && $isExpired)
-                                                                <span class="text-secondary fw-bold"
-                                                                    title="Verifikasi sekarang">Verify now
-                                                                    <i class="bi bi-check-circle"></i></span>
+                                                            @if ($ppk->pembuat == auth()->id() && $isExpired && $daysPassed > 31)
+                                                                <span class="text-danger fw-bold"
+                                                                    title="Lewat {{ $daysPassed - 31 }} hari, Segera Verifikasi">OPEN
+                                                                    (Lewat
+                                                                    Tanggal)
+                                                                    <i class="bi bi-hourglass-split"></i></span>
+                                                            @elseif ($ppk->pembuat == auth()->id() && $isExpired)
+                                                                <span class="text-danger fw-bold" title="Verifikasi sekarang">Verify
+                                                                    now !!!</span>
                                                             @elseif ($ppk->pembuat == auth()->id() && !$isExpired)
                                                                 <span class="text-secondary fw-bold"
                                                                     title="Belum saatnya verifikasi">Verify in {{ $currentMonth }}d
@@ -250,9 +249,6 @@
                             <!-- Kolom Action Edit -->
                             <td style="text-align: center;">
                                 @if ($ppk->statusppk == 'CLOSE (Tidak Efektif)')
-                                    <span class="text-muted fw-bold">
-                                        CLOSE (Tidak Efektif) <i class="bi bi-slash-circle"></i>
-                                    </span>
                                 @else
                                     @if ($ppk->statusppk != 'CANCEL')
                                         @if ($ppk->statusppk != 'CLOSE')
@@ -319,10 +315,6 @@
                                                 @endif
                                             @endif
                                         @endif
-                                    @else
-                                        <span class="text-danger fw-bold">
-                                            CANCEL <i class="bi bi-x-circle"></i>
-                                        </span>
                                     @endif
                                 @endif
                             </td>

@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/ppk/accept/{id}', [PpkController::class, 'accept'])->name('ppk.accept');
     Route::get('/adminppk', [PpkController::class, 'index2'])->name('ppk.index2');
     Route::delete('/admin/ppk/{id}', [PpkController::class, 'destroy'])->name('ppk.destroy');
+    Route::patch('/admin/ppk/{id}', [PpkController::class, 'updateStatus'])->name('ppk.updatestatus');
     // });
     // STATUS PPK
     Route::get('statusppk', [StatusPpkController::class, 'index'])->name('admin.statusppk');

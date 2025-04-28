@@ -81,7 +81,7 @@ class PpkController extends Controller
 
         $statusPpkList = StatusPpk::all();
 
-        // dd(request()->all());
+        // dd($statusPpkList->pluck('nama_statusppk'));
 
         // Query data PPK berdasarkan filter
         $ppks = Ppk::query()
@@ -1248,6 +1248,15 @@ class PpkController extends Controller
         }
 
         return view('pdf.ppk', $data);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $ppk = Ppk::findOrFail($id);
+        $ppk->statusppk = $request->status;
+        $ppk->save();
+
+        return back()->with('success', 'Status berhasil diupdate.');
     }
 
 

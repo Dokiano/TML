@@ -2,8 +2,8 @@
 
 @section('content')
     <!-- Pastikan Bootstrap Icons sudah terpasang. Jika belum, tambahkan link berikut di head layout utama:
-                                                                                                                                                                                                                                                                                                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-                                                                                                                                                                                                                                                                                                    -->
+                                                                                                                                                                                                                                                                                                                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+                                                                                                                                                                                                                                                                                                                -->
 
     <body>
         <div class="card shadow-lg border-0">
@@ -320,19 +320,20 @@
                         </div>
                     </div>
 
-                    {{-- 
-                    <div class="mb-3">
-                        <label for="statusppk" class="form-label fw-bold">Status PPK</label>
-                        <select name="statusppk" class="form-select">
-                            <option value="">--Pilih Status--</option>
-                            @foreach ($status as $s)
-                                <option value="{{ $s->nama_statusppk }}" {{ old('statusppk') == $s->nama_statusppk ? 'selected' : '' }}>
-                                    {{ $s->nama_statusppk }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="d-none">
+                        <div class="mb-3">
+                            <label for="statusppk" class="form-label fw-bold">Status PPK</label>
+                            <select name="statusppk" class="form-select">
+                                <option value="">--Pilih Status--</option>
+                                @foreach ($status as $s)
+                                    <option value="{{ $s->nama_statusppk }}"
+                                        {{ old('statusppk') == $s->nama_statusppk ? 'selected' : '' }}>
+                                        {{ $s->nama_statusppk }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                    --}}
 
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <a href="{{ route('ppk.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i>

@@ -137,7 +137,33 @@
                                                 ...
                                             @endif
                                         </td>
-                                        <td>{{ $ppk->statusppk }}</td>
+                                        <td>
+                                            @if (auth()->user()->role === 'admin')
+                                                <div class="dropdown">
+                                                    <button class="btn btn-secondary dropdown-toggle" type="button"
+                                                        data-bs-toggle="dropdown" aria-expanded="false"
+                                                        style="font-size: 10px;">
+                                                        {{ $ppk->statusppk }}
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @foreach ($statusPpkList as $statusItem)
+                                                            <li>
+                                                                <form action="{{ route('ppk.updatestatus', $ppk->id) }}"
+                                                                    method="POST">
+                                                                    @csrf
+                                                                    @method('PATCH')
+                                                                    <button class="dropdown-item" type="submit"
+                                                                        name="status" style="font-size: 10px;"
+                                                                        value="{{ $statusItem->nama_statusppk }}">{{ $statusItem->nama_statusppk }}</button>
+                                                                </form>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            @else
+                                                {{ $ppk->statusppk }}
+                                            @endif
+                                        </td>
                                         <td>{{ $ppk->formppk2->updated_at ? \Carbon\Carbon::parse($ppk->formppk2->updated_at)->addMonth()->format('d / m / Y') : 'Form Identifikasi belum diisi' }}
                                         </td>
                                         <td>{{ $ppk->divisipembuat }}</td>
@@ -228,7 +254,8 @@
                                                     class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" title="Hapus PPK" class="btn btn-danger btn-sm"
+                                                    <button type="submit" title="Hapus PPK"
+                                                        class="btn btn-danger btn-sm"
                                                         onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                                                         <i class="ri ri-delete-bin-fill"></i>
                                                     </button>
@@ -400,6 +427,23 @@
                                             <option value="{{ $statusItem->nama_statusppk }}"
                                                 {{ request('status') == $statusItem->nama_statusppk ? 'selected' : '' }}>
                                                 {{ $statusItem->nama_statusppk }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <?php
+                                    $jenis = ['SISTEM', 'PROSES', 'PRODUK', 'AUDIT'];
+                                    ?>
+                                    <label for="jenis" class="form-label"><strong>Jenis
+                                            Ketidaksesuaian</strong></label>
+                                    <select id="jenis" name="jenis" class="form-select">
+                                        <option value="">Pilih Status</option>
+                                        @foreach ($jenis as $jeniss)
+                                            <option value="{{ $jeniss }}"
+                                                {{ request('jenis') == $jeniss ? 'selected' : '' }}>
+                                                {{ $jeniss }}
                                             </option>
                                         @endforeach
                                     </select>
