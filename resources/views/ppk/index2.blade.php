@@ -94,8 +94,8 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div style="overflow-x: auto;">
-                    <div class="table-wrapper">
+                <div style="overflow-x: auto; overflow-y: auto;">
+                    <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
                         <table class="table table-striped" style="width: 300%; font-size: 10px;">
                             <thead>
                                 <tr>
@@ -140,8 +140,9 @@
                                         <td>
                                             @if (auth()->user()->role === 'admin')
                                                 <div class="dropdown">
-                                                    <button class="btn btn-secondary dropdown-toggle" type="button"
-                                                        data-bs-toggle="dropdown" aria-expanded="false"
+                                                    <button
+                                                        class="btn {{ $ppk->statusppk == 'CANCEL' || $ppk->statusppk == 'IDENTIFIKASI ULANG' || $ppk->statusppk == 'CLOSE (Tidak Efektif)' ? 'btn-danger' : ($ppk->statusppk == 'CLOSE' ? 'btn-success' : 'btn-secondary') }} dropdown-toggle"
+                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
                                                         style="font-size: 10px;">
                                                         {{ $ppk->statusppk }}
                                                     </button>

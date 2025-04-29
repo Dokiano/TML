@@ -78,6 +78,7 @@ class PpkController extends Controller
         $status = $request->input('status');
         $divisiPenerima = $request->input('divisi_penerima');
         $divisiPengirim = $request->input('divisi_pengirim');
+        $jenis = $request->input('jenis');
 
         $statusPpkList = StatusPpk::all();
 
@@ -96,6 +97,7 @@ class PpkController extends Controller
             })
             ->when($keyword, fn($query) => $query->where('nomor_surat', 'like', "%$keyword%"))
             ->when($status, fn($query) => $query->where('statusppk', $status))
+            ->when($jenis, fn($query) => $query->where('jenisketidaksesuaian', 'like' , "%$jenis%"))
             ->when($divisiPenerima, fn($query) => $query->where('divisipenerima', '=', $divisiPenerima))
             ->when($divisiPengirim, fn($query) => $query->where('divisipembuat', '=', $divisiPengirim))
             ->get();
@@ -265,16 +267,17 @@ class PpkController extends Controller
             $data_email = [
                 'subject' => "Penerbitan No PPK {$nomorSurat}",
                 'sender_name' => "{$request->emailpembuat}, {$request->divisipembuat}",
+                'senderView' => "$pembuatUser->nama_user, {$request->divisipembuat}",
                 'paragraf1' => "Dear {$penerimaUser->nama_user}, {$request->divisipenerima}", // Menggunakan nama_user dari model User
                 'paragraf2' => "Berikut Terlampir PPK",
                 'paragraf3' => $nomorSurat,
                 'paragraf4' => $request->judul,
-                'paragraf5' => "yang diajukan oleh {$pembuatUser->nama_user}",
+                'paragraf5' => "yang diajukan oleh",
                 'paragraf7' => "Untuk menambahkan Evidence dan update progress silahkan klik link di bawah ini",
                 'paragraf8' => route('ppk.index'),
             ];
 
-            Mail::to($request->emailpenerima)->cc($request->cc_email)->send(new kirimemail($data_email));
+            Mail::to($request->emailpenerima)->cc(array_merge($request->cc_email, [$request->emailpembuat]))->send(new kirimemail($data_email));
 
             DB::commit();
             return redirect()->route('ppk.index')->with('success', 'Data PPK berhasil disimpan.✅');

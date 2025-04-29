@@ -3,9 +3,9 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
 class KirimEmail extends Mailable
 {
@@ -29,15 +29,14 @@ class KirimEmail extends Mailable
      * @return $this
      */
     public function build()
-{
-    // Memecah sender_name untuk email
-    $fromDetails = explode(',', $this->data_email['sender_name']);
-    $fromEmail = $fromDetails[0] ?? config('mail.from.address'); // Ambil email
+    {
+        // Memecah sender_name untuk email
+        $fromDetails = explode(',', $this->data_email['sender_name']);
+        $fromEmail = $fromDetails[0] ?? config('mail.from.address'); // Ambil email
 
-    return $this
-        ->from(trim($fromEmail)) // Menentukan pengirim email tanpa nama
-        ->subject($this->data_email['subject']) // Subjek email
-        ->view('mail.kirimemail', ['data' => $this->data_email]); // View untuk email
-}
-
+        return $this
+            ->from(trim($fromEmail)) // Menentukan pengirim email tanpa nama
+            ->subject($this->data_email['subject']) // Subjek email
+            ->view('mail.kirimemail', ['data' => $this->data_email]); // View untuk email
+    }
 }
