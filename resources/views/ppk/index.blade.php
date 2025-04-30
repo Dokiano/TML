@@ -3,6 +3,60 @@
 @section('content')
     <div class="container">
 
+        {{-- Kirim email verifikasi 30 hari --}}
+        @foreach ($ppk as $item)
+            @php
+                $nomor_surat = $item->nomor_surat;
+                $pembuatUser = App\Models\User::find($item->pembuat);
+                $penerimaUser = App\Models\User::find($item->penerima);
+
+                $updated_at = \Carbon\Carbon::parse($item->formppk2->updated_at);
+                $isExpired = $updated_at->diffInMonths(now()) >= 1;
+                $months = $updated_at->diffInDays(now());
+                $currentMonth = 30 - $months;
+                $daysPassed = $updated_at->diffInDays(now());
+
+                // Cek apakah email sudah dikirim (menggunakan status di database)
+                $emailSent = $item->emailverifikasi;
+
+                // Perbaiki deklarasi array dengan tanda '=>'
+                $data_email = [
+                    'judul' => 'Verifikasi PPK',
+                    'sender_name' => "{$item->pembuatUser->email}, {$item->divisipembuat}",
+                    'subject' => "Segera verifikasi PPK No. {$nomor_surat}",
+                    'senderView' => "$penerimaUser->nama_user, {$item->divisipenerima}",
+                    'paragraf1' => "Dear {$pembuatUser->nama_user}, {$item->divisipembuat}", // Menggunakan nama_user dari model User
+                    'paragraf2' => 'Segera lakukan verifikasi PPK dengan nomor surat :',
+                    'paragraf3' => $nomor_surat,
+                    'paragraf4' => $item->formppk2->identifikasi,
+                    'paragraf5' => 'yang telah diidentifikasi oleh :',
+                    'paragraf7' => 'Untuk menambahkan Evidence dan update progress silahkan klik link di bawah ini',
+                ];
+            @endphp
+            @php
+                $statusInvalid = in_array($item->statusppk, ['CANCEL', 'IDENTIFIKASI ULANG', 'CLOSE (Tidak Efektif)']);
+                $form2 = $item->formppk2 ?? null;
+                $signaturePenerima = $form2?->signaturepenerima;
+                $form3 = $item->formppk3 ?? null;
+                $form2Valid =
+                    !empty($form2?->pencegahan) && !empty($form2?->penanggulangan) && !empty($form2?->identifikasi);
+            @endphp
+
+            @if (!$statusInvalid && $signaturePenerima && is_null($form3?->verifikasi) && $form2Valid && $isExpired && !$emailSent)
+                @php
+                    // Kirim email jika expired dan email belum dikirim
+                    Mail::to($item->emailpembuat)
+                        ->cc(array_merge((array) $item->cc_email, [$item->emailpenerima]))
+                        ->send(new \App\Mail\KirimEmail($data_email));
+
+                    // Update status email sudah terkirim di database
+                    $item->emailverifikasi = true;
+                    $item->save();
+                @endphp
+            @endif
+        @endforeach
+        {{-- End Kirim email verifikasi --}}
+
         @if ($ppks->isEmpty())
             <div class="alert alert-warning">Tidak ada data yang tersedia.</div>
             <div class="d-flex justify-content-between align-items-center mt-3">

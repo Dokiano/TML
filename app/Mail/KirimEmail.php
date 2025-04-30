@@ -32,10 +32,11 @@ class KirimEmail extends Mailable
     {
         // Memecah sender_name untuk email
         $fromDetails = explode(',', $this->data_email['sender_name']);
+        $judul = $this->data_email['judul'] ?? 'Identifikasi PPK'; // Ambil nama pengirim
         $fromEmail = $fromDetails[0] ?? config('mail.from.address'); // Ambil email
 
         return $this
-            ->from(trim($fromEmail)) // Menentukan pengirim email tanpa nama
+            ->from('ppktatametal@gmail.com', $judul)  // Menentukan pengirim email tanpa nama
             ->subject($this->data_email['subject']) // Subjek email
             ->view('mail.kirimemail', ['data' => $this->data_email]); // View untuk email
     }

@@ -33,6 +33,8 @@ class PpkController extends Controller
         $keyword = $request->input('keyword');
         $verifiedStatus = $request->input('status');
 
+        $ppk = Ppk::with(['formppk2', 'formppk3', 'pembuatUser', 'penerimaUser'])->get();
+
         // Query PPK dengan filter
         $ppks = Ppk::where(function ($query) use ($userId) {
             $query->where('pembuat', $userId)
@@ -64,7 +66,7 @@ class PpkController extends Controller
 
             ->with(['formppk2', 'formppk3', 'pembuatUser', 'penerimaUser'])
             ->get();
-        return view('ppk.index', compact('ppks'));
+        return view('ppk.index', compact('ppks', 'ppk'));
     }
 
     public function index2(Request $request)
@@ -265,6 +267,7 @@ class PpkController extends Controller
             }
             // Kirim Email
             $data_email = [
+                'judul' => "Identifikasi PPK",
                 'subject' => "Penerbitan No PPK {$nomorSurat}",
                 'sender_name' => "{$request->emailpembuat}, {$request->divisipembuat}",
                 'senderView' => "$pembuatUser->nama_user, {$request->divisipembuat}",
@@ -560,7 +563,7 @@ class PpkController extends Controller
                 ];
 
                 $penerima = Ppk::find($request->id_formppk)->emailpenerima;
-                Mail::to($penerima)->send(new KirimEmail2($data_email));
+                // Mail::to($penerima)->send(new KirimEmail2($data_email));
             }
 
             return redirect()->route('ppk.index')->with('success', 'Data berhasil diperbarui.✅');
@@ -775,7 +778,7 @@ class PpkController extends Controller
                 $pembuat = Ppk::find($ppk->id_formppk)->emailpembuat;
 
                 if ($pembuat) {
-                    Mail::to($pembuat)->later(now()->addMinute(), new KirimEmail2($data_email));
+                    // Mail::to($pembuat)->later(now()->addMinute(), new KirimEmail2($data_email));
                 }
             }
 
@@ -794,15 +797,17 @@ class PpkController extends Controller
         if ($ppk) {
             // Siapkan data untuk email
             $data_email = [
-                'subject' => "VERIFIKASI",
-                'sender_name' => "", // Bisa disesuaikan dengan nama pengirim
-                'isi' => "Dear PIC Departemen Inisiator, Mohon segera memverifikasi & Close PPK.",
+                'subject' => "Progres PPK {$ppk->nomor_surat}",
+                'header' => "{$ppk->nomor_surat}",
+                'status' => "{$ppk->statusppk}" // Bisa disesuaikan dengan nama pengirim
             ];
 
             // Ambil email penerima dari data PPK
             if ($ppk->emailpembuat) {
                 // Kirim email langsung
-                Mail::to($ppk->emailpembuat)->send(new KirimEmail2($data_email));
+                Mail::to($ppk->emailpembuat)
+                ->cc(array_merge((array) $ppk->cc_email, [$ppk->emailpenerima]))
+                ->send(new KirimEmail2($data_email));
 
                 // Jika berhasil, kembali ke halaman /adminppk
                 return redirect()->route('ppk.index2')->with('success', 'Email berhasil dikirim! ✅');
