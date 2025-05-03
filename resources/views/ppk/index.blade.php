@@ -270,13 +270,25 @@
                                                                     (Lewat
                                                                     Tanggal)
                                                                     <i class="bi bi-hourglass-split"></i></span>
+                                                                <?php
+                                                                $ppk->statusppk = 'OPEN (Lewat Tanggal)';
+                                                                $ppk->save();
+                                                                ?>
                                                             @elseif ($ppk->pembuat == auth()->id() && $isExpired)
                                                                 <span class="text-danger fw-bold" title="Verifikasi sekarang">Verify
                                                                     now !!!</span>
+                                                                <?php
+                                                                $ppk->statusppk = 'OPEN';
+                                                                $ppk->save();
+                                                                ?>
                                                             @elseif ($ppk->pembuat == auth()->id() && !$isExpired)
                                                                 <span class="text-secondary fw-bold"
                                                                     title="Belum saatnya verifikasi">Verify in {{ $currentMonth }}d
                                                                     <i class="bi bi-stopwatch-fill"></i></span>
+                                                                <?php
+                                                                $ppk->statusppk = 'OPEN';
+                                                                $ppk->save();
+                                                                ?>
                                                             @else
                                                                 <span class="text-warning fw-bold">
                                                                     OPEN <i class="bi bi-hourglass-split"></i>

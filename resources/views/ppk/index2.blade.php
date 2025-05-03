@@ -139,10 +139,28 @@
                                         </td>
                                         <td>
                                             @if (auth()->user()->role === 'admin')
+                                                @php
+                                                    $status = $ppk->statusppk;
+                                                    if (
+                                                        in_array($status, [
+                                                            'CANCEL',
+                                                            'IDENTIFIKASI ULANG',
+                                                            'CLOSE (Tidak Efektif)',
+                                                            'OPEN (Lewat Tanggal)',
+                                                        ])
+                                                    ) {
+                                                        $btnClass = 'btn-danger';
+                                                    } elseif ($status === 'CLOSE') {
+                                                        $btnClass = 'btn-success';
+                                                    } elseif ($status === 'BELUM DIJAWAB') {
+                                                        $btnClass = 'btn-warning';
+                                                    } else {
+                                                        $btnClass = 'btn-secondary';
+                                                    }
+                                                @endphp
                                                 <div class="dropdown">
-                                                    <button
-                                                        class="btn {{ $ppk->statusppk == 'CANCEL' || $ppk->statusppk == 'IDENTIFIKASI ULANG' || $ppk->statusppk == 'CLOSE (Tidak Efektif)' ? 'btn-danger' : ($ppk->statusppk == 'CLOSE' ? 'btn-success' : 'btn-secondary') }} dropdown-toggle"
-                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                                                    <button class="btn {{ $btnClass }} dropdown-toggle" type="button"
+                                                        data-bs-toggle="dropdown" aria-expanded="false"
                                                         style="font-size: 10px;">
                                                         {{ $ppk->statusppk }}
                                                     </button>
