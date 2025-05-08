@@ -76,6 +76,16 @@ Route::middleware('auth')->group(function () {
     });
     Route::get('/riskregister', [RiskController::class, 'index'])->name('riskregister.index');
     Route::get('/riskregister/{id}', [RiskController::class, 'tablerisk'])->name('riskregister.tablerisk');
+    Route::patch('/editresk/inex/{id}', [RiskController::class, 'updateData'])->name('riskregister.updateData');
+	Route::patch('/riskregister/update-issue/{id}', [RiskController::class, 'updateIssue'])->name('riskregister.updateissue');
+	Route::patch('/riskregister/update-resiko/{id}', [RiskController::class, 'updateResiko'])->name('riskregister.updateresiko');
+	Route::patch('/riskregister/update-peluang/{id}', [RiskController::class, 'updatePeluang'])->name('riskregister.updatepeluang');
+	Route::patch('/riskregister/update-before/{id}', [RiskController::class, 'updateBefore'])->name('riskregister.updatebefore');
+	Route::patch('/riskregister/update-after/{id}', [RiskController::class, 'updateAfter'])->name('riskregister.updateafter');
+	Route::patch('/riskregister/update-date/{id}', [RiskController::class, 'updateDate'])->name('riskregister.updatedate');
+	Route::patch('/riskregister/update-pihak/{id}', [RiskController::class, 'updatePihak'])->name('riskregister.updatepihak');
+
+
 
 
     // Resiko

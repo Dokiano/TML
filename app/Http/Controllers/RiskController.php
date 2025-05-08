@@ -200,6 +200,7 @@ class RiskController extends Controller
             ? explode(",", $riskregister->pihak)
             : [];
 
+
         // Ambil target PIC berdasarkan targetpicId
         $targetpicId = $riskregister->targetpic;
         $users = User::orderBy("nama_user", "asc")->get();
@@ -925,7 +926,7 @@ class RiskController extends Controller
 
     public function exportFilteredExcel(Request $request)
     {
-        $layout = $request->query('layout', 'layout_b'); 
+        $layout = $request->query('layout', 'layout_b');
         $formattedData = $this->getFilteredData($request);
         if ($layout === 'layout_a') {
             return Excel::download(new RiskOpportunityExport($formattedData), 'Risk_Opportunity_Report.xlsx');
@@ -1174,5 +1175,87 @@ class RiskController extends Controller
         return redirect()
             ->route("riskregister.biglist")
             ->with("success", "Data berhasil dihapus!. ✅");
+    }
+
+    public function updateData(Request $request, $id)
+    {
+        $update = Riskregister::findOrFail($id);
+        $update->inex = $request->inex;
+        $update->save();
+        return back()->with('success', 'Inex berhasil diupdate.');
+    }
+
+    // PpkController.php
+    public function updateIssue(Request $request, $id)
+    {
+        $risk = Riskregister::findOrFail($id);
+        $risk->issue = $request->issue;
+        $risk->save();
+        return back()->with('success', 'Issue berhasil diupdate.');
+    }
+
+    public function updateResiko(Request $request, $id)
+    {
+        $resiko = Resiko::where('id_riskregister', $id)->first();
+        $resiko->nama_resiko = $request->resiko;
+        $resiko->save();
+        return back()->with('success', 'Resiko berhasil diupdate.');
+    }
+    
+    public function updatePeluang(Request $request, $id)
+    {
+        $peluang = Riskregister::findOrFail($id);
+        $peluang->peluang = $request->peluang;
+        $peluang->save();
+        return back()->with('success', 'Peluang berhasil diupdate.');
+    }
+    
+    public function updateBefore(Request $request, $id)
+    {
+        $before = Resiko::where('id_riskregister', $id)->first();
+        $before->before = $request->before;
+        $before->save();
+        return back()->with('success', 'Before berhasil diupdate.');
+    }
+
+    public function updateAfter(Request $request, $id)
+    {
+        $after = Resiko::where('id_riskregister', $id)->first();
+        $after->after = $request->after;
+        $after->save();
+        return back()->with('success', 'After berhasil diupdate.');
+    }
+
+    public function updateDate(Request $request, $id)
+    {
+        $Date = Riskregister::findOrFail($id);
+        $Date->target_penyelesaian = $request->target_penyelesaian;
+        $Date->save();
+        return back()->with('success', 'Date berhasil diupdate.');
+    }
+
+    public function updatePihak(Request $request, $id)
+    {
+        // Validasi input
+        $data = $request->validate([
+            'pihak'       => 'nullable|array',
+            'pihak.*'     => 'string',
+            'pihak_other' => 'nullable|string',
+        ]);
+
+        // Ambil array pilihan pihak
+        $pilihan = $data['pihak'] ?? [];
+
+        // Jika ada input Other, tambahkan ke array
+        if (!empty($data['pihak_other'])) {
+            $pilihan[] = $data['pihak_other'];
+        }
+
+        // Temukan record dan update kolom 'pihak' sebagai string CSV
+        $risk = Riskregister::findOrFail($id);
+        $risk->pihak = implode(',', $pilihan);
+        $risk->save();
+
+        return back()->with('success', 'Pihak berkepentingan berhasil diupdate.');
     }
 }

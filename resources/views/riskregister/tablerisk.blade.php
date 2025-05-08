@@ -252,22 +252,332 @@
                                     <tr>
                                         <td>{{ $no++ }}
                                         </td>
-                                        <td>{{ $form->issue }}</td>
-                                        <td>{{ $form->inex }}</td>
-                                        <td>{{ $form->pihak }}</td>
+                                        <td>
+                                            <form method="POST"
+                                                action="{{ route('riskregister.updateissue', $form->id) }}"
+                                                class="d-flex flex-column">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                {{-- 1. Checkbox Edit --}}
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="editIssue-{{ $form->id }}"
+                                                        onchange="toggleIssue({{ $form->id }})">
+                                                    <label class="form-check-label text-danger"
+                                                        for="editIssue-{{ $form->id }}">
+                                                        Edit
+                                                    </label>
+                                                </div>
+
+                                                {{-- 2. Teks statis --}}
+                                                <span id="issue-text-{{ $form->id }}">
+                                                    {{ $form->issue }}
+                                                </span>
+
+                                                {{-- 3. Textarea hidden lewat d-none --}}
+                                                <textarea name="issue" id="issue-input-{{ $form->id }}" class="form-control form-control-sm mt-2 d-none"
+                                                    style="overflow:hidden; resize:none;" oninput="autoResize(this)">{{ $form->issue }}</textarea>
+
+                                                {{-- 4. Tombol Save juga hidden --}}
+                                                <button type="submit" id="save-btn-{{ $form->id }}"
+                                                    class="btn btn-primary btn-sm mt-2 d-none">
+                                                    Save
+                                                </button>
+                                            </form>
+                                            <script>
+                                                function autoResize(el) {
+                                                    el.style.height = 'auto';
+                                                    el.style.height = el.scrollHeight + 'px';
+                                                }
+
+                                                function toggleIssue(id) {
+                                                    const cb = document.getElementById('editIssue-' + id);
+                                                    const span = document.getElementById('issue-text-' + id);
+                                                    const input = document.getElementById('issue-input-' + id);
+                                                    const button = document.getElementById('save-btn-' + id);
+
+                                                    if (cb.checked) {
+                                                        // hide span, show textarea + button
+                                                        span.classList.add('d-none');
+                                                        input.classList.remove('d-none');
+                                                        button.classList.remove('d-none');
+                                                        autoResize(input);
+                                                    } else {
+                                                        // show span, hide textarea + button
+                                                        span.classList.remove('d-none');
+                                                        input.classList.add('d-none');
+                                                        button.classList.add('d-none');
+                                                    }
+                                                }
+                                            </script>
+                                        </td>
+
+                                        <td>
+                                            <form method="POST"
+                                                action="{{ route('riskregister.updateData', $form->id) }}">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <select name="inex" class="form-select form-select-sm"
+                                                    onchange="this.form.submit()"
+                                                    style="font-size: 10px; width: auto; display: inline-block;">
+                                                    <option value="I" {{ $form->inex === 'I' ? 'selected' : '' }}>I
+                                                    </option>
+                                                    <option value="E" {{ $form->inex === 'E' ? 'selected' : '' }}>E
+                                                    </option>
+                                                </select>
+                                            </form>
+                                        </td>
+
+                                        <td style="max-width:300px">
+                                            @php
+                                                $selectedDivisi = $form->pihak ? explode(',', $form->pihak) : [];
+                                                $allDivisi = \App\Models\Divisi::all();
+                                            @endphp
+
+                                            <form method="POST"
+                                                action="{{ route('riskregister.updatepihak', $form->id) }}"
+                                                class="d-flex flex-column">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                {{-- 1. Checkbox Edit --}}
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="editpihak-{{ $form->id }}"
+                                                        onchange="togglePihakEdit({{ $form->id }})">
+                                                    <label class="form-check-label text-danger"
+                                                        for="editpihak-{{ $form->id }}">
+                                                        Edit
+                                                    </label>
+                                                </div>
+
+                                                {{-- 2. Tampilan default ketika tidak edit --}}
+                                                <div id="pihak-view-{{ $form->id }}">
+                                                    @foreach ($selectedDivisi as $s)
+                                                        - {{ $s }}<br>
+                                                    @endforeach
+                                                    @if (count($selectedDivisi) === 0)
+                                                        -
+                                                    @endif
+                                                </div>
+
+                                                {{-- 3. Kontainer edit (dropdown + Save), hidden default --}}
+                                                <div id="pihak-edit-{{ $form->id }}" class="d-none">
+                                                    <div class="dropdown mb-2">
+                                                        <button
+                                                            class="btn btn-outline-dark dropdown-toggle text-start text-wrap"
+                                                            type="button" id="dropdownDivisiAkses-{{ $form->id }}"
+                                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                                            style="max-width:3 00px; white-space:normal; word-break:break-word; font-size:13px;">
+                                                            @foreach ($selectedDivisi as $s)
+                                                                - {{ $s }}<br>
+                                                            @endforeach
+                                                            @if (count($selectedDivisi) === 0)
+                                                                -
+                                                            @endif
+                                                        </button>
+                                                        <ul class="dropdown-menu checkbox-group p-2"
+                                                            aria-labelledby="dropdownDivisiAkses-{{ $form->id }}"
+                                                            style=" max-height: 200px; overflow-y: auto;">
+                                                            <li class="form-check mb-2">
+                                                                <input
+                                                                    class="form-check-input select-all-{{ $form->id }}"
+                                                                    type="checkbox" id="select-all-{{ $form->id }}">
+                                                                <label class="form-check-label"
+                                                                    for="select-all-{{ $form->id }}">
+                                                                    Pilih Semua
+                                                                </label>
+                                                            </li>
+
+                                                            @foreach ($allDivisi as $d)
+                                                                <li class="form-check mb-1">
+                                                                    <input
+                                                                        class="form-check-input all-divisi-{{ $form->id }}"
+                                                                        type="checkbox" name="pihak[]"
+                                                                        value="{{ $d->nama_divisi }}"
+                                                                        id="divisi-{{ $form->id }}-{{ $d->id }}"
+                                                                        {{ in_array($d->nama_divisi, $selectedDivisi) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label"
+                                                                        for="divisi-{{ $form->id }}-{{ $d->id }}">
+                                                                        {{ $d->nama_divisi }}
+                                                                    </label>
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+
+                                                    {{-- 4. Tombol Save --}}
+                                                    <button type="submit" id="save-pihak-{{ $form->id }}"
+                                                        class="btn btn-primary btn-sm">
+                                                        Save
+                                                    </button>
+                                                </div>
+                                            </form>
+
+                                            <script>
+                                                function togglePihakEdit(id) {
+                                                    const chk = document.getElementById('editpihak-' + id);
+                                                    const view = document.getElementById('pihak-view-' + id);
+                                                    const edit = document.getElementById('pihak-edit-' + id);
+
+                                                    if (chk.checked) {
+                                                        view.classList.add('d-none');
+                                                        edit.classList.remove('d-none');
+                                                        initPihakDropdown(id);
+                                                    } else {
+                                                        view.classList.remove('d-none');
+                                                        edit.classList.add('d-none');
+                                                    }
+                                                }
+
+                                                function initPihakDropdown(id) {
+                                                    // Inisialisasi "Pilih Semua"
+                                                    const selectAll = document.getElementById('select-all-' + id);
+                                                    const menu = document.getElementById('dropdown-menu-' + id);
+                                                    const items = menu.querySelectorAll('.all-divisi-' + id);
+
+                                                    // toggle semua
+                                                    selectAll.addEventListener('change', function() {
+                                                        items.forEach(cb => cb.checked = this.checked);
+                                                    });
+                                                    // cek manual seleksi
+                                                    items.forEach(cb => {
+                                                        cb.addEventListener('change', function() {
+                                                            const semua = Array.from(items).every(ch => ch.checked);
+                                                            selectAll.checked = semua;
+                                                        });
+                                                    });
+                                                    // inisialisasi awal
+                                                    selectAll.checked = Array.from(items).every(ch => ch.checked);
+                                                }
+                                            </script>
+                                        </td>
+
+
+
 
                                         <!-- Kolom Resiko -->
                                         <td>
-                                            @if ($resikos->isNotEmpty())
-                                                @foreach ($resikos as $resiko)
-                                                    {{ $resiko->nama_resiko }}
-                                                @endforeach
-                                            @else
-                                                None
-                                            @endif
+                                            <form method="POST"
+                                                action="{{ route('riskregister.updateresiko', $form->id) }}">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="editresiko-{{ $form->id }}"
+                                                        onchange="toggleresiko({{ $form->id }})">
+                                                    <label class="form-check-label text-danger"
+                                                        for="editresiko-{{ $form->id }}">
+                                                        Edit
+                                                    </label>
+                                                </div>
+
+                                                <span id="resiko-text-{{ $form->id }}">
+                                                    @if ($resikos->isNotEmpty())
+                                                        @foreach ($resikos as $resiko)
+                                                            {{ $resiko->nama_resiko }}
+                                                        @endforeach
+                                                    @else
+                                                        None
+                                                    @endif
+                                                </span>
+
+                                                <textarea name="resiko" id="resiko-input-{{ $form->id }}" class="form-control form-control-sm mt-2 d-none"
+                                                    style="overflow:hidden; resize:none;" oninput="autoResize(this)">{{ $resiko->nama_resiko }}</textarea>
+
+                                                <button type="submit" id="resiko-save-{{ $form->id }}"
+                                                    class="btn btn-primary btn-sm mt-2 d-none">
+                                                    Save
+                                                </button>
+                                            </form>
+
+                                            <script>
+                                                // Auto‐resize textarea sesuai isi
+                                                function autoResize(el) {
+                                                    el.style.height = 'auto';
+                                                    el.style.height = el.scrollHeight + 'px';
+                                                }
+
+                                                // Toggle edit/view mode untuk Resiko
+                                                function toggleresiko(id) {
+                                                    const cb = document.getElementById('editresiko-' + id);
+                                                    const text = document.getElementById('resiko-text-' + id);
+                                                    const input = document.getElementById('resiko-input-' + id);
+                                                    const button = document.getElementById('resiko-save-' + id);
+
+                                                    if (cb.checked) {
+                                                        text.classList.add('d-none');
+                                                        input.classList.remove('d-none');
+                                                        button.classList.remove('d-none');
+                                                        autoResize(input);
+                                                    } else {
+                                                        text.classList.remove('d-none');
+                                                        input.classList.add('d-none');
+                                                        button.classList.add('d-none');
+                                                    }
+                                                }
+                                            </script>
                                         </td>
 
-                                        <td>{{ $form->peluang ?? '-' }}</td>
+                                        <td>
+                                            <form method="POST"
+                                                action="{{ route('riskregister.updatepeluang', $form->id) }}">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="editpeluang-{{ $form->id }}"
+                                                        onchange="togglepeluang({{ $form->id }})">
+                                                    <label class="form-check-label text-danger"
+                                                        for="editpeluang-{{ $form->id }}">
+                                                        Edit
+                                                    </label>
+                                                </div>
+
+                                                <span id="peluang-text-{{ $form->id }}">
+                                                    {{ $form->peluang ?? '-' }}
+                                                </span>
+
+                                                <textarea name="peluang" id="peluang-input-{{ $form->id }}" class="form-control form-control-sm mt-2 d-none"
+                                                    style="overflow:hidden; resize:none;" oninput="autoResize(this)">{{ $form->peluang }}</textarea>
+
+                                                <button type="submit" id="peluang-save-{{ $form->id }}"
+                                                    class="btn btn-primary btn-sm mt-2 d-none">
+                                                    Save
+                                                </button>
+
+                                                <script>
+                                                    // Auto‐resize textarea sesuai isi
+                                                    function autoResize(el) {
+                                                        el.style.height = 'auto';
+                                                        el.style.height = el.scrollHeight + 'px';
+                                                    }
+
+                                                    // Toggle edit/view mode untuk Peluang
+                                                    function togglepeluang(id) {
+                                                        const cb = document.getElementById('editpeluang-' + id);
+                                                        const text = document.getElementById('peluang-text-' + id);
+                                                        const input = document.getElementById('peluang-input-' + id);
+                                                        const button = document.getElementById('peluang-save-' + id);
+
+                                                        if (cb.checked) {
+                                                            text.classList.add('d-none');
+                                                            input.classList.remove('d-none');
+                                                            button.classList.remove('d-none');
+                                                            autoResize(input);
+                                                        } else {
+                                                            text.classList.remove('d-none');
+                                                            input.classList.add('d-none');
+                                                            button.classList.add('d-none');
+                                                        }
+                                                    }
+                                                </script>
+                                            </form>
+                                        </td>
                                         <td>
                                             @if ($resikos->isNotEmpty())
                                                 @foreach ($resikos as $resiko)
@@ -309,10 +619,7 @@
                                                 <ul>
                                                     @foreach ($data[$form->id] as $tindakan)
                                                         <li>
-                                                            <strong class="d-none">Pihak: {{ $tindakan->pihak }}
-                                                            </strong><!-- Menampilkan pihak sebagai string biasa -->
                                                             <ul>
-                                                                {{-- <li> --}}
                                                                 <a href="{{ route('realisasi.index', $tindakan->id) }}">
                                                                     {{ $tindakan->nama_tindakan }}
                                                                 </a>
@@ -325,9 +632,8 @@
                                                                 </div>
 
                                                                 @if ($tindakan->isClosed)
-                                                                    <span class="badge bg-purple">CLOSE</span>
+                                                                    <span class="badge bg-success">CLOSE</span>
                                                                 @endif
-                                                                {{-- </li> --}}
                                                             </ul>
                                                         </li>
                                                         <hr>
@@ -338,7 +644,56 @@
                                             @endif
                                         </td>
 
-                                        <td>{{ $form->target_penyelesaian }}</td>
+                                        <td>
+                                            <form method="POST"
+                                                action="{{ route('riskregister.updatedate', $form->id) }}">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="editdate-{{ $form->id }}"
+                                                        onchange="toggledate({{ $form->id }})">
+                                                    <label class="form-check-label text-danger"
+                                                        for="editdate-{{ $form->id }}">
+                                                        Edit
+                                                    </label>
+                                                </div>
+
+                                                <span id="date-text-{{ $form->id }}">
+                                                    {{ $form->target_penyelesaian }}
+                                                </span>
+
+                                                <input type="date" name="target_penyelesaian"
+                                                    id="date-input-{{ $form->id }}"
+                                                    class="form-control form-control-sm mt-2 d-none" {{-- Convert format d-m-Y → Y-m-d untuk date input --}}
+                                                    value="{{ \Carbon\Carbon::createFromFormat('d-m-Y', $form->target_penyelesaian)->format('Y-m-d') }}">
+
+                                                <button type="submit" id="date-save-{{ $form->id }}"
+                                                    class="btn btn-primary btn-sm mt-2 d-none">
+                                                    Save
+                                                </button>
+                                            </form>
+
+                                            <script>
+                                                function toggledate(id) {
+                                                    const cb = document.getElementById('editdate-' + id);
+                                                    const text = document.getElementById('date-text-' + id);
+                                                    const input = document.getElementById('date-input-' + id);
+                                                    const button = document.getElementById('date-save-' + id);
+
+                                                    if (cb.checked) {
+                                                        text.classList.add('d-none');
+                                                        input.classList.remove('d-none');
+                                                        button.classList.remove('d-none');
+                                                    } else {
+                                                        text.classList.remove('d-none');
+                                                        input.classList.add('d-none');
+                                                        button.classList.add('d-none');
+                                                    }
+                                                }
+                                            </script>
+                                        </td>
 
                                         <td>
                                             @if ($resikos->isNotEmpty())
@@ -385,22 +740,128 @@
                                         </td>
 
                                         <td>
-                                            @if ($resikos->isNotEmpty())
-                                                @foreach ($resikos as $resiko)
-                                                    {{ $resiko->before }}
-                                                @endforeach
-                                            @else
-                                                None
-                                            @endif
+                                            <form method="POST"
+                                                action="{{ route('riskregister.updatebefore', $form->id) }}">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="editbefore-{{ $form->id }}"
+                                                        onchange="togglebefore({{ $form->id }})">
+                                                    <label class="form-check-label text-danger"
+                                                        for="editbefore-{{ $form->id }}">
+                                                        Edit
+                                                    </label>
+                                                </div>
+
+                                                <span id="before-text-{{ $form->id }}">
+                                                    @if ($resikos->isNotEmpty())
+                                                        @foreach ($resikos as $resiko)
+                                                            {{ $resiko->before }}
+                                                        @endforeach
+                                                    @else
+                                                        None
+                                                    @endif
+                                                </span>
+
+                                                <textarea name="before" id="before-input-{{ $form->id }}" class="form-control form-control-sm mt-2 d-none"
+                                                    style="overflow:hidden; resize:none;" oninput="autoResize(this)">{{ $resiko->before }}</textarea>
+
+                                                <button type="submit" id="before-save-{{ $form->id }}"
+                                                    class="btn btn-primary btn-sm mt-2 d-none">
+                                                    Save
+                                                </button>
+                                            </form>
+
+                                            <script>
+                                                // fungsi auto-resize yang dapat dipakai ulang
+                                                function autoResize(el) {
+                                                    el.style.height = 'auto';
+                                                    el.style.height = el.scrollHeight + 'px';
+                                                }
+
+                                                // toggle view/edit mode untuk kolom "before"
+                                                function togglebefore(id) {
+                                                    const cb = document.getElementById('editbefore-' + id);
+                                                    const text = document.getElementById('before-text-' + id);
+                                                    const input = document.getElementById('before-input-' + id);
+                                                    const button = document.getElementById('before-save-' + id);
+
+                                                    if (cb.checked) {
+                                                        text.classList.add('d-none');
+                                                        input.classList.remove('d-none');
+                                                        button.classList.remove('d-none');
+                                                        autoResize(input);
+                                                    } else {
+                                                        text.classList.remove('d-none');
+                                                        input.classList.add('d-none');
+                                                        button.classList.add('d-none');
+                                                    }
+                                                }
+                                            </script>
                                         </td>
                                         <td>
-                                            @if ($resikos->isNotEmpty())
-                                                @foreach ($resikos as $resiko)
-                                                    {{ $resiko->after }}
-                                                @endforeach
-                                            @else
-                                                None
-                                            @endif
+                                            <form method="POST"
+                                                action="{{ route('riskregister.updateafter', $form->id) }}">
+                                                @csrf
+                                                @method('PATCH')
+
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="editafter-{{ $form->id }}"
+                                                        onchange="toggleafter({{ $form->id }})">
+                                                    <label class="form-check-label text-danger"
+                                                        for="editafter-{{ $form->id }}">
+                                                        Edit
+                                                    </label>
+                                                </div>
+
+                                                <span id="after-text-{{ $form->id }}">
+                                                    @if ($resikos->isNotEmpty())
+                                                        @foreach ($resikos as $resiko)
+                                                            {{ $resiko->after }}
+                                                        @endforeach
+                                                    @else
+                                                        None
+                                                    @endif
+                                                </span>
+
+                                                <textarea name="after" id="after-input-{{ $form->id }}" class="form-control form-control-sm mt-2 d-none"
+                                                    style="overflow:hidden; resize:none;" oninput="autoResize(this)">{{ $resiko->after }}</textarea>
+
+                                                <button type="submit" id="after-save-{{ $form->id }}"
+                                                    class="btn btn-primary btn-sm mt-2 d-none">
+                                                    Save
+                                                </button>
+                                            </form>
+
+                                            <script>
+                                                // fungsi auto-resize yang dapat dipakai ulang
+                                                function autoResize(el) {
+                                                    el.style.height = 'auto';
+                                                    el.style.height = el.scrollHeight + 'px';
+                                                }
+
+                                                // toggle view/edit mode untuk kolom "after"
+                                                function toggleafter(id) {
+                                                    const cb = document.getElementById('editafter-' + id);
+                                                    const text = document.getElementById('after-text-' + id);
+                                                    const input = document.getElementById('after-input-' + id);
+                                                    const button = document.getElementById('after-save-' + id);
+
+                                                    if (cb.checked) {
+                                                        text.classList.add('d-none');
+                                                        input.classList.remove('d-none');
+                                                        button.classList.remove('d-none');
+                                                        autoResize(input);
+                                                    } else {
+                                                        text.classList.remove('d-none');
+                                                        input.classList.add('d-none');
+                                                        button.classList.add('d-none');
+                                                    }
+                                                }
+                                            </script>
                                         </td>
                                         <td>
                                             <div
