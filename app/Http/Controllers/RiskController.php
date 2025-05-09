@@ -513,6 +513,13 @@ class RiskController extends Controller
                         ->where("status", "CLOSE")
                         ->exists();
 
+                    $tindakan->isOnProgress = Realisasi::where(
+                        'id_tindakan',
+                        $tindakan->id
+                    )
+                        ->where('status', 'ON PROGRES')
+                        ->exists();
+
                     $tindakan->tgl_penyelesaian = $tindakan->tgl_penyelesaian
                         ? Carbon::parse($tindakan->tgl_penyelesaian)->format(
                             "d-m-Y"
@@ -531,10 +538,12 @@ class RiskController extends Controller
                 "id_riskregister",
                 $form->id
             )->sum("nilai_akhir");
+
             $jumlahEntry = Realisasi::where(
                 "id_riskregister",
                 $form->id
-            )->count();
+                )->count();
+                // dd($form->id);
             $form->nilai_actual =
                 $jumlahEntry > 0
                 ? round($totalNilaiAkhir / $jumlahEntry, 2)
@@ -1201,7 +1210,7 @@ class RiskController extends Controller
         $resiko->save();
         return back()->with('success', 'Resiko berhasil diupdate.');
     }
-    
+
     public function updatePeluang(Request $request, $id)
     {
         $peluang = Riskregister::findOrFail($id);
@@ -1209,7 +1218,7 @@ class RiskController extends Controller
         $peluang->save();
         return back()->with('success', 'Peluang berhasil diupdate.');
     }
-    
+
     public function updateBefore(Request $request, $id)
     {
         $before = Resiko::where('id_riskregister', $id)->first();

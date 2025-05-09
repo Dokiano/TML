@@ -614,35 +614,193 @@
                                         </td>
 
                                         <!-- Kolom pihak berkepentingan dan tindakan lanjut -->
-                                        <td>
-                                            @if (isset($data[$form->id]))
-                                                <ul>
-                                                    @foreach ($data[$form->id] as $tindakan)
-                                                        <li>
-                                                            <ul>
-                                                                <a href="{{ route('realisasi.index', $tindakan->id) }}">
-                                                                    {{ $tindakan->nama_tindakan }}
-                                                                </a>
-                                                                <div>
-                                                                    <span
-                                                                        class="badge bg-purple">{{ $tindakan->tgl_penyelesaian ?? '-' }}</span>
-                                                                    <span
-                                                                        class="badge bg-purple">{{ $tindakan->user->nama_user ?? '-' }}</span>
+                                        <td style="vertical-align: top;">
 
-                                                                </div>
+                                            @php
+                                                // Data tindakan yang sudah ada
+                                                $tindakanExisting = $data[$form->id] ?? collect();
+                                            @endphp
 
-                                                                @if ($tindakan->isClosed)
+                                            {{-- Checkbox untuk switch mode --}}
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox"
+                                                    id="editTindakan-{{ $form->id }}"
+                                                    onchange="toggleTindakanEdit({{ $form->id }})">
+                                                <label class="form-check-label text-danger"
+                                                    for="editTindakan-{{ $form->id }}">
+                                                    Edit
+                                                </label>
+                                            </div>
+
+                                            {{-- VIEW MODE (tampilan daftar saja) --}}
+                                            <div id="tindakan-view-{{ $form->id }}">
+                                                @if ($tindakanExisting->isNotEmpty())
+                                                    <ul class="list-unstyled">
+                                                        @foreach ($tindakanExisting as $t)
+                                                            <li class="mb-2">
+                                                                <a
+                                                                    href="{{ route('realisasi.index', $t->id) }}">{{ $t->nama_tindakan }}</a><br>
+                                                                <span
+                                                                    class="badge bg-purple">{{ $t->tgl_penyelesaian }}</span>
+                                                                <span
+                                                                    class="badge bg-purple">{{ $t->user->nama_user ?? '-' }}</span>
+                                                                @if ($t->isClosed)
                                                                     <span class="badge bg-success">CLOSE</span>
+                                                                @elseif($t->isOnProgress)
+                                                                    <span class="badge bg-warning">ON PROGRESS</span>
                                                                 @endif
-                                                            </ul>
-                                                        </li>
-                                                        <hr>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                Tidak ada tindakan lanjut
-                                            @endif
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    Tidak ada tindakan lanjut
+                                                @endif
+                                            </div>
+
+                                            {{-- EDIT MODE (form input), hidden default --}}
+                                            <div id="tindakan-edit-{{ $form->id }}" class="d-none">
+                                                <h3 class="card-title">Tindakan Lanjut</h3>
+
+                                                <form method="POST"
+                                                    action="{{ route('realisasi.updateBatch', $form->id) }}">
+                                                    {{-- route custom --}}
+                                                    @csrf
+                                                    @method('PATCH')
+
+                                                    <div id="inputContainer-{{ $form->id }}">
+                                                        @foreach ($tindakanExisting as $t)
+                                                            <div class="action-block mb-3"
+                                                                data-id="{{ $t->id }}">
+                                                                {{-- Tindakan --}}
+                                                                <div class="row mb-2">
+                                                                    <label
+                                                                        class="col-sm-3 col-form-label"><strong>Tindakan</strong></label>
+                                                                    <div class="col-sm-9">
+                                                                        <textarea name="tindakan[{{ $t->id }}]" class="form-control" rows="2" required>{{ old("tindakan.{$t->id}", $t->nama_tindakan) }}</textarea>
+                                                                    </div>
+                                                                </div>
+                                                                {{-- PIC --}}
+                                                                <div class="row mb-2">
+                                                                    <label
+                                                                        class="col-sm-3 col-form-label"><strong>PIC</strong></label>
+                                                                    <div class="col-sm-9">
+                                                                        <select name="targetpic[{{ $t->id }}]"
+                                                                            class="form-select" required>
+                                                                            <option value="">Pilih PIC</option>
+                                                                            @foreach ($users as $user)
+                                                                                <option value="{{ $user->id }}"
+                                                                                    {{ old("targetpic.{$t->id}", $t->targetpic) == $user->id ? 'selected' : '' }}>
+                                                                                    {{ $user->nama_user }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                {{-- Tanggal --}}
+                                                                <div class="row mb-2">
+                                                                    <label class="col-sm-3 col-form-label"><strong>Target
+                                                                            Tgl</strong></label>
+                                                                    <div class="col-sm-9">
+                                                                        <input type="date"
+                                                                            name="tgl_penyelesaian[{{ $t->id }}]"
+                                                                            class="form-control"
+                                                                            value="{{ old("tgl_penyelesaian.{$t->id}", \Carbon\Carbon::createFromFormat('d-m-Y', $t->tgl_penyelesaian)->format('Y-m-d')) }}"
+                                                                            required>
+                                                                    </div>
+                                                                </div>
+                                                                {{-- Hapus --}}
+                                                                <div class="row mb-2">
+                                                                    <div class="col-sm-9 offset-sm-3">
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input"
+                                                                                type="checkbox"
+                                                                                name="hapus[{{ $t->id }}]"
+                                                                                id="hapus_{{ $t->id }}"
+                                                                                value="1">
+                                                                            <label class="form-check-label text-danger"
+                                                                                for="hapus_{{ $t->id }}">
+                                                                                Hapus Tindakan Ini
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <hr>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+
+                                                    {{-- tombol Add More --}}
+                                                    <div class="mb-3">
+                                                        <button type="button" class="btn btn-info btn-sm"
+                                                            onclick="addMoreTindakan({{ $form->id }})">
+                                                            Add More
+                                                        </button>
+                                                    </div>
+
+                                                    {{-- tombol simpan --}}
+                                                    <div class="mt-3 text-end">
+                                                        <button type="submit" class="btn btn-success">
+                                                            Update Semua
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </td>
+
+                                        <script>
+                                            function toggleTindakanEdit(id) {
+                                                const chk = document.getElementById('editTindakan-' + id);
+                                                const view = document.getElementById('tindakan-view-' + id);
+                                                const edt = document.getElementById('tindakan-edit-' + id);
+
+                                                if (chk.checked) {
+                                                    view.classList.add('d-none');
+                                                    edt.classList.remove('d-none');
+                                                } else {
+                                                    view.classList.remove('d-none');
+                                                    edt.classList.add('d-none');
+                                                }
+                                            }
+
+                                            function addMoreTindakan(id) {
+                                                const container = document.getElementById('inputContainer-' + id);
+                                                const index = Date.now(); // unique key
+                                                const html = `
+                                                <div class="action-block mb-3" data-id="new_${index}">
+                                                  <div class="row mb-2">
+                                                    <label class="col-sm-3 col-form-label"><strong>Tindakan</strong></label>
+                                                    <div class="col-sm-9">
+                                                      <textarea name="tindakan_new[${index}]" class="form-control" rows="2" required></textarea>
+                                                    </div>
+                                                  </div>
+                                                  <div class="row mb-2">
+                                                    <label class="col-sm-3 col-form-label"><strong>PIC</strong></label>
+                                                    <div class="col-sm-9">
+                                                      <select name="targetpic_new[${index}]" class="form-select" required>
+                                                        <option value="">Pilih PIC</option>
+                                                        @foreach ($users as $user)
+                                                          <option value="{{ $user->id }}">{{ $user->nama_user }}</option>
+                                                        @endforeach
+                                                      </select>
+                                                    </div>
+                                                  </div>
+                                                  <div class="row mb-2">
+                                                    <label class="col-sm-3 col-form-label"><strong>Target Tgl</strong></label>
+                                                    <div class="col-sm-9">
+                                                      <input type="date" name="tgl_penyelesaian_new[${index}]" class="form-control" required>
+                                                    </div>
+                                                  </div>
+                                                  <div class="text-end">
+                                                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.action-block').remove()">
+                                                      Delete
+                                                    </button>
+                                                  </div>
+                                                  <hr>
+                                                </div>`;
+                                                container.insertAdjacentHTML('beforeend', html);
+                                            }
+                                        </script>
+
 
                                         <td>
                                             <form method="POST"
@@ -697,6 +855,7 @@
 
                                         <td>
                                             @if ($resikos->isNotEmpty())
+                                                {{-- <?= dd($resikos) ?> --}}
                                                 @foreach ($resikos as $resiko)
                                                     <span
                                                         class="badge
@@ -707,6 +866,7 @@
                                                                         bg-success @endif">
                                                         {{ $resiko->status }}<br>
                                                         {{ $form->nilai_actual }}%
+                                                        {{-- <?= dd($form) ?> --}}
                                                     </span>
                                                 @endforeach
                                             @else

@@ -48,9 +48,10 @@
             <div style="margin-top: 25px; border-top: 1px solid #ddd; padding-top: 15px;">
                 <h2 style="font-size: 18px; color: #2c3e50;">PIC: {{ $pic }}</h2>
                 <p style="font-size: 16px; color: #555; margin-top: 8px;">Target Tanggal:
-                    <strong>{{ $deadline }}</strong></p>
+                    <strong>{{ $deadline }}</strong>
+                </p>
                 <label for="nilai_akhir"><strong> Persentase Tindakan Lanjut:
-                        {{ number_format($realisasiList->first()->nilai_akhir ?? 0, 0) }}%</strong></label>
+                        {{ number_format($realisasiList->count() ? $realisasiList->sum('nilai_akhir') / $realisasiList->count() : 0, 0) }}%</strong></label>
 
             </div>
         </div>
@@ -255,34 +256,32 @@
 
 
         <!-- Form untuk Mengupdate Status -->
-        <form action="{{ route('realisasi.update', $realisasiList->first()->id ?? 0) }}" method="POST" class="mt-4">
+        <form action="{{ route('realisasi.updateStatusByTindakan', $realisasiList->first()->id_tindakan ?? 0) }}"
+            method="POST" class="mt-4">
             @csrf
-            @method('PUT')
+            @method('PATCH')
 
             <div class="row">
                 <div class="col-md-4">
-                    <br>
                     <label for="status"><strong>Status</strong></label>
                     <div class="d-flex align-items-center">
                         <select name="status" class="form-control">
                             <option value="">--Pilih Status--</option>
                             <option value="ON PROGRES"
                                 {{ old('status', $realisasiList->first()->status ?? '') == 'ON PROGRES' ? 'selected' : '' }}>
-                                ON PROGRES</option>
+                                ON PROGRES
+                            </option>
                             <option value="CLOSE"
                                 {{ old('status', $realisasiList->first()->status ?? '') == 'CLOSE' ? 'selected' : '' }}>
-                                CLOSE</option>
+                                CLOSE
+                            </option>
                         </select>
                         <button type="submit" class="btn btn-primary ms-2">Update</button>
                     </div>
                 </div>
-
-                <div class="col-md-4">
-                    <br>
-                </div>
             </div>
-
         </form>
+
 
         <div class="mt-3">
             <a class="btn btn-danger" href="{{ route('riskregister.tablerisk', $divisi) }}" title="Back">

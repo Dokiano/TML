@@ -77,13 +77,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/riskregister', [RiskController::class, 'index'])->name('riskregister.index');
     Route::get('/riskregister/{id}', [RiskController::class, 'tablerisk'])->name('riskregister.tablerisk');
     Route::patch('/editresk/inex/{id}', [RiskController::class, 'updateData'])->name('riskregister.updateData');
-	Route::patch('/riskregister/update-issue/{id}', [RiskController::class, 'updateIssue'])->name('riskregister.updateissue');
-	Route::patch('/riskregister/update-resiko/{id}', [RiskController::class, 'updateResiko'])->name('riskregister.updateresiko');
-	Route::patch('/riskregister/update-peluang/{id}', [RiskController::class, 'updatePeluang'])->name('riskregister.updatepeluang');
-	Route::patch('/riskregister/update-before/{id}', [RiskController::class, 'updateBefore'])->name('riskregister.updatebefore');
-	Route::patch('/riskregister/update-after/{id}', [RiskController::class, 'updateAfter'])->name('riskregister.updateafter');
-	Route::patch('/riskregister/update-date/{id}', [RiskController::class, 'updateDate'])->name('riskregister.updatedate');
-	Route::patch('/riskregister/update-pihak/{id}', [RiskController::class, 'updatePihak'])->name('riskregister.updatepihak');
+    Route::patch('/riskregister/update-issue/{id}', [RiskController::class, 'updateIssue'])->name('riskregister.updateissue');
+    Route::patch('/riskregister/update-resiko/{id}', [RiskController::class, 'updateResiko'])->name('riskregister.updateresiko');
+    Route::patch('/riskregister/update-peluang/{id}', [RiskController::class, 'updatePeluang'])->name('riskregister.updatepeluang');
+    Route::patch('/riskregister/update-before/{id}', [RiskController::class, 'updateBefore'])->name('riskregister.updatebefore');
+    Route::patch('/riskregister/update-after/{id}', [RiskController::class, 'updateAfter'])->name('riskregister.updateafter');
+    Route::patch('/riskregister/update-date/{id}', [RiskController::class, 'updateDate'])->name('riskregister.updatedate');
+    Route::patch('/riskregister/update-pihak/{id}', [RiskController::class, 'updatePihak'])->name('riskregister.updatepihak');
 
 
 
@@ -108,6 +108,14 @@ Route::middleware('auth')->group(function () {
         Route::put('/realisasi/{id}/update', [RealisasiController::class, 'update'])->name('realisasi.update');
         Route::delete('/realisasi/{id}/destroy', [RealisasiController::class, 'destroy'])->name('realisasi.destroy');
         Route::get('/realisasi/{id}/detail', [RealisasiController::class, 'getDetail'])->name('realisasi.detail');
+        Route::patch(
+            '/realisasi/update-status/{id}',
+            [RealisasiController::class, 'updateStatusByTindakan']
+        )->name('realisasi.updateStatusByTindakan');
+        Route::patch(
+            '/realisasi/{riskregisterId}/batch-update',
+            [RealisasiController::class, 'updateBatch']
+        )->name('realisasi.updateBatch');
     });
 
     // Route kelompok dengan middleware 'manager' dan 'manajemen'

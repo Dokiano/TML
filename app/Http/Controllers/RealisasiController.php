@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use Svg\Tag\Rect;
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Resiko;
+use App\Models\Tindakan;
 use App\Models\Realisasi;
 use App\Models\Riskregister;
-use App\Models\Tindakan;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class RealisasiController extends Controller
 {
@@ -19,6 +20,7 @@ class RealisasiController extends Controller
 
         // Ambil data realisasi yang terkait dengan id_tindakan
         $realisasiList = Realisasi::where('id_tindakan', $id)->get();
+        // dd($realisasiList);
         $tindak = Tindakan::where('id', $id)->value('nama_tindakan');
 
         // Ambil targetpic (user_id) dan nama_user
@@ -142,90 +144,90 @@ class RealisasiController extends Controller
     }
 
     public function update(Request $request, $id)
-{
-    // Validasi input
-    $validated = $request->validate([
-        'nama_realisasi' => 'nullable|string|max:255',
-        'tgl_realisasi' => 'nullable|date',
-        'target' => 'nullable|string|max:255',
-        'desc' => 'nullable|string',
-        'presentase' => 'nullable|numeric|min:0|max:100',
-        'status' => 'nullable|in:ON PROGRES,CLOSE',
-    ]);
+    {
+        // Validasi input
+        $validated = $request->validate([
+            'nama_realisasi' => 'nullable|string|max:255',
+            'tgl_realisasi' => 'nullable|date',
+            'target' => 'nullable|string|max:255',
+            'desc' => 'nullable|string',
+            'presentase' => 'nullable|numeric|min:0|max:100',
+            'status' => 'nullable|in:ON PROGRES,CLOSE',
+        ]);
 
-    // Temukan realisasi berdasarkan ID
-    $realisasi = Realisasi::findOrFail($id);
+        // Temukan realisasi berdasarkan ID
+        $realisasi = Realisasi::findOrFail($id);
 
-    // Update field pada realisasi yang ditemukan
-    $realisasi->nama_realisasi = $validated['nama_realisasi'] ?? $realisasi->nama_realisasi;
-    $realisasi->target = $validated['target'] ?? $realisasi->target;
-    $realisasi->desc = $validated['desc'] ?? $realisasi->desc;
-    $realisasi->tgl_realisasi = $validated['tgl_realisasi'] ?? $realisasi->tgl_realisasi;
-    $realisasi->presentase = $validated['presentase'] ?? $realisasi->presentase;
+        // Update field pada realisasi yang ditemukan
+        $realisasi->nama_realisasi = $validated['nama_realisasi'] ?? $realisasi->nama_realisasi;
+        $realisasi->target = $validated['target'] ?? $realisasi->target;
+        $realisasi->desc = $validated['desc'] ?? $realisasi->desc;
+        $realisasi->tgl_realisasi = $validated['tgl_realisasi'] ?? $realisasi->tgl_realisasi;
+        $realisasi->presentase = $validated['presentase'] ?? $realisasi->presentase;
 
-    // Update status jika ada
-    if (isset($validated['status'])) {
-        $realisasi->status = $validated['status'];
+        // Update status jika ada
+        if (isset($validated['status'])) {
+            $realisasi->status = $validated['status'];
+        }
+
+        // Simpan perubahan untuk realisasi yang spesifik ini
+        $realisasi->save();
+
+        // Jika status 'CLOSE', maka update semua realisasi dengan id_tindakan yang sama menjadi 'CLOSE'
+        if ($realisasi->status == 'CLOSE') {
+            // Update semua realisasi dengan id_tindakan yang sama menjadi 'CLOSE'
+            Realisasi::where('id_tindakan', $realisasi->id_tindakan)
+                ->update(['status' => 'CLOSE']);
+        }
+
+        // Cek status semua realisasi yang tertaut dengan id_tindakan
+        $hasOpenStatus = Realisasi::where('id_tindakan', $realisasi->id_tindakan)
+            ->where('status', '!=', 'CLOSE')
+            ->exists(); // Jika ada yang statusnya bukan 'CLOSE'
+
+        // Jika ada yang statusnya bukan 'CLOSE', maka status resiko adalah 'ON PROGRES'
+        if ($hasOpenStatus) {
+            $statusResiko = 'ON PROGRES';
+        } else {
+            $statusResiko = 'CLOSE';
+        }
+
+        // Update status di tabel resiko berdasarkan status realisasi
+        $id_riskregister = $realisasi->id_riskregister;
+        $resiko = Resiko::where('id', $id_riskregister)->first();
+
+        if ($resiko) {
+            $resiko->status = $statusResiko;  // Update status resiko
+            $resiko->save();
+        }
+
+        // Menghitung total persentase dan jumlah aktivitas untuk id_tindakan
+        $id_tindakan = $realisasi->id_tindakan;
+        $realisasiList = Realisasi::where('id_tindakan', $id_tindakan)->get();
+        $totalPresentase = $realisasiList->sum('presentase');
+        $jumlahActivity = $realisasiList->count();
+
+        $nilaiAkhir = $jumlahActivity > 0 ? round($totalPresentase / $jumlahActivity, 2) : 0;
+
+        // Simpan nilai akhir di tabel realisasi untuk id_tindakan
+        Realisasi::where('id_tindakan', $id_tindakan)
+            ->update(['nilai_akhir' => $nilaiAkhir]); // Update semua nilai akhir untuk id_tindakan yang sama
+
+        // Hitung nilai_actual keseluruhan untuk id_riskregister yang sama
+        $nilaiActual = Realisasi::where('id_riskregister', $realisasi->id_riskregister)->sum('nilai_akhir');
+        $jumlahTindakan = Realisasi::where('id_riskregister', $realisasi->id_riskregister)->count('id_tindakan');
+
+        // Menghitung rata-rata nilai_actual
+        $rataNilaiActual = $jumlahTindakan > 0 ? round($nilaiActual / $jumlahTindakan, 2) : 0;
+
+        // Update nilai_actual di tabel realisasi untuk id_riskregister yang sama
+        Realisasi::where('id_riskregister', $realisasi->id_riskregister)
+            ->update(['nilai_actual' => $rataNilaiActual]);
+
+        // Redirect ke halaman index dengan pesan sukses
+        return redirect()->route('realisasi.index', ['id' => $realisasi->id_tindakan])
+            ->with('success', 'Activity berhasil diperbarui!✅');
     }
-
-    // Simpan perubahan untuk realisasi yang spesifik ini
-    $realisasi->save();
-
-    // Jika status 'CLOSE', maka update semua realisasi dengan id_tindakan yang sama menjadi 'CLOSE'
-    if ($realisasi->status == 'CLOSE') {
-        // Update semua realisasi dengan id_tindakan yang sama menjadi 'CLOSE'
-        Realisasi::where('id_tindakan', $realisasi->id_tindakan)
-            ->update(['status' => 'CLOSE']);
-    }
-
-    // Cek status semua realisasi yang tertaut dengan id_tindakan
-    $hasOpenStatus = Realisasi::where('id_tindakan', $realisasi->id_tindakan)
-        ->where('status', '!=', 'CLOSE')
-        ->exists(); // Jika ada yang statusnya bukan 'CLOSE'
-
-    // Jika ada yang statusnya bukan 'CLOSE', maka status resiko adalah 'ON PROGRES'
-    if ($hasOpenStatus) {
-        $statusResiko = 'ON PROGRES';
-    } else {
-        $statusResiko = 'CLOSE';
-    }
-
-    // Update status di tabel resiko berdasarkan status realisasi
-    $id_riskregister = $realisasi->id_riskregister;
-    $resiko = Resiko::where('id', $id_riskregister)->first();
-
-    if ($resiko) {
-        $resiko->status = $statusResiko;  // Update status resiko
-        $resiko->save();
-    }
-
-    // Menghitung total persentase dan jumlah aktivitas untuk id_tindakan
-    $id_tindakan = $realisasi->id_tindakan;
-    $realisasiList = Realisasi::where('id_tindakan', $id_tindakan)->get();
-    $totalPresentase = $realisasiList->sum('presentase');
-    $jumlahActivity = $realisasiList->count();
-
-    $nilaiAkhir = $jumlahActivity > 0 ? round($totalPresentase / $jumlahActivity, 2) : 0;
-
-    // Simpan nilai akhir di tabel realisasi untuk id_tindakan
-    Realisasi::where('id_tindakan', $id_tindakan)
-        ->update(['nilai_akhir' => $nilaiAkhir]); // Update semua nilai akhir untuk id_tindakan yang sama
-
-    // Hitung nilai_actual keseluruhan untuk id_riskregister yang sama
-    $nilaiActual = Realisasi::where('id_riskregister', $realisasi->id_riskregister)->sum('nilai_akhir');
-    $jumlahTindakan = Realisasi::where('id_riskregister', $realisasi->id_riskregister)->count('id_tindakan');
-
-    // Menghitung rata-rata nilai_actual
-    $rataNilaiActual = $jumlahTindakan > 0 ? round($nilaiActual / $jumlahTindakan, 2) : 0;
-
-    // Update nilai_actual di tabel realisasi untuk id_riskregister yang sama
-    Realisasi::where('id_riskregister', $realisasi->id_riskregister)
-        ->update(['nilai_actual' => $rataNilaiActual]);
-
-    // Redirect ke halaman index dengan pesan sukses
-    return redirect()->route('realisasi.index', ['id' => $realisasi->id_tindakan])
-        ->with('success', 'Activity berhasil diperbarui!✅');
-}
 
     public function getDetail($id)
     {
@@ -235,42 +237,107 @@ class RealisasiController extends Controller
     }
 
     public function destroy($id)
-{
-    // Temukan realisasi berdasarkan ID
-    $realisasi = Realisasi::findOrFail($id);
+    {
+        // Temukan realisasi berdasarkan ID
+        $realisasi = Realisasi::findOrFail($id);
 
-    // Ambil id_tindakan sebelum menghapus
-    $id_tindakan = $realisasi->id_tindakan;
+        // Ambil id_tindakan sebelum menghapus
+        $id_tindakan = $realisasi->id_tindakan;
 
-    // Hapus realisasi
-    $realisasi->delete();
+        // Hapus realisasi
+        $realisasi->delete();
 
-    // Update nilai_akhir dan nilai_actual setelah penghapusan
-    $realisasiList = Realisasi::where('id_tindakan', $id_tindakan)->get();
-    $totalPresentase = $realisasiList->sum('presentase');
-    $jumlahActivity = $realisasiList->count();
+        // Update nilai_akhir dan nilai_actual setelah penghapusan
+        $realisasiList = Realisasi::where('id_tindakan', $id_tindakan)->get();
+        $totalPresentase = $realisasiList->sum('presentase');
+        $jumlahActivity = $realisasiList->count();
 
-    $nilaiAkhir = $jumlahActivity > 0 ? round($totalPresentase / $jumlahActivity, 2) : 0;
+        $nilaiAkhir = $jumlahActivity > 0 ? round($totalPresentase / $jumlahActivity, 2) : 0;
 
-    // Simpan nilai akhir di tabel realisasi untuk id_tindakan
-    Realisasi::where('id_tindakan', $id_tindakan)
-        ->update(['nilai_akhir' => $nilaiAkhir]);
+        // Simpan nilai akhir di tabel realisasi untuk id_tindakan
+        Realisasi::where('id_tindakan', $id_tindakan)
+            ->update(['nilai_akhir' => $nilaiAkhir]);
 
-    // Hitung nilai_actual keseluruhan untuk id_riskregister yang sama
-    $id_riskregister = $realisasi->id_riskregister;
-    $nilaiActual = Realisasi::where('id_riskregister', $id_riskregister)->sum('nilai_akhir');
-    $jumlahTindakan = Realisasi::where('id_riskregister', $id_riskregister)->count('id_tindakan');
+        // Hitung nilai_actual keseluruhan untuk id_riskregister yang sama
+        $id_riskregister = $realisasi->id_riskregister;
+        $nilaiActual = Realisasi::where('id_riskregister', $id_riskregister)->sum('nilai_akhir');
+        $jumlahTindakan = Realisasi::where('id_riskregister', $id_riskregister)->count('id_tindakan');
 
-    // Menghitung rata-rata nilai_actual
-    $rataNilaiActual = $jumlahTindakan > 0 ? round($nilaiActual / $jumlahTindakan, 2) : 0;
+        // Menghitung rata-rata nilai_actual
+        $rataNilaiActual = $jumlahTindakan > 0 ? round($nilaiActual / $jumlahTindakan, 2) : 0;
 
-    // Update nilai_actual di tabel realisasi untuk id_riskregister yang sama
-    Realisasi::where('id_riskregister', $id_riskregister)
-        ->update(['nilai_actual' => $rataNilaiActual]);
+        // Update nilai_actual di tabel realisasi untuk id_riskregister yang sama
+        Realisasi::where('id_riskregister', $id_riskregister)
+            ->update(['nilai_actual' => $rataNilaiActual]);
 
-    return redirect()->route('realisasi.index', ['id' => $id_tindakan])
-        ->with('success', 'Activity berhasil dihapus!.✅');
+        return redirect()->route('realisasi.index', ['id' => $id_tindakan])
+            ->with('success', 'Activity berhasil dihapus!.✅');
+    }
+
+    public function updateStatusByTindakan(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'status' => 'required|in:ON PROGRES,CLOSE',
+        ]);
+
+        // Update semua baris realisasi dengan id_tindakan = $tindakanId
+        Realisasi::where('id_tindakan', $id)
+            ->update(['status' => $request->status]);
+
+        return back()->with('success', 'Status semua realisasi berhasil diperbarui.');
+    }
+
+
+    public function updateBatch(Request $request, $riskregisterId)
+    {
+        // 1. Validasi input
+        $request->validate([
+            'tindakan.*'             => 'required|string|max:255',
+            'targetpic.*'            => 'required|exists:user,id',
+            'tgl_penyelesaian.*'     => 'required|date',
+            'hapus.*'                => 'nullable|boolean',
+            'tindakan_new.*'         => 'nullable|string|max:255',
+            'targetpic_new.*'        => 'nullable|exists:user,id',
+            'tgl_penyelesaian_new.*' => 'nullable|date',
+        ]);
+
+        // 2. Proses tindakan yang sudah ada
+        $existing = $request->input('tindakan', []);
+        foreach ($existing as $tindakanId => $namaTindakan) {
+            // jika dicentang hapus, destroy
+            if ($request->input("hapus.$tindakanId")) {
+                Tindakan::destroy($tindakanId);
+                continue;
+            }
+            // update record
+            $t = Tindakan::find($tindakanId);
+            if ($t) {
+                $t->nama_tindakan    = $namaTindakan;
+                $t->tgl_penyelesaian = Carbon::parse(
+                    $request->input("tgl_penyelesaian.$tindakanId")
+                )->format('Y-m-d');
+                $t->targetpic          = $request->input("targetpic.$tindakanId");
+                $t->save();
+            }
+        }
+
+        // 3. Buat tindakan baru jika ada
+        $newTindakan = $request->input('tindakan_new', []);
+        foreach ($newTindakan as $key => $namaBaru) {
+            if (trim($namaBaru) === '') {
+                continue;
+            }
+            Tindakan::create([
+                'id_riskregister'   => $riskregisterId,
+                'nama_tindakan'     => $namaBaru,
+                'tgl_penyelesaian'  => Carbon::parse(
+                    $request->input("tgl_penyelesaian_new.$key")
+                )->format('Y-m-d'),
+                'targetpic'           => $request->input("targetpic_new.$key"),
+            ]);
+        }
+
+        return back()->with('success', 'Tindakan lanjutan berhasil diperbarui.');
+    }
 }
-
-}
-
