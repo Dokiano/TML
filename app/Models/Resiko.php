@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Resiko extends Model
 {
@@ -74,9 +74,9 @@ class Resiko extends Model
 
             if ($score >= 1 && $score <= 2) {
                 return 'LOW'; // Kategori Low
-            } elseif ($score >= 2 && $score <= 5) {
+            } elseif ($score >= 2 && $score < 5) {
                 return 'MEDIUM'; // Kategori Medium
-            } elseif ($score >= 4 && $score <= 21) {
+            } elseif ($score > 4 && $score <= 21) {
                 return 'HIGH'; // Kategori High
             }
         }
@@ -91,9 +91,9 @@ class Resiko extends Model
 
             if ($scorerisk >= 1 && $scorerisk <= 2) { // LOW
                 $this->risk = 'LOW';
-            } elseif ($scorerisk >= 2 && $scorerisk <= 5) {
+            } elseif ($scorerisk >= 2 && $scorerisk < 5) {
                 $this->risk = 'MEDIUM'; // MEDIUM
-            } elseif ($scorerisk >= 4 && $scorerisk <= 21) {
+            } elseif ($scorerisk > 4 && $scorerisk <= 21) {
                 $this->risk = 'HIGH'; // HIGH
             }
         }

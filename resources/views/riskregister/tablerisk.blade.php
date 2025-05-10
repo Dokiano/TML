@@ -216,7 +216,7 @@
                         <thead>
                             <tr>
                                 <th scope="col">No</th>
-                                <th scope="col">Issue (Int:Ex)</th>
+                                <th scope="col" style="width: 300px;">Issue (Int:Ex)</th>
                                 <th scope="col">I/E</th>
                                 <th scope="col" style="width: 200px;">Pihak Berkepentingan</th>
                                 <th scope="col">Resiko</th>
@@ -658,34 +658,33 @@
                                             </div>
 
                                             {{-- EDIT MODE (form input), hidden default --}}
-                                            <div id="tindakan-edit-{{ $form->id }}" class="d-none">
-                                                <h3 class="card-title">Tindakan Lanjut</h3>
+                                            <div id="tindakan-edit-{{ $form->id }}" class="card d-none">
+                                                <div class="card-header py-2 px-3">
+                                                    <h5 class="card-title mb-0">Tindakan Lanjut</h5>
+                                                </div>
+                                                <div class="card-body py-2 px-3">
 
-                                                <form method="POST"
-                                                    action="{{ route('realisasi.updateBatch', $form->id) }}">
-                                                    {{-- route custom --}}
-                                                    @csrf
-                                                    @method('PATCH')
+                                                    <form method="POST"
+                                                        action="{{ route('realisasi.updateBatch', $form->id) }}">
+                                                        @csrf
+                                                        @method('PATCH')
 
-                                                    <div id="inputContainer-{{ $form->id }}">
-                                                        @foreach ($tindakanExisting as $t)
-                                                            <div class="action-block mb-3"
-                                                                data-id="{{ $t->id }}">
-                                                                {{-- Tindakan --}}
-                                                                <div class="row mb-2">
-                                                                    <label
-                                                                        class="col-sm-3 col-form-label"><strong>Tindakan</strong></label>
-                                                                    <div class="col-sm-9">
-                                                                        <textarea name="tindakan[{{ $t->id }}]" class="form-control" rows="2" required>{{ old("tindakan.{$t->id}", $t->nama_tindakan) }}</textarea>
+                                                        <div id="inputContainer-{{ $form->id }}">
+                                                            @foreach ($tindakanExisting as $t)
+                                                                <div class="mb-3 border-bottom pb-2">
+                                                                    {{-- Tindakan --}}
+                                                                    <div class="mb-2">
+                                                                        <label
+                                                                            class="form-label"><strong>Tindakan</strong></label>
+                                                                        <textarea name="tindakan[{{ $t->id }}]" class="form-control form-control-sm" rows="2" required>{{ old("tindakan.{$t->id}", $t->nama_tindakan) }}</textarea>
                                                                     </div>
-                                                                </div>
-                                                                {{-- PIC --}}
-                                                                <div class="row mb-2">
-                                                                    <label
-                                                                        class="col-sm-3 col-form-label"><strong>PIC</strong></label>
-                                                                    <div class="col-sm-9">
+
+                                                                    {{-- PIC --}}
+                                                                    <label class="mb-2">
+                                                                        <label
+                                                                            class="form-label"><strong>PIC</strong></label>
                                                                         <select name="targetpic[{{ $t->id }}]"
-                                                                            class="form-select" required>
+                                                                            class="form-select form-select-sm" required>
                                                                             <option value="">Pilih PIC</option>
                                                                             @foreach ($users as $user)
                                                                                 <option value="{{ $user->id }}"
@@ -694,57 +693,48 @@
                                                                                 </option>
                                                                             @endforeach
                                                                         </select>
-                                                                    </div>
-                                                                </div>
-                                                                {{-- Tanggal --}}
-                                                                <div class="row mb-2">
-                                                                    <label class="col-sm-3 col-form-label"><strong>Target
-                                                                            Tgl</strong></label>
-                                                                    <div class="col-sm-9">
+                                                                    </label>
+
+                                                                    {{-- Target Tanggal --}}
+                                                                    <div class="mb-2">
+                                                                        <label class="form-label"><strong>Target
+                                                                                Tgl</strong></label>
                                                                         <input type="date"
                                                                             name="tgl_penyelesaian[{{ $t->id }}]"
-                                                                            class="form-control"
+                                                                            class="form-control form-control-sm"
                                                                             value="{{ old("tgl_penyelesaian.{$t->id}", \Carbon\Carbon::createFromFormat('d-m-Y', $t->tgl_penyelesaian)->format('Y-m-d')) }}"
                                                                             required>
                                                                     </div>
-                                                                </div>
-                                                                {{-- Hapus --}}
-                                                                <div class="row mb-2">
-                                                                    <div class="col-sm-9 offset-sm-3">
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input"
-                                                                                type="checkbox"
-                                                                                name="hapus[{{ $t->id }}]"
-                                                                                id="hapus_{{ $t->id }}"
-                                                                                value="1">
-                                                                            <label class="form-check-label text-danger"
-                                                                                for="hapus_{{ $t->id }}">
-                                                                                Hapus Tindakan Ini
-                                                                            </label>
-                                                                        </div>
+
+                                                                    {{-- Hapus --}}
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="checkbox"
+                                                                            name="hapus[{{ $t->id }}]"
+                                                                            id="hapus_{{ $t->id }}"
+                                                                            value="1">
+                                                                        <label class="form-check-label text-danger"
+                                                                            for="hapus_{{ $t->id }}">
+                                                                            Hapus Tindakan Ini
+                                                                        </label>
                                                                     </div>
                                                                 </div>
-                                                                <hr>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
+                                                            @endforeach
+                                                        </div>
 
-                                                    {{-- tombol Add More --}}
-                                                    <div class="mb-3">
-                                                        <button type="button" class="btn btn-info btn-sm"
-                                                            onclick="addMoreTindakan({{ $form->id }})">
-                                                            Add More
-                                                        </button>
-                                                    </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <button type="button" class="btn btn-info btn-sm"
+                                                                onclick="addMoreTindakan({{ $form->id }})">
+                                                                Add More
+                                                            </button>
+                                                            <button type="submit" class="btn btn-success btn-sm">
+                                                                Update Semua
+                                                            </button>
+                                                        </div>
+                                                    </form>
 
-                                                    {{-- tombol simpan --}}
-                                                    <div class="mt-3 text-end">
-                                                        <button type="submit" class="btn btn-success">
-                                                            Update Semua
-                                                        </button>
-                                                    </div>
-                                                </form>
+                                                </div>
                                             </div>
+
                                         </td>
 
                                         <script>
@@ -764,39 +754,34 @@
 
                                             function addMoreTindakan(id) {
                                                 const container = document.getElementById('inputContainer-' + id);
-                                                const index = Date.now(); // unique key
+                                                const index = Date.now();
                                                 const html = `
-                                                <div class="action-block mb-3" data-id="new_${index}">
-                                                  <div class="row mb-2">
-                                                    <label class="col-sm-3 col-form-label"><strong>Tindakan</strong></label>
-                                                    <div class="col-sm-9">
-                                                      <textarea name="tindakan_new[${index}]" class="form-control" rows="2" required></textarea>
+                                                  <div class="mb-3 border-bottom pb-2">
+                                                    <div class="mb-2">
+                                                      <label class="form-label"><strong>Tindakan</strong></label>
+                                                      <textarea name="tindakan_new[${index}]" class="form-control form-control-sm" rows="2" required></textarea>
                                                     </div>
-                                                  </div>
-                                                  <div class="row mb-2">
-                                                    <label class="col-sm-3 col-form-label"><strong>PIC</strong></label>
-                                                    <div class="col-sm-9">
-                                                      <select name="targetpic_new[${index}]" class="form-select" required>
+                                                    <div class="mb-2">
+                                                      <label class="form-label"><strong>PIC</strong></label>
+                                                      <select name="targetpic_new[${index}]" class="form-select form-select-sm" required>
                                                         <option value="">Pilih PIC</option>
                                                         @foreach ($users as $user)
                                                           <option value="{{ $user->id }}">{{ $user->nama_user }}</option>
                                                         @endforeach
                                                       </select>
                                                     </div>
-                                                  </div>
-                                                  <div class="row mb-2">
-                                                    <label class="col-sm-3 col-form-label"><strong>Target Tgl</strong></label>
-                                                    <div class="col-sm-9">
-                                                      <input type="date" name="tgl_penyelesaian_new[${index}]" class="form-control" required>
+                                                    <div class="mb-2">
+                                                      <label class="form-label"><strong>Target Tgl</strong></label>
+                                                      <input type="date" name="tgl_penyelesaian_new[${index}]" class="form-control form-control-sm" required>
                                                     </div>
-                                                  </div>
-                                                  <div class="text-end">
-                                                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.action-block').remove()">
-                                                      Delete
-                                                    </button>
-                                                  </div>
-                                                  <hr>
-                                                </div>`;
+                                                    <div class="text-end">
+                                                      <button type="button"
+                                                              class="btn btn-danger btn-sm"
+                                                              onclick="this.closest('.mb-3').remove()">
+                                                        Delete
+                                                      </button>
+                                                    </div>
+                                                  </div>`;
                                                 container.insertAdjacentHTML('beforeend', html);
                                             }
                                         </script>
@@ -855,7 +840,6 @@
 
                                         <td>
                                             @if ($resikos->isNotEmpty())
-                                                {{-- <?= dd($resikos) ?> --}}
                                                 @foreach ($resikos as $resiko)
                                                     <span
                                                         class="badge
@@ -866,7 +850,6 @@
                                                                         bg-success @endif">
                                                         {{ $resiko->status }}<br>
                                                         {{ $form->nilai_actual }}%
-                                                        {{-- <?= dd($form) ?> --}}
                                                     </span>
                                                 @endforeach
                                             @else

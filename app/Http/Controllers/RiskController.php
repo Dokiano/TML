@@ -187,7 +187,7 @@ class RiskController extends Controller
         $divisi = Divisi::all()->sortBy("nama_divisi");
         $kriteria = Kriteria::all();
 
-        $one = Resiko::findOrFail($id);
+        $one = Resiko::where("id_riskregister", $id)->firstOrFail();;
         $two = Riskregister::where("id", $one->id_riskregister)->first();
         $three = $two->id_divisi;
 
@@ -783,6 +783,13 @@ class RiskController extends Controller
 
         // Get list of divisions for filtering in the view
         $divisiList = Divisi::orderBy("nama_divisi", "asc")->get();
+        $query = Divisi::orderBy('nama_divisi', 'asc');
+
+        if (!empty($allowedDivisi)) {
+            $query->whereIn('id', $allowedDivisi);
+        }
+
+        $divisiListFilter = $query->get();
 
         $defaultDivisiId = $divisiList->first()->id ?? null;
 
@@ -793,7 +800,7 @@ class RiskController extends Controller
         // Pass data to the view
         return view(
             "riskregister.biglist",
-            compact("formattedData", "divisiList", "defaultDivisiId", "divisi")
+            compact("formattedData", "divisiList", "divisiListFilter", "defaultDivisiId", "divisi")
         );
     }
 

@@ -1,7 +1,6 @@
 @extends('layouts.main')
 
 @section('content')
-
     <div class="container">
 
         <!-- Tampilkan pesan sukses jika ada -->
@@ -125,22 +124,21 @@
                             <div class="container">
                                 <div class="row g-3"> <!-- Menggunakan g-3 untuk jarak antar elemen -->
 
-                                    @if (auth()->user()->role === 'admin' || auth()->user()->role === 'manajemen')
-                                        <div class="col-md-6">
-                                            <label for="nama_divisi" class="form-label">
-                                                <i class="bi bi-building"></i> <strong>Departemen:</strong>
-                                            </label>
-                                            <select id="nama_divisi" name="nama_divisi" class="form-select">
-                                                <option value="">-- Semua Departemen --</option>
-                                                @foreach ($divisiList as $divisi)
-                                                    <option value="{{ $divisi->nama_divisi }}"
-                                                        {{ request('nama_divisi') == $divisi->nama_divisi ? 'selected' : '' }}>
-                                                        {{ $divisi->nama_divisi }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    @endif
+
+                                    <div class="col-md-6">
+                                        <label for="nama_divisi" class="form-label">
+                                            <i class="bi bi-building"></i> <strong>Departemen:</strong>
+                                        </label>
+                                        <select id="nama_divisi" name="nama_divisi" class="form-select">
+                                            <option value="">-- Semua Departemen --</option>
+                                            @foreach ($divisiListFilter as $divisi)
+                                                <option value="{{ $divisi->nama_divisi }}"
+                                                    {{ request('nama_divisi') == $divisi->nama_divisi ? 'selected' : '' }}>
+                                                    {{ $divisi->nama_divisi }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
 
                                     <div class="col-md-6">
                                         <label for="year" class="form-label">

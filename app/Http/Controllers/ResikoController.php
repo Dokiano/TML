@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Resiko;
-use App\Models\Realisasi;
 use App\Models\Divisi;
+use App\Models\Resiko;
 use App\Models\Kriteria;
-use App\Models\Riskregister; // Pastikan untuk mengimpor model Riskregister
 use App\Models\Tindakan;
+use App\Models\Realisasi; // Pastikan untuk mengimpor model Riskregister
+use App\Models\Riskregister;
 use Illuminate\Http\Request;
 
 class ResikoController extends Controller
@@ -89,7 +89,7 @@ class ResikoController extends Controller
     public function edit($id)
 {
     // Fetch the resiko data based on the provided ID
-    $resiko = Resiko::findOrFail($id);  // Fetch risk data
+    $resiko = Resiko::where("id_riskregister", $id)->firstOrFail();  // Fetch risk data
     $kriteria = Kriteria::all(); // Get all kriteria data
     // dd($kriteria);
 
@@ -97,7 +97,7 @@ class ResikoController extends Controller
     $riskregister = Riskregister::findOrFail($resiko->id_riskregister); // Get Riskregister based on resiko relation
     $divisionId = $riskregister->id_divisi; // Division ID for the current Riskregister
 
-    $one = Resiko::findOrFail($id);
+    $one = $resiko;
     $two = Riskregister::where('id', $one->id_riskregister)->first();
     $three = $two->id_divisi; // Division ID for the current Riskregister
 
@@ -116,7 +116,6 @@ class ResikoController extends Controller
             ];
         }
 
-    // dd($severityOptions);
 
 
     // Pass the data to the view
@@ -303,7 +302,7 @@ class ResikoController extends Controller
 public function matriks2($id)
 {
     // Fetch Riskregister data and related information
-    $resiko_nama = Resiko::where('id', $id)->value('nama_resiko');
+    $resiko_nama = Resiko::where('id_riskregister', $id)->value('nama_resiko');
 
     // Define the matriks data
     $matriks = [
@@ -324,7 +323,7 @@ public function matriks2($id)
 
     // Fetch the relevant data
     $same = Tindakan::where('id_riskregister', $id)->value('id_riskregister');
-    $form = Resiko::findOrFail($id);
+    $form = Resiko::where('id_riskregister', $id)->firstOrFail();
     $riskregister = Riskregister::where('id', $form->id_riskregister)->first();
     $samee = $riskregister->id_divisi;
 
@@ -397,7 +396,8 @@ public function matriks2($id)
     }
 
     // Retrieve division id for the 'three' variable
-    $one = Resiko::findOrFail($id);
+    $one = Resiko::where('id_riskregister', $id)->firstOrFail();
+	
     $two = Riskregister::where('id', $one->id_riskregister)->first();
     $three = $two->id_divisi;
 
