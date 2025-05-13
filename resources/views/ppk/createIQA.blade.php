@@ -2,8 +2,8 @@
 
 @section('content')
     <!-- Pastikan Bootstrap Icons sudah terpasang. Jika belum, tambahkan link berikut di head layout utama:
-                                                                                                                                                                                                                                                                                                                         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-                                                                                                                                                                                                                                                                                                                    -->
+                                                                                                                                                                                                                                                                                                                                                                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+                                                                                                                                                                                                                                                                                                                                                            -->
 
     <body>
         <div class="card shadow-lg border-0">
@@ -11,13 +11,13 @@
                 <h5
                     class="card-title text-center text-uppercase fw-bold text-primary d-flex justify-content-center align-items-center gap-2">
                     Proses Peningkatan Kinerja
-                    <span class="text-white bg-success px-2 py-1 rounded-pill fw-bold" style="font-size: 10px;">
-                        MFG
+                    <span class="text-white bg-warning px-2 py-1 rounded-pill fw-bold" style="font-size: 10px;">
+                        IQA
                     </span>
                 </h5>
                 <hr class="mb-4 border-primary">
 
-                <form method="POST" action="{{ route('ppk.store') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('ppk.storeIQA') }}" enctype="multipart/form-data">
                     @csrf
 
                     @if ($errors->any())
@@ -342,7 +342,8 @@
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-3">
-                        <a href="{{ route('ppk.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i>
+                        <a href="{{ route('ppk.indexppk2') }}" class="btn btn-secondary"><i
+                                class="bi bi-arrow-left"></i>
                             Kembali</a>
                         <button type="submit" class="btn btn-primary">Create PPK <i
                                 class="bi bi-file-earmark-plus"></i></button>

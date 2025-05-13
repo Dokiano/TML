@@ -40,6 +40,7 @@ class PpkController extends Controller
             $query->where('pembuat', $userId)
                 ->orWhere('penerima', $userId);
         })
+            ->where('nomor_surat', 'like', '%MFG%')
             ->when($startDate, function ($query, $startDate) {
                 $query->whereDate('created_at', '>=', $startDate);
             })
@@ -99,7 +100,7 @@ class PpkController extends Controller
             })
             ->when($keyword, fn($query) => $query->where('nomor_surat', 'like', "%$keyword%"))
             ->when($status, fn($query) => $query->where('statusppk', $status))
-            ->when($jenis, fn($query) => $query->where('jenisketidaksesuaian', 'like' , "%$jenis%"))
+            ->when($jenis, fn($query) => $query->where('jenisketidaksesuaian', 'like', "%$jenis%"))
             ->when($divisiPenerima, fn($query) => $query->where('divisipenerima', '=', $divisiPenerima))
             ->when($divisiPengirim, fn($query) => $query->where('divisipembuat', '=', $divisiPengirim))
             ->get();
@@ -198,7 +199,9 @@ class PpkController extends Controller
                 }
             }
 
-            $lastPpk = Ppk::latest()->first();
+            $lastPpk = Ppk::where('nomor_surat', 'like', '%/MFG/%')
+                ->latest('id') // atau 'created_at' kalau ada kolom timestamp
+                ->first();
             $lastYear = $lastPpk ? substr($lastPpk->nomor_surat, -10, 4) : ''; // Mendapatkan tahun dari nomor surat terakhir
             $currentYear = date('Y'); // Tahun saat ini
 
@@ -806,8 +809,8 @@ class PpkController extends Controller
             if ($ppk->emailpembuat) {
                 // Kirim email langsung
                 Mail::to($ppk->emailpembuat)
-                ->cc(array_merge((array) $ppk->cc_email, [$ppk->emailpenerima]))
-                ->send(new KirimEmail2($data_email));
+                    ->cc(array_merge((array) $ppk->cc_email, [$ppk->emailpenerima]))
+                    ->send(new KirimEmail2($data_email));
 
                 // Jika berhasil, kembali ke halaman /adminppk
                 return redirect()->route('ppk.index2')->with('success', 'Email berhasil dikirim! ✅');
@@ -1307,5 +1310,201 @@ class PpkController extends Controller
         ];
         Mail::to("ps315475@gmail.com")->send(new kirimemail2($data_email));
         return '<h1>SUCCESS MENGIRIM EMAIL</h1>';
+    }
+
+    public function dashboardPPK()
+    {
+        return view('ppk.dashboardPPK');
+    }
+
+    public function indexppk2(Request $request)
+    {
+        $userId = auth()->id();
+
+        // Ambil parameter filter dari request
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $semester = $request->input('semester');
+        $keyword = $request->input('keyword');
+        $verifiedStatus = $request->input('status');
+
+        $ppk = Ppk::with(['formppk2', 'formppk3', 'pembuatUser', 'penerimaUser'])->get();
+
+        // Query PPK dengan filter
+        $ppks = Ppk::where(function ($query) use ($userId) {
+            $query->where('pembuat', $userId)
+                ->orWhere('penerima', $userId);
+        })
+            ->where('nomor_surat', 'like', '%IQA%')
+            ->when($startDate, function ($query, $startDate) {
+                $query->whereDate('created_at', '>=', $startDate);
+            })
+            ->when($endDate, function ($query, $endDate) {
+                $query->whereDate('created_at', '<=', $endDate);
+            })
+            ->when($semester, function ($query) use ($semester) {
+                $query->where('nomor_surat', 'like', "%$semester");
+            })
+            ->when($keyword, function ($query, $keyword) {
+                $query->where('nomor_surat', 'like', "%$keyword%");
+            })
+            ->when($verifiedStatus, function ($query, $verifiedStatus) {
+                if ($verifiedStatus === 'VERIFIED') {
+                    $query->whereHas('formppk3', function ($subQuery) {
+                        $subQuery->whereNotNull('verifikasi');
+                    });
+                } elseif ($verifiedStatus === 'WAITING') {
+                    $query->whereHas('formppk3', function ($subQuery) {
+                        $subQuery->whereNull('verifikasi');
+                    });
+                }
+            })
+
+            ->with(['formppk2', 'formppk3', 'pembuatUser', 'penerimaUser'])
+            ->get();
+        return view('ppk.indexppk2', compact('ppks', 'ppk'));
+    }
+
+    public function createIQA(Request $request)
+    {
+        $data = User::all()->sortBy('nama_user');
+        $status = StatusPpk::all();
+        return view('ppk.createIQA', compact('data', 'status'));
+    }
+
+    public function storeIQA(Request $request)
+    {
+        // dd($request->all());
+        $request->validate([
+            'judul' => 'nullable|string|max:1000',
+            'statusppk' => 'nullable|exists:status,nama_statusppk', // Pastikan sesuai dengan nama tabel StatusPpk
+            'jenisketidaksesuaian' => 'nullable|array',
+            'jenisketidaksesuaian.*' => 'in:SISTEM,AUDIT,PRODUK,PROSES',
+            'pembuat' => 'required|string|max:255',
+            'emailpembuat' => 'required|email|max:255',
+            'divisipembuat' => 'required|string|max:255',
+            'penerima' => 'required|string|max:255',
+            'emailpenerima' => 'required|email|max:255',
+            'divisipenerima' => 'required|string|max:255',
+            'cc_email' => 'nullable|array',
+            'cc_email.*' => 'email',
+            'evidence' => 'nullable|array',
+            'evidence.*' => 'file|mimes:jpg,jpeg,png,xlsx,xls,doc,docx,pdf', // ensure proper validation for each file
+            'signature' => 'nullable|string',
+            'signature_file' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'identifikasi' => 'nullable|string|max:1000',
+            'signaturepenerima' => 'nullable|string',
+            'signaturepenerima_file' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // Store other data
+        $ccEmails = $request->cc_email ? implode(',', $request->cc_email) : null;
+        $signatureFileName = $this->handleSignature($request, 'signature', 'signature_file');
+
+        try {
+            DB::beginTransaction();
+
+            $evidences = [];
+            if ($request->hasFile('evidence')) {
+                foreach ($request->file('evidence') as $file) {
+                    $filename = time() . '_' . $file->getClientOriginalName();
+                    $file->storeAs('public/evidence', $filename);
+                    $evidences[] = 'evidence/' . $filename;
+                }
+            }
+
+            $lastPpk = Ppk::where('nomor_surat', 'like', '%/IQA/%')
+                ->latest('id') // atau 'created_at' kalau ada kolom timestamp
+                ->first();
+
+            $lastYear = $lastPpk ? substr($lastPpk->nomor_surat, -10, 4) : ''; // Mendapatkan tahun dari nomor surat terakhir
+            $currentYear = date('Y'); // Tahun saat ini
+
+            // Jika tahun terakhir berbeda dengan tahun saat ini, reset urutan ke 1
+            if ($lastYear !== $currentYear) {
+                $sequence = 1;
+            } else {
+                // Jika tahun sama, ambil urutan nomor terakhir dan tambahkan 1
+                $sequence = $lastPpk ? intval(substr($lastPpk->nomor_surat, 0, 3)) + 1 : 1;
+            }
+
+            // Membuat nomor dengan format tiga digit
+            $nomor = str_pad($sequence, 3, '0', STR_PAD_LEFT);
+
+            // Mendapatkan bulan dan semester
+            $bulan = date('m');
+            $tahun = date('Y');
+            $semester = ($bulan <= 6) ? 'SEM 1' : 'SEM 2';
+
+            // Menentukan penerima dan divisi
+            $user = User::find($request->penerima);
+            $divisi = $request->divisipenerima ?? $user->divisi;
+
+            // Membuat nomor surat
+            $nomorSurat = "$nomor/IQA/$divisi/$bulan/$tahun-$semester";
+
+
+            // Pastikan nomor surat unik
+            while (Ppk::where('nomor_surat', $nomorSurat)->exists()) {
+                $sequence++;  // Meningkatkan urutan
+                $nomor = str_pad($sequence, 3, '0', STR_PAD_LEFT);  // Membuat nomor tiga digit
+                $nomorSurat = "$nomor/IQA/$divisi/$bulan/$tahun-$semester"; // Membuat nomor surat baru
+            }
+
+            $buatppk = Ppk::create([
+                'judul' => $request->judul,
+                'statusppk' => 'BELUM DIJAWAB',
+                'jenisketidaksesuaian' => is_array($request->jenisketidaksesuaian) ? implode(',', $request->jenisketidaksesuaian) : null,
+                'pembuat' => auth()->id(),
+                'emailpembuat' => $request->emailpembuat,
+                'divisipembuat' => $request->divisipembuat,
+                'penerima' => $request->penerima, // Pastikan ID User dikirim melalui request
+                'emailpenerima' => $request->emailpenerima,
+                'divisipenerima' => $request->divisipenerima,
+                'cc_email' => $ccEmails,
+                'evidence' => json_encode($evidences), // Menyimpan evidence sebagai JSON
+                'nomor_surat' => $nomorSurat,
+                'signature' => $signatureFileName,
+            ]);
+
+            // Membuat Data Terkait di Tabel Lain
+            Ppkkedua::create(['id_formppk' => $buatppk->id]);
+            Ppkketiga::create([
+                'id_formppk' => $buatppk->id,
+            ]);
+
+
+            $penerimaUser = User::find($request->penerima); // Ambil user berdasarkan ID penerima
+            if (!$penerimaUser) {
+                return response()->json(['error' => 'Penerima tidak ditemukan'], 404);
+            }
+
+            $pembuatUser = auth()->user(); // Gunakan pengguna yang sedang login
+            if (!$pembuatUser) {
+                return response()->json(['error' => 'Pengguna tidak ditemukan'], 404);
+            }
+            // Kirim Email
+            $data_email = [
+                'judul' => "Identifikasi PPK",
+                'subject' => "Penerbitan No PPK {$nomorSurat}",
+                'sender_name' => "{$request->emailpembuat}, {$request->divisipembuat}",
+                'senderView' => "$pembuatUser->nama_user, {$request->divisipembuat}",
+                'paragraf1' => "Dear {$penerimaUser->nama_user}, {$request->divisipenerima}", // Menggunakan nama_user dari model User
+                'paragraf2' => "Berikut Terlampir PPK",
+                'paragraf3' => $nomorSurat,
+                'paragraf4' => $request->judul,
+                'paragraf5' => "yang diajukan oleh",
+                'paragraf7' => "Untuk menambahkan Evidence dan update progress silahkan klik link di bawah ini",
+                'paragraf8' => route('ppk.index'),
+            ];
+
+            Mail::to($request->emailpenerima)->cc(array_merge($request->cc_email, [$request->emailpembuat]))->send(new kirimemail($data_email));
+
+            DB::commit();
+            return redirect()->route('ppk.indexppk2')->with('success', 'Data PPK berhasil disimpan.✅');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Gagal menyimpan data: ' . $e->getMessage()]);
+        }
     }
 }

@@ -122,9 +122,13 @@ Route::middleware('auth')->group(function () {
     // Route::middleware(['manager', 'manajemen'])->group(function () {
 
     // -- PPK Routes --
-    Route::get('/ppk', [PpkController::class, 'index'])->name('ppk.index');
+    Route::get('/ppk', [PpkController::class, 'dashboardPPK'])->name('ppk.dashboardPPK');
+    Route::get('/ppk-IQA', [PpkController::class, 'indexppk2'])->name('ppk.indexppk2');
+    Route::get('/ppk-MFG', [PpkController::class, 'index'])->name('ppk.index');
     Route::get('/formppk', [PpkController::class, 'create'])->name('ppk.create');
+    Route::get('/formppk2', [PpkController::class, 'createIQA'])->name('ppk.createIQA');
     Route::post('/form/store', [PpkController::class, 'store'])->name('ppk.store');
+    Route::post('/form/storeIQA', [PpkController::class, 'storeIQA'])->name('ppk.storeIQA');
     Route::get('/formidentifikasi/{id}', [PpkController::class, 'create2'])->name('ppk.create2');
     Route::post('/ppk/store-2', [PpkController::class, 'store2'])->name('ppk.store2');
     Route::get('/formusulan/{id}', [PpkController::class, 'create3'])->name('ppk.create3');
