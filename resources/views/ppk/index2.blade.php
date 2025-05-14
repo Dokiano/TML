@@ -74,12 +74,27 @@
                     <i class="fa fa-filter" style="font-size: 14px;"></i> Filter Options
                 </button>
 
+                <div class="btn-group" role="group">
+                    <a href="{{ route('ppk.index2', ['filter' => 'ALL']) }}"
+                        class="btn {{ $tipeFilter === 'ALL' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        style="font-weight: 500; font-size: 12px;">ALL</a>
+                    <a href="{{ route('ppk.index2', ['filter' => 'IQA']) }}"
+                        class="btn {{ $tipeFilter === 'IQA' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        style="font-weight: 500; font-size: 12px;">IQA</a>
+                    <a href="{{ route('ppk.index2', ['filter' => 'MFG']) }}"
+                        class="btn {{ $tipeFilter === 'MFG' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        style="font-weight: 500; font-size: 12px;">MFG</a>
+                </div>
+
+
                 <!-- Tombol Setting PPK -->
                 @if (auth()->user()->role === 'admin')
                     <a href="{{ route('admin.statusppk') }}" class="btn btn-primary" title="Setting PPK"
                         style="font-weight: 500; font-size: 12px; padding: 6px 12px;">
                         <i class="ri-settings-5-line"></i>
                     </a>
+                @else
+                    <div class=""></div>
                 @endif
             </div>
         </form>

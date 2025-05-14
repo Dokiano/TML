@@ -72,30 +72,29 @@ class PpkController extends Controller
 
     public function index2(Request $request)
     {
-        // Periksa apakah ada filter input dari pengguna
+        // Ambil semua input filter
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $semester = $request->input('semester');
-        $user = $request->input('user'); // Ambil ID pengguna
+        $userFilter = $request->input('user');
         $keyword = $request->input('keyword');
         $status = $request->input('status');
         $divisiPenerima = $request->input('divisi_penerima');
         $divisiPengirim = $request->input('divisi_pengirim');
         $jenis = $request->input('jenis');
+        $tipeFilter = $request->input('filter', 'ALL'); // nilai default = ALL
 
         $statusPpkList = StatusPpk::all();
 
-        // dd($statusPpkList->pluck('nama_statusppk'));
-
-        // Query data PPK berdasarkan filter
+        // Query builder
         $ppks = Ppk::query()
             ->when($startDate, fn($query) => $query->whereDate('created_at', '>=', $startDate))
             ->when($endDate, fn($query) => $query->whereDate('created_at', '<=', $endDate))
             ->when($semester, fn($query) => $query->where('nomor_surat', 'like', "%$semester%"))
-            ->when($user, function ($query) use ($user) {
-                $query->where(function ($query) use ($user) {
-                    $query->where('pembuat', $user)
-                        ->orWhere('penerima', $user); // Filter untuk sending & accepting
+            ->when($userFilter, function ($query) use ($userFilter) {
+                $query->where(function ($query) use ($userFilter) {
+                    $query->where('pembuat', $userFilter)
+                        ->orWhere('penerima', $userFilter);
                 });
             })
             ->when($keyword, fn($query) => $query->where('nomor_surat', 'like', "%$keyword%"))
@@ -103,20 +102,27 @@ class PpkController extends Controller
             ->when($jenis, fn($query) => $query->where('jenisketidaksesuaian', 'like', "%$jenis%"))
             ->when($divisiPenerima, fn($query) => $query->where('divisipenerima', '=', $divisiPenerima))
             ->when($divisiPengirim, fn($query) => $query->where('divisipembuat', '=', $divisiPengirim))
+            ->when($tipeFilter === 'IQA', fn($query) => $query->where('nomor_surat', 'like', '%/IQA/%'))
+            ->when($tipeFilter === 'MFG', fn($query) => $query->where('nomor_surat', 'like', '%/MFG/%'))
             ->get();
 
-
-
+        // Ambil data dropdown
         $user = auth()->user();
-        // Ambil daftar pengguna untuk dropdown
         $userList = User::orderBy('nama_user', 'asc')->pluck('nama_user', 'id');
-        // Ambil daftar divisi untuk dropdown
         $divisiList = Divisi::orderBy('nama_divisi', 'asc')->pluck('nama_divisi', 'id');
 
-
-        // Kirim data ke view
-        return view('ppk.index2', compact('ppks', 'userList', 'divisiList', 'statusPpkList', 'status', 'user'));
+        // Kirim semua ke view
+        return view('ppk.index2', compact(
+            'ppks',
+            'userList',
+            'divisiList',
+            'statusPpkList',
+            'status',
+            'user',
+            'tipeFilter'
+        ));
     }
+
 
 
     public function detail($id)
