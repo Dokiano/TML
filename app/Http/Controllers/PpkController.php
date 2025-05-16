@@ -192,6 +192,7 @@ class PpkController extends Controller
         // Store other data
         $ccEmails = $request->cc_email ? implode(',', $request->cc_email) : null;
         $signatureFileName = $this->handleSignature($request, 'signature', 'signature_file');
+        // dd($request->file('evidence'));
 
         try {
             DB::beginTransaction();
@@ -1027,7 +1028,7 @@ class PpkController extends Controller
             'evidence' => json_decode($ppksatu->evidence, true),
             'signature' => $signatureBase64,
             'signaturepenerima' => $signatureBase64Penerima,
-            'evidencekedua' => json_decode($ppkdua->evidencekedua, true),
+            'evidencekedua' => is_string($ppkdua->evidencekedua) ? json_decode($ppkdua->evidencekedua, true) : $ppkdua->evidencekedua,
         ];
 
         // dd($ppkdua->picUser);
@@ -1091,7 +1092,7 @@ class PpkController extends Controller
             'divisipenerima' => $ppk->divisipenerima,
             'jenisketidaksesuaian' => $ppk->jenisketidaksesuaian,
             'evidence' => json_decode($ppk->evidence, true),
-            'evidencekedua' => json_decode($ppkkedua->evidencekedua, true),
+            'evidencekedua' => is_string($ppkkedua->evidencekedua) ? json_decode($ppkkedua->evidencekedua, true) : $ppkkedua->evidencekedua,
             'created_at' => $ppk->created_at,
             'signature' => $signatureBase64, // Berisi data base64 dari signature
             'signaturepenerima' => $signaturePenerimaBase64,
@@ -1166,7 +1167,7 @@ class PpkController extends Controller
             'divisipenerima' => $ppk->divisipenerima,
             'jenisketidaksesuaian' => $ppk->jenisketidaksesuaian,
             'evidence' => json_decode($ppk->evidence, true),
-            'evidencekedua' => json_decode($ppkkedua->evidencekedua, true),
+            'evidencekedua' => is_string($ppkkedua->evidencekedua) ? json_decode($ppkkedua->evidencekedua, true) : $ppkkedua->evidencekedua,
             'created_at' => $ppk->created_at,
             'signature' => $signatureBase64, // Berisi data base64 dari signature
             'signaturepenerima' => $signaturePenerimaBase64,

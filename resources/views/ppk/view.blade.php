@@ -292,21 +292,20 @@
 
             <div class="mb-2 border border-1 border-dark"></div>
 
-            <div class="px-5 py-3 pb-5">
+            <div class="px-5 py-3">
                 <!-- Verifikasi -->
-                <p class="my-4" style="font-size: 2rm;"><strong>4. Verifikasi Tindakan , sesuai kolom"Target
+                <p style="font-size: 2rm;"><strong>4. Verifikasi Tindakan , sesuai kolom"Target
                         Tanggal"</strong></p>
-
+    
                 <div class="row mb-3">
-                    <label for="verifikasi" class="col-sm-2 col-form-label"><strong>Catatan</strong></label>
-                    <div class="col-sm-10">
-
+                    <div class="col-6">
+    
                         @if (!empty($verifikasi) && !empty($verifikasi_img))
                             <p><strong>Catatan Verifikasi:</strong></p>
                             <p>{{ $verifikasi }}</p>
                             @foreach (json_decode($verifikasi_img) as $file)
                                 <img src="{{ asset('storage/' . $file) }}" alt="Verifikasi"
-                                    style="max-width: 200px; max-height: 200px; margin-top: 10px;">
+                                    style="max-width: 100px; max-height: 100px; margin-top: 10px;">
                             @endforeach
                         @elseif(!empty($verifikasi))
                             <p><strong>Catatan Verifikasi:</strong></p>
@@ -315,12 +314,23 @@
                             <p><strong>Gambar Verifikasi:</strong></p>
                             @foreach (json_decode($verifikasi_img) as $file)
                                 <img src="{{ asset('storage/' . $file) }}" alt="Verifikasi"
-                                    style="max-width: 200px; max-height: 200px; margin-top: 10px;">
+                                    style="max-width: 100px; max-height: 100px; margin-top: 10px;">
                             @endforeach
                         @else
                             <p>Catatan: Tidak ada Catatan atau Gambar Verifikasi.</p>
                         @endif
-
+                    </div>
+                    <div class="col">
+                        <div class="row d-flex justify-content-end">
+                            <img src="{{ $signature }}" style="max-width: 300px; max-height: 70px;">
+                        </div>
+                        <div class="row text-end">
+                            <p>Tanggal Verifikasi : <span class="ps-5" style="border-bottom: 1px solid #000">
+                                    {{ $created_at_ppkketiga ? \Carbon\Carbon::parse($created_at_ppkketiga)->isoFormat('D MMMM YYYY') : 'Tidak ada Tanggal Verifikasi' }}
+                                </span>
+                            </p>
+                            <p>Auditor, <strong>{{ $ppk->pembuatUser->nama_user }}.</strong></p>
+                        </div>
                     </div>
                 </div>
                 <small class="form-text text-muted font-italic">Efektifitas Tindakan Penanggulangan/Pencegahan dapat
@@ -380,12 +390,27 @@
                     </p>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <a href="javascript:history.back()" class="btn btn-secondary">Kembali</a>
-                    <a href="{{ route('ppk.pdf', ['id' => $ppk->id]) }}" target="_blank"
-                        class="btn btn-danger">Print</a>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border border-2 border-dark border-top-0">
+            <p style="font-size: 2rm;"><strong>6. Close Out (apabila efektif)</strong></p>
+            <div class="row align-items-end">
+                <div class="col-7 text-center">
+                    <p>Tanda Tangan : <img src="{{ $signature }}" alt="Signature"
+                            style="border-bottom: 1px solid #000; max-height: 50px;"></p>
+                    <p>Pembuat/Inisiator: <strong>{{ $ppk->pembuatUser->nama_user }}</strong></p>
                 </div>
-                </form>
+                <div class="col">
+                    <p>Date : <span class="ps-5" style="border-bottom: 1px solid #000">
+                            {{ $created_at_ppkketiga ? \Carbon\Carbon::parse($created_at_ppkketiga)->isoFormat('D MMMM YYYY') : 'Tidak ada Tanggal' }}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <a href="javascript:history.back()" class="btn btn-secondary">Kembali</a>
+                <a href="{{ route('ppk.pdf', ['id' => $ppk->id]) }}" target="_blank"
+                    class="btn btn-danger">Print</a>
             </div>
         </div>
     </div>

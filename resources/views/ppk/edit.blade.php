@@ -168,6 +168,7 @@
                                 <label for="evidence" class="form-label fw-bold">Evidence</label>
                                 @php
                                     $evidences = json_decode($ppk->evidence ?? '[]', true);
+                                    // dd($evidences);
                                 @endphp
 
                                 @if (is_array($evidences) && count($evidences) > 0)

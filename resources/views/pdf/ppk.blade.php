@@ -171,7 +171,7 @@
                             <strong> {{ $ppk->pembuatUser->nama_user }}</strong>
                         </div>
                         <div class="col">
-                            <img src="{{ $signature }}" style="max-width: 130px; max-height:70px; ">
+                            <img src="{{ $signature }}" style="max-width: 300px; max-height:70px; ">
                         </div>
                     </div>
                     <div class="row mt-4">
@@ -181,7 +181,7 @@
                             <strong> {{ $ppk->penerimaUser->nama_user }} </strong>
                         </div>
                         <div class="col">
-                            <img src="{{ $signaturepenerima }}" style="max-width: 130px; max-height:70px; ">
+                            <img src="{{ $signaturepenerima }}" style="max-width: 300px; max-height:70px; ">
                         </div>
                     </div>
                 </div>
@@ -342,7 +342,7 @@
                 </div>
                 <div class="col text-start d-flex">
                     <p>Tanda Tangan :<br /><strong>{{ $ppk->penerimaUser->nama_user }}</strong></p>
-                    <img src="{{ $signaturepenerima }}" class="ms-3" alt="Signature" height="50">
+                    <img src="{{ $signaturepenerima }}" class="ms-3" alt="Signature" height="70">
                 </div>
             </div>
         </div>
@@ -355,7 +355,6 @@
                     Tanggal"</strong></p>
 
             <div class="row mb-3">
-                <label for="verifikasi" class="col-2 col-form-label"><strong>Catatan</strong></label>
                 <div class="col-6">
 
                     @if (!empty($verifikasi) && !empty($verifikasi_img))
@@ -380,7 +379,7 @@
                 </div>
                 <div class="col">
                     <div class="row d-flex justify-content-end">
-                        <img src="{{ $signature }}" style="max-width: 100px; max-height: 70px;">
+                        <img src="{{ $signature }}" style="max-width: 300px; max-height: 70px;">
                     </div>
                     <div class="row text-end">
                         <p>Tanggal Verifikasi : <span class="ps-5" style="border-bottom: 1px solid #000">
@@ -457,7 +456,7 @@
             <div class="row align-items-end">
                 <div class="col-7 text-center">
                     <p>Tanda Tangan : <img src="{{ $signature }}" alt="Signature"
-                            style="border-bottom: 1px solid #000; max-width: 100px; max-height: 70px;"></p>
+                            style="border-bottom: 1px solid #000; max-height: 50px;"></p>
                     <p>Pembuat/Inisiator: <strong>{{ $ppk->pembuatUser->nama_user }}</strong></p>
                 </div>
                 <div class="col">
