@@ -9,6 +9,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ResikoController;
 use App\Http\Controllers\KriteriaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\StatusPpkController;
 use App\Http\Controllers\RiskRegisterController;
@@ -156,4 +157,8 @@ Route::middleware('auth')->group(function () {
     Route::post('statusppk', [StatusPpkController::class, 'store'])->name('admin.statusppk.store');
     Route::put('statusppk/{id}', [StatusPpkController::class, 'update'])->name('statusppk.update');
     Route::delete('statusppk/{id}', [StatusPpkController::class, 'destroy'])->name('statusppk.destroy');
+
+    // Notification
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 });

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
 class User extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $table = 'user';
     protected $primaryKey = 'id';
@@ -25,9 +26,6 @@ class User extends Authenticatable
     // Define the relationship with Divisi
     public function divisi()
     {
-        return $this->belongsTo(Divisi::class, 'divisi', 'id','nama_divisi');
+        return $this->belongsTo(Divisi::class, 'divisi', 'id', 'nama_divisi');
     }
-
-
 }
-

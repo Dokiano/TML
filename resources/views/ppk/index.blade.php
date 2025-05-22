@@ -355,10 +355,11 @@
 
                                             @if (auth()->id() == $ppk->pembuat)
                                                 @php
-                                                    $updated_at = \Carbon\Carbon::parse($ppk->formppk2->updated_at);
+                                                    $updated_at = \Carbon\Carbon::parse($ppk->formppk2->tgl_pencegahan);
                                                     $isExpired = $updated_at->diffInMonths(now()) >= 1;
                                                     $months = $updated_at->diffInDays(now());
                                                     $currentMonth = 30 - $months;
+                                                    // dd($currentMonth);
                                                 @endphp
                                                 @if ($ppk->statusppk != 'IDENTIFIKASI ULANG' && !is_null($ppk->formppk2->signaturepenerima))
                                                     <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
