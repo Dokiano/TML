@@ -102,7 +102,7 @@ class PpkController extends Controller
             ->when($jenis, fn($query) => $query->where('jenisketidaksesuaian', 'like', "%$jenis%"))
             ->when($divisiPenerima, fn($query) => $query->where('divisipenerima', '=', $divisiPenerima))
             ->when($divisiPengirim, fn($query) => $query->where('divisipembuat', '=', $divisiPengirim))
-            ->when($tipeFilter === 'IQA', fn($query) => $query->where('nomor_surat', 'like', '%/IQA/%'))
+            ->when($tipeFilter === 'IA', fn($query) => $query->where('nomor_surat', 'like', '%/IA/%'))
             ->when($tipeFilter === 'MFG', fn($query) => $query->where('nomor_surat', 'like', '%/MFG/%'))
             ->get();
 
@@ -1342,7 +1342,7 @@ class PpkController extends Controller
             $query->where('pembuat', $userId)
                 ->orWhere('penerima', $userId);
         })
-            ->where('nomor_surat', 'like', '%IQA%')
+            ->where('nomor_surat', 'like', '%IA%')
             ->when($startDate, function ($query, $startDate) {
                 $query->whereDate('created_at', '>=', $startDate);
             })
@@ -1372,14 +1372,14 @@ class PpkController extends Controller
         return view('ppk.indexppk2', compact('ppks', 'ppk'));
     }
 
-    public function createIQA(Request $request)
+    public function createIA(Request $request)
     {
         $data = User::all()->sortBy('nama_user');
         $status = StatusPpk::all();
-        return view('ppk.createIQA', compact('data', 'status'));
+        return view('ppk.createIA', compact('data', 'status'));
     }
 
-    public function storeIQA(Request $request)
+    public function storeIA(Request $request)
     {
         // dd($request->all());
         $request->validate([
@@ -1420,7 +1420,7 @@ class PpkController extends Controller
                 }
             }
 
-            $lastPpk = Ppk::where('nomor_surat', 'like', '%/IQA/%')
+            $lastPpk = Ppk::where('nomor_surat', 'like', '%/IA/%')
                 ->latest('id') // atau 'created_at' kalau ada kolom timestamp
                 ->first();
 
@@ -1448,14 +1448,14 @@ class PpkController extends Controller
             $divisi = $request->divisipenerima ?? $user->divisi;
 
             // Membuat nomor surat
-            $nomorSurat = "$nomor/IQA/$divisi/$bulan/$tahun-$semester";
+            $nomorSurat = "$nomor/IA/$divisi/$bulan/$tahun-$semester";
 
 
             // Pastikan nomor surat unik
             while (Ppk::where('nomor_surat', $nomorSurat)->exists()) {
                 $sequence++;  // Meningkatkan urutan
                 $nomor = str_pad($sequence, 3, '0', STR_PAD_LEFT);  // Membuat nomor tiga digit
-                $nomorSurat = "$nomor/IQA/$divisi/$bulan/$tahun-$semester"; // Membuat nomor surat baru
+                $nomorSurat = "$nomor/IA/$divisi/$bulan/$tahun-$semester"; // Membuat nomor surat baru
             }
 
             $buatppk = Ppk::create([

@@ -47,7 +47,7 @@
                                         style="width: 50px; height: 50px; border-radius: 50%; background-color: #F6F9FF;">
                                         <i class="bi bi-file-earmark-text"></i>
                                     </div>
-                                    <span style="color: #00286F;">PPK-IQA</span>
+                                    <span style="color: #00286F;">PPK-IA</span>
                                 </div>
                             </div>
                         </a>

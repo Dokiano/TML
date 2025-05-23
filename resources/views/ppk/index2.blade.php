@@ -78,9 +78,9 @@
                     <a href="{{ route('ppk.index2', ['filter' => 'ALL']) }}"
                         class="btn {{ $tipeFilter === 'ALL' ? 'btn-primary' : 'btn-outline-primary' }}"
                         style="font-weight: 500; font-size: 12px;">ALL</a>
-                    <a href="{{ route('ppk.index2', ['filter' => 'IQA']) }}"
-                        class="btn {{ $tipeFilter === 'IQA' ? 'btn-primary' : 'btn-outline-primary' }}"
-                        style="font-weight: 500; font-size: 12px;">IQA</a>
+                    <a href="{{ route('ppk.index2', ['filter' => 'IA']) }}"
+                        class="btn {{ $tipeFilter === 'IA' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        style="font-weight: 500; font-size: 12px;">IA</a>
                     <a href="{{ route('ppk.index2', ['filter' => 'MFG']) }}"
                         class="btn {{ $tipeFilter === 'MFG' ? 'btn-primary' : 'btn-outline-primary' }}"
                         style="font-weight: 500; font-size: 12px;">MFG</a>

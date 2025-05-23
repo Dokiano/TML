@@ -45,6 +45,9 @@
                     <a href="/adminppk">
                         <i class="bi bi-circle"></i><span>All Proses Peningkatan Kinerja (PPK)</span>
                     </a>
+                    <a href="/ppk">
+                        <i class="bi bi-circle"></i><span>Create Proses Peningkatan Kinerja (PPK)</span>
+                    </a>
                 </li>
             </ul>
         </li>

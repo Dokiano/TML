@@ -202,7 +202,7 @@
                                                                 !empty($ppk->formppk2->identifikasi))
                                                             @php
                                                                 $updated_at = \Carbon\Carbon::parse(
-                                                                    $ppk->formppk2->updated_at,
+                                                                    $ppk->formppk2->tgl_pencegahan,
                                                                 );
                                                                 $isExpired = $updated_at->diffInMonths(now()) >= 1;
                                                                 $months = $updated_at->diffInDays(now());
@@ -291,7 +291,7 @@
                                                     </a>
                                                     <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
                                                         class="btn btn-warning btn-sm"
-                                                        title="Edit Penanggunlangan & Pencegahan">
+                                                        title="Edit Penanggulangan & Pencegahan">
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </a>
                                                 @endif
@@ -300,7 +300,7 @@
 
                                             @if (auth()->id() == $ppk->pembuat)
                                                 @php
-                                                    $updated_at = \Carbon\Carbon::parse($ppk->formppk2->updated_at);
+                                                    $updated_at = \Carbon\Carbon::parse($ppk->formppk2->tgl_pencegahan);
                                                     $isExpired = $updated_at->diffInMonths(now()) >= 1;
                                                     $months = $updated_at->diffInDays(now());
                                                     $currentMonth = 30 - $months;
@@ -308,7 +308,7 @@
                                                 @if ($ppk->statusppk != 'IDENTIFIKASI ULANG' && !is_null($ppk->formppk2->signaturepenerima))
                                                     <a href="{{ route('ppk.editUsulan', $ppk->id) }}"
                                                         class="btn btn-warning btn-sm"
-                                                        title="Edit Penanggunlangan & Pencegahan">
+                                                        title="Edit Penanggulangan & Pencegahan">
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </a>
                                                     @if ($isExpired && is_null($ppk->formppk3->verifikasi))

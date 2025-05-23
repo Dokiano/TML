@@ -2,8 +2,8 @@
 
 @section('content')
     <!-- Pastikan Bootstrap Icons sudah terpasang. Jika belum, tambahkan link berikut di head layout utama:
-                                                                                                                                                                                                                                                                                                                                                                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-                                                                                                                                                                                                                                                                                                                                                            -->
+                                                                                                                                                                                                                                                                                                                                                                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+                                                                                                                                                                                                                                                                                                                                                                -->
 
     <body>
         <div class="card shadow-lg border-0">
@@ -12,12 +12,12 @@
                     class="card-title text-center text-uppercase fw-bold text-primary d-flex justify-content-center align-items-center gap-2">
                     Proses Peningkatan Kinerja
                     <span class="text-white bg-warning px-2 py-1 rounded-pill fw-bold" style="font-size: 10px;">
-                        IQA
+                        IA
                     </span>
                 </h5>
                 <hr class="mb-4 border-primary">
 
-                <form method="POST" action="{{ route('ppk.storeIQA') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('ppk.storeIA') }}" enctype="multipart/form-data">
                     @csrf
 
                     @if ($errors->any())

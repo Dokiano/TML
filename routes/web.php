@@ -9,9 +9,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ResikoController;
 use App\Http\Controllers\KriteriaController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\StatusPpkController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RiskRegisterController;
 
 
@@ -124,12 +124,12 @@ Route::middleware('auth')->group(function () {
 
     // -- PPK Routes --
     Route::get('/ppk', [PpkController::class, 'dashboardPPK'])->name('ppk.dashboardPPK');
-    Route::get('/ppk-IQA', [PpkController::class, 'indexppk2'])->name('ppk.indexppk2');
+    Route::get('/ppk-IA', [PpkController::class, 'indexppk2'])->name('ppk.indexppk2');
     Route::get('/ppk-MFG', [PpkController::class, 'index'])->name('ppk.index');
     Route::get('/formppk', [PpkController::class, 'create'])->name('ppk.create');
-    Route::get('/formppk2', [PpkController::class, 'createIQA'])->name('ppk.createIQA');
+    Route::get('/formppk2', [PpkController::class, 'createIA'])->name('ppk.createIA');
     Route::post('/form/store', [PpkController::class, 'store'])->name('ppk.store');
-    Route::post('/form/storeIQA', [PpkController::class, 'storeIQA'])->name('ppk.storeIQA');
+    Route::post('/form/storeIA', [PpkController::class, 'storeIA'])->name('ppk.storeIA');
     Route::get('/formidentifikasi/{id}', [PpkController::class, 'create2'])->name('ppk.create2');
     Route::post('/ppk/store-2', [PpkController::class, 'store2'])->name('ppk.store2');
     Route::get('/formusulan/{id}', [PpkController::class, 'create3'])->name('ppk.create3');
