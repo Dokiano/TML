@@ -25,7 +25,12 @@ class Ppk extends Model
         'signature',
         'created_at',
         'nomor_surat',
-        'cc_email'
+        'cc_email',
+        'emailverifikasi'
+    ];
+
+    protected $casts = [
+        'emailverifikasi'  => 'array',
     ];
 
     public function pembuatUser()

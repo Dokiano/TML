@@ -67,7 +67,7 @@
 
     <section class="section dashboard">
         {{-- <?php
-        dd($ppk);
+        dd($ppk->formppk2);
         ?> --}}
         @foreach ($ppk as $item)
             @php
@@ -76,15 +76,42 @@
                 $penerimaUser = App\Models\User::find($item->penerima);
 
                 $updated_at = \Carbon\Carbon::parse($item->formppk2->tgl_pencegahan);
+                // dd($item->formppk2);
                 $isExpired = $updated_at->diffInMonths(now()) >= 1;
                 $months = $updated_at->diffInDays(now());
                 $currentMonth = 30 - $months;
                 $daysPassed = $updated_at->diffInDays(now());
 
-                // Cek apakah email sudah dikirim (menggunakan status di database)
-                $emailSent = $item->emailverifikasi;
+                $creatPpk = \Carbon\Carbon::parse($item->updated_at);
+                $isExpired2 = $creatPpk->diffInDays(now()) >= 7;
+
+                $flags = $item->emailverifikasi ?? [];
+                if (!is_array($flags)) {
+                    $flags = (array) $flags;
+                }
+                $emailSent = in_array(1, $flags, true);
+
+                $flags2 = $item->emailverifikasi ?? [];
+                if (!is_array($flags2)) {
+                    $flags2 = (array) $flags2;
+                }
+                $emailSent2 = in_array(2, $flags2, true);
 
                 // Perbaiki deklarasi array dengan tanda '=>'
+                $data_email_identifikasi = [
+                    'judul' => 'Peringatan Identifikasi PPK',
+                    'sender_name' => "{$item->penerimaUser->email}, {$item->divisipenerima}",
+                    'subject' => "Segera identifikasi PPK No. {$nomor_surat}",
+                    'senderView' => "$pembuatUser->nama_user, {$item->divisipembuat}",
+                    'paragraf1' => "Dear {$item->penerimaUser->email}, {$item->divisipenerima}", // Menggunakan nama_user dari model User
+                    'paragraf2' =>
+                        'Anda belum melakukan identifikasi PPK selama 1 Minggu. Segera lakukan identifikasi PPK dengan nomor surat :',
+                    'paragraf3' => $nomor_surat,
+                    'paragraf4' => $item->judul,
+                    'paragraf5' => 'yang telah dibuat oleh :',
+                    'paragraf7' => 'Untuk menjawab PPK dan update progress silahkan klik link di bawah ini',
+                ];
+
                 $data_email = [
                     'judul' => 'Verifikasi PPK',
                     'sender_name' => "{$item->pembuatUser->email}, {$item->divisipembuat}",
@@ -97,25 +124,54 @@
                     'paragraf5' => 'yang telah diidentifikasi oleh :',
                     'paragraf7' => 'Untuk menambahkan Evidence dan update progress silahkan klik link di bawah ini',
                 ];
-            @endphp
-            @php
+
                 $statusInvalid = in_array($item->statusppk, ['CANCEL', 'IDENTIFIKASI ULANG', 'CLOSE (Tidak Efektif)']);
                 $form2 = $item->formppk2 ?? null;
                 $signaturePenerima = $form2?->signaturepenerima;
                 $form3 = $item->formppk3 ?? null;
                 $form2Valid =
                     !empty($form2?->pencegahan) && !empty($form2?->penanggulangan) && !empty($form2?->identifikasi);
+
+                $identifikasiValid = empty($form2?->identifikasi);
+
             @endphp
 
             @if (!$statusInvalid && $signaturePenerima && is_null($form3?->verifikasi) && $form2Valid && $isExpired && !$emailSent)
                 @php
-                    // Kirim email jika expired dan email belum dikirim
+                    // Kirim email
                     Mail::to($item->emailpembuat)
                         ->cc(array_merge((array) $item->cc_email, [$item->emailpenerima]))
                         ->send(new \App\Mail\KirimEmail($data_email));
 
-                    // Update status email sudah terkirim di database
-                    $item->emailverifikasi = true;
+                    // Ambil flags sebagai array (atau [] kalau null)
+                    $flags = $item->emailverifikasi ?? [];
+
+                    // Tambahkan flag '1' jika belum ada
+                    if (!in_array(1, $flags)) {
+                        $flags[] = 1;
+                    }
+
+                    // Simpan kembali
+                    $item->emailverifikasi = $flags;
+                    $item->save();
+                @endphp
+            @endif
+
+            @if ($identifikasiValid && !$statusInvalid && $isExpired2 && !$emailSent2)
+                @php
+                    // Kirim email identifikasi
+                    Mail::to($item->emailpenerima)
+                        ->cc(array_merge((array) $item->cc_email, [$item->emailpembuat]))
+                        ->send(new \App\Mail\KirimEmail($data_email_identifikasi));
+
+                    // Ambil flags (array) lalu tambahkan '2' jika belum ada
+                    $flags2 = $item->emailverifikasi ?? [];
+
+                    if (!in_array(2, $flags2)) {
+                        $flags2[] = 2;
+                    }
+
+                    $item->emailverifikasi = $flags2;
                     $item->save();
                 @endphp
             @endif
@@ -264,9 +320,9 @@
                     </thead>
                     <tbody>
                         ${data.map((resiko, index) => `<tr>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <td>${index + 1}</td>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <td>${resiko.nama_resiko}</td>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </tr>`
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <td>${index + 1}</td>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <td>${resiko.nama_resiko}</td>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </tr>`
                         ).join('')}
                     </tbody>
                 </table>
