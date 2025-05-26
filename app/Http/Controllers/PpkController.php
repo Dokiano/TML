@@ -382,8 +382,11 @@ class PpkController extends Controller
             $ppk->save();
 
             DB::commit();
-
-            return redirect()->route('ppk.index')->with('success', 'PPK updated successfully! ✅');
+            if (strpos($ppk->nomor_surat, '/IA/') !== false) {
+                return redirect()->route('ppk.indexppk2')->with('success', 'PPK updated successfully! ✅');
+            } else {
+                return redirect()->route('ppk.index')->with('success', 'PPK updated successfully! ✅');
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors(['error' => 'Failed to update data: ' . $e->getMessage()]);
@@ -404,6 +407,8 @@ class PpkController extends Controller
 
         return view('ppk.edit', compact('ppk', 'ppkkedua', 'users', 'evidenceFiles', 'status'));
     }
+
+
 
 
     public function create2($id)
@@ -575,8 +580,13 @@ class PpkController extends Controller
                 $penerima = Ppk::find($request->id_formppk)->emailpenerima;
                 // Mail::to($penerima)->send(new KirimEmail2($data_email));
             }
+            $ppk = Ppk::findOrFail($request->id_formppk);
+            if (strpos($ppk->nomor_surat, '/IA/') !== false) {
 
-            return redirect()->route('ppk.index')->with('success', 'Data berhasil diperbarui.✅');
+                return redirect()->route('ppk.indexppk2')->with('success', 'Data berhasil diperbarui.✅');
+            } else {
+                return redirect()->route('ppk.index')->with('success', 'Data berhasil diperbarui.✅');
+            }
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Gagal menyimpan data: ' . $e->getMessage()]);
         }
@@ -698,6 +708,7 @@ class PpkController extends Controller
 
         try {
             $ppk = Ppkkedua::findOrFail($id);
+            $ppklengkap = Ppk::findOrFail($ppk->id_formppk);
 
             $evidences = is_string($ppk->evidencekedua) ? json_decode($ppk->evidencekedua, true) : [];
 
@@ -792,7 +803,11 @@ class PpkController extends Controller
                 }
             }
 
-            return redirect()->route('ppk.index')->with('success', 'Data berhasil diperbarui.✅');
+            if (strpos($ppklengkap->nomor_surat, '/IA/') !== false) {
+                return redirect()->route('ppk.indexppk2')->with('success', 'Data berhasil diperbarui.✅');
+            } else {
+                return redirect()->route('ppk.index')->with('success', 'Data berhasil diperbarui.✅');
+            }
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Gagal memperbarui data: ' . $e->getMessage()]);
         }
@@ -991,7 +1006,13 @@ class PpkController extends Controller
             // $penerima = Ppk::find($request->id_formppk)->emailpenerima;
             // Mail::to($penerima)->send(new KirimEmail2($data_email));
 
-            return redirect()->route('ppk.index')->with('success', 'Form keempat berhasil diperbarui.✅');
+            $ppklengkap = Ppk::findOrFail($request->id_formppk);
+
+            if (strpos($ppklengkap->nomor_surat, '/IA/') !== false) {
+                return redirect()->route('ppk.indexppk2')->with('success', 'Form keempat berhasil diperbarui.✅');
+            } else {
+                return redirect()->route('ppk.index')->with('success', 'Form keempat berhasil diperbarui.✅');
+            }
         } catch (\Exception $e) {
             return back()->withInput()->withErrors(['error' => 'Gagal memperbarui data: ' . $e->getMessage()]);
         }
