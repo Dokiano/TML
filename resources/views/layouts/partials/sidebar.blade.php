@@ -42,11 +42,11 @@
             </a>
             <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="/adminppk">
-                        <i class="bi bi-circle"></i><span>All Proses Peningkatan Kinerja (PPK)</span>
-                    </a>
                     <a href="/ppk">
                         <i class="bi bi-circle"></i><span>Create Proses Peningkatan Kinerja (PPK)</span>
+                    </a>
+                    <a href="/adminppk">
+                        <i class="bi bi-circle"></i><span>All Proses Peningkatan Kinerja (PPK)</span>
                     </a>
                 </li>
             </ul>
