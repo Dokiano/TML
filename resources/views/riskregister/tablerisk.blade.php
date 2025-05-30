@@ -333,7 +333,13 @@
                                         <td style="max-width:300px">
                                             @php
                                                 $selectedDivisi = $form->pihak ? explode(',', $form->pihak) : [];
+                                                $keteranganList = old('keterangan', $form->keterangan ?? []);
                                                 $allDivisi = \App\Models\Divisi::all();
+                                                $divisiNames = $allDivisi->pluck('nama_divisi')->toArray();
+
+                                                $oldPihak = old('pihak', $selectedDivisi);
+                                                $oldCustom = old('pihak_custom', []);
+                                                $oldKet = old('keterangan', $riskregister->keterangan ?? []);
                                             @endphp
 
                                             <form method="POST"
@@ -355,68 +361,110 @@
 
                                                 {{-- 2. Tampilan default ketika tidak edit --}}
                                                 <div id="pihak-view-{{ $form->id }}">
-                                                    @foreach ($selectedDivisi as $s)
-                                                        - {{ $s }}<br>
-                                                    @endforeach
-                                                    @if (count($selectedDivisi) === 0)
+                                                    @if (count($selectedDivisi))
+                                                        @foreach ($selectedDivisi as $i => $divisiName)
+                                                            - <span class="fw-bold">{{ $divisiName }}</span> :
+                                                            {{ $keteranganList[$i] ?? '-' }}<br>
+                                                        @endforeach
+                                                    @else
                                                         -
                                                     @endif
                                                 </div>
 
                                                 {{-- 3. Kontainer edit (dropdown + Save), hidden default --}}
-                                                <div id="pihak-edit-{{ $form->id }}" class="d-none">
-                                                    <div class="dropdown mb-2">
-                                                        <button
-                                                            class="btn btn-outline-dark dropdown-toggle text-start text-wrap"
-                                                            type="button" id="dropdownDivisiAkses-{{ $form->id }}"
-                                                            data-bs-toggle="dropdown" aria-expanded="false"
-                                                            style="max-width:3 00px; white-space:normal; word-break:break-word; font-size:13px;">
-                                                            @foreach ($selectedDivisi as $s)
-                                                                - {{ $s }}<br>
-                                                            @endforeach
-                                                            @if (count($selectedDivisi) === 0)
-                                                                -
-                                                            @endif
-                                                        </button>
-                                                        <ul class="dropdown-menu checkbox-group p-2"
-                                                            aria-labelledby="dropdownDivisiAkses-{{ $form->id }}"
-                                                            style=" max-height: 200px; overflow-y: auto;">
-                                                            <li class="form-check mb-2">
-                                                                <input
-                                                                    class="form-check-input select-all-{{ $form->id }}"
-                                                                    type="checkbox" id="select-all-{{ $form->id }}">
-                                                                <label class="form-check-label"
-                                                                    for="select-all-{{ $form->id }}">
-                                                                    Pilih Semua
-                                                                </label>
-                                                            </li>
+                                                @php
+                                                    // Siapkan data
+                                                    $divisiNames = $allDivisi->pluck('nama_divisi')->toArray();
+                                                    $oldPihak = old('pihak', $selectedDivisi);
+                                                    $oldCustom = old('pihak_custom', []);
+                                                    $oldKet = old('keterangan', $form->keterangan ?? []);
+                                                @endphp
 
-                                                            @foreach ($allDivisi as $d)
-                                                                <li class="form-check mb-1">
-                                                                    <input
-                                                                        class="form-check-input all-divisi-{{ $form->id }}"
-                                                                        type="checkbox" name="pihak[]"
-                                                                        value="{{ $d->nama_divisi }}"
-                                                                        id="divisi-{{ $form->id }}-{{ $d->id }}"
-                                                                        {{ in_array($d->nama_divisi, $selectedDivisi) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label"
-                                                                        for="divisi-{{ $form->id }}-{{ $d->id }}">
-                                                                        {{ $d->nama_divisi }}
-                                                                    </label>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
+                                                <div id="pihak-edit-{{ $form->id }}" class="d-none">
+
+                                                    <div id="pihak-list-{{ $form->id }}">
+                                                        @foreach ($oldPihak as $i => $p)
+                                                            @php
+                                                                $isCustom = !in_array($p, $divisiNames);
+                                                                $customValue = $isCustom ? $p : $oldCustom[$i] ?? '';
+                                                                $ketValue = $oldKet[$i] ?? '';
+                                                            @endphp
+
+                                                            <div class="row mb-3 align-items-center input-row">
+                                                                {{-- Dropdown Pihak --}}
+                                                                <div class="col-9">
+                                                                    <div class="row" style="font-size: 10px;"><select
+                                                                            name="pihak[]"
+                                                                            class="form-select pihak-select">
+                                                                            <option value="">-- Pilih Pihak --
+                                                                            </option>
+                                                                            @foreach ($allDivisi as $d)
+                                                                                <option value="{{ $d->nama_divisi }}"
+                                                                                    {{ !$isCustom && $p === $d->nama_divisi ? 'selected' : '' }}>
+                                                                                    {{ $d->nama_divisi }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                            <option value="Other"
+                                                                                {{ $isCustom ? 'selected' : '' }}>Other
+                                                                            </option>
+                                                                        </select></div>
+                                                                    <div class="row pihak-custom-row"
+                                                                        style="display: {{ $isCustom ? 'block' : 'none' }};">
+                                                                        <input type="text" name="pihak_custom[]"
+                                                                            class="form-control pihak-custom"
+                                                                            placeholder="Masukkan Pihak Lainnya"
+                                                                            value="{{ $customValue }}">
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <textarea name="keterangan[]" class="form-control auto-resize" placeholder="Keterangan" rows="1">{{ $ketValue }}</textarea>
+                                                                    </div>
+                                                                </div>
+                                                                {{-- Tombol Hapus Baris --}}
+                                                                <div class="col-sm-2 ">
+                                                                    <button type="button"
+                                                                        class="btn btn-danger remove-row"
+                                                                        style="height: 100%;">×</button>
+                                                                </div>
+
+                                                            </div>
+                                                        @endforeach
                                                     </div>
 
-                                                    {{-- 4. Tombol Save --}}
-                                                    <button type="submit" id="save-pihak-{{ $form->id }}"
-                                                        class="btn btn-primary btn-sm">
-                                                        Save
+                                                    {{-- Tombol Tambah --}}
+                                                    <button type="button" id="add-row-{{ $form->id }}"
+                                                        class="btn btn-outline-primary btn-sm mb-3 w-100">
+                                                        + Tambah Pihak
                                                     </button>
+
+                                                    {{-- Action Buttons --}}
+                                                    <div class="d-flex justify-content-end">
+                                                        <button type="button" class="btn btn-secondary me-2 cancel-edit"
+                                                            data-target="#pihak-edit-{{ $form->id }}">
+                                                            Cancel
+                                                        </button>
+                                                        <button type="submit"
+                                                            class="btn btn-primary btn-sm">Save</button>
+                                                    </div>
                                                 </div>
                                             </form>
 
                                             <script>
+                                                document.addEventListener('DOMContentLoaded', () => {
+                                                    const areas = document.querySelectorAll('.auto-resize');
+
+                                                    function autoGrow(el) {
+                                                        el.style.height = 'auto'; // reset
+                                                        el.style.height = el.scrollHeight + 'px'; // tumbuh sesuai konten
+                                                    }
+
+                                                    areas.forEach(a => {
+                                                        // saat pertama load, sesuaikan tinggi
+                                                        autoGrow(a);
+                                                        // attach event untuk setiap input
+                                                        a.addEventListener('input', () => autoGrow(a));
+                                                    });
+                                                });
+
                                                 function togglePihakEdit(id) {
                                                     const chk = document.getElementById('editpihak-' + id);
                                                     const view = document.getElementById('pihak-view-' + id);
@@ -452,6 +500,82 @@
                                                     // inisialisasi awal
                                                     selectAll.checked = Array.from(items).every(ch => ch.checked);
                                                 }
+
+                                                document.addEventListener('DOMContentLoaded', () => {
+                                                    const list = document.getElementById('pihak-list-{{ $form->id }}');
+                                                    const addBtn = document.getElementById('add-row-{{ $form->id }}');
+
+                                                    // Opsi dropdown
+                                                    const divisiOptions = `
+      <option value="">-- Pilih Pihak --</option>
+      @foreach ($allDivisi as $d)
+        <option value="{{ $d->nama_divisi }}">{{ $d->nama_divisi }}</option>
+      @endforeach
+      <option value="Other">Other</option>
+    `;
+
+                                                    // Toggle custom-field
+                                                    list.addEventListener('change', e => {
+                                                        if (!e.target.matches('.pihak-select')) return;
+                                                        const row = e.target.closest('.input-row');
+                                                        const customRow = row.querySelector('.pihak-custom-row');
+                                                        if (e.target.value === 'Other') {
+                                                            customRow.style.display = 'block';
+                                                        } else {
+                                                            customRow.style.display = 'none';
+                                                            customRow.querySelector('.pihak-custom').value = '';
+                                                        }
+                                                    });
+
+                                                    // Fungsi bikin baris baru (mirror struktur di atas)
+                                                    function newRow() {
+                                                        const wrapper = document.createElement('div');
+                                                        wrapper.className = 'row mb-3 align-items-center input-row';
+                                                        wrapper.innerHTML = `<div class="col-9">
+        <div class="row" style="font-size:10px;">
+          <select name="pihak[]" class="form-select pihak-select">
+            ${divisiOptions}
+          </select>
+        </div>
+        <div class="row pihak-custom-row" style="display:none;">
+          <input type="text"
+                 name="pihak_custom[]"
+                 class="form-control pihak-custom"
+                 placeholder="Masukkan Pihak Lainnya">
+        </div>
+        <div class="row mt-2">
+          <textarea name="keterangan[]"
+                    class="form-control auto-resize"
+                    placeholder="Keterangan"
+                    rows="1"></textarea>
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <button type="button" class="btn btn-danger remove-row" style="height:100%">×</button>
+      </div>
+      `;
+                                                        return wrapper;
+                                                    }
+
+                                                    // Tambah baris
+                                                    addBtn.addEventListener('click', () => {
+                                                        list.appendChild(newRow());
+                                                    });
+
+                                                    // Hapus baris
+                                                    list.addEventListener('click', e => {
+                                                        if (e.target.matches('.remove-row')) {
+                                                            e.target.closest('.input-row').remove();
+                                                        }
+                                                    });
+
+                                                    // Cancel edit (hide container)
+                                                    document.querySelectorAll('.cancel-edit').forEach(btn => {
+                                                        btn.addEventListener('click', () => {
+                                                            document.querySelector(btn.dataset.target).classList.add('d-none');
+                                                        });
+                                                    });
+                                                });
                                             </script>
                                         </td>
 

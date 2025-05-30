@@ -200,6 +200,8 @@ class RiskController extends Controller
             ? explode(",", $riskregister->pihak)
             : [];
 
+        $keterangan = $riskregister->keterangan ?? [];
+
 
         // Ambil target PIC berdasarkan targetpicId
         $targetpicId = $riskregister->targetpic;
@@ -214,6 +216,7 @@ class RiskController extends Controller
                 "tindakanList",
                 "resikoList",
                 "selectedDivisi",
+                "keterangan",
                 "users",
                 "three",
                 "kriteria"
@@ -223,152 +226,121 @@ class RiskController extends Controller
 
     public function update(Request $request, $id)
     {
-        // dd($request->all());
+        // 1. Validasi input
         $validated = $request->validate([
-            "id_divisi" => "required|exists:divisi,id",
-            "issue" => "required|string",
-            "inex" => "nullable|in:I,E",
-            "peluang" => "nullable|string",
-            "tindakan" => "nullable|array",
-            "tindakan.*" => "nullable|string",
-            "tindakan_to_delete" => "nullable|array",
-            "tindakan_to_delete.*" => "boolean",
-            "pihak" => "nullable|array",
-            "pihak.*" => "exists:divisi,nama_divisi",
-            "targetpic" => "nullable|array",
-            "targetpic.*" => "nullable|string",
+            "id_divisi"        => "required|exists:divisi,id",
+            "issue"            => "required|string",
+            "inex"             => "nullable|in:I,E",
+            "peluang"          => "nullable|string",
+            "tindakan"         => "nullable|array",
+            "tindakan.*"       => "nullable|string",
+            "tindakan_to_delete"    => "nullable|array",
+            "tindakan_to_delete.*"  => "boolean",
+            "pihak"            => "required|array",
+            "pihak.*"          => "string",
+            "pihak_custom"     => "nullable|array",
+            "pihak_custom.*"   => "nullable|string",
+            "keterangan"       => "nullable|array",
+            "keterangan.*"     => "nullable|string",
+            "targetpic"        => "nullable|array",
+            "targetpic.*"      => "nullable|string",
             "tgl_penyelesaian" => "nullable|array",
             "tgl_penyelesaian.*" => "nullable|date_format:Y-m-d",
-            "nama_resiko" => "nullable|array",
-            "before" => "nullable|array",
-            "after" => "nullable|array",
+            "nama_resiko"      => "nullable|array",
+            "before"           => "nullable|array",
+            "after"            => "nullable|array",
             "target_penyelesaian" => "required|date",
-            "pihak_other" => "nullable|string",
         ]);
 
-        // Proses pihak dan pihak_other
-        $pihak = $validated["pihak"] ?? [];
-        if (!empty($validated["pihak_other"])) {
-            $pihak[] = $validated["pihak_other"];
+        // 2. Merge input pihak + custom
+        $pihakInputs  = $validated['pihak'];
+        $customInputs = $validated['pihak_custom'] ?? [];
+        $pihakFinal   = [];
+
+        foreach ($pihakInputs as $i => $val) {
+            if ($val === 'Other') {
+                // kalau pilih Other, ambil dari customInputs
+                if (!empty($customInputs[$i])) {
+                    $pihakFinal[] = $customInputs[$i];
+                }
+            } else {
+                $pihakFinal[] = $val;
+            }
         }
 
-        // Temukan Riskregister berdasarkan ID
+        // 3. Temukan model dan update main record
         $riskregister = Riskregister::findOrFail($id);
-
-        // Update Riskregister
         $riskregister->update([
-            "id_divisi" => $validated["id_divisi"],
-            "issue" => $validated["issue"],
-            "inex" => $validated["inex"],
-            "peluang" => $validated["peluang"],
+            "id_divisi"           => $validated["id_divisi"],
+            "issue"               => $validated["issue"],
+            "inex"                => $validated["inex"],
+            "peluang"             => $validated["peluang"],
             "target_penyelesaian" => $validated["target_penyelesaian"],
-            "pihak" => !empty($pihak) ? implode(",", $pihak) : null, // Gabungkan array menjadi string
+            "pihak"               => implode(',', $pihakFinal),
+            "keterangan"          => $validated["keterangan"] ?? null,
         ]);
 
-        // Ambil tindakan yang ada
-        $existingTindakan = Tindakan::where(
-            "id_riskregister",
-            $riskregister->id
-        )
-            ->get()
-            ->keyBy("id");
-
-        // Hapus tindakan yang perlu dihapus
+        // 4. Hapus tindakan yang ditandai untuk delete
+        $existingTindakan = Tindakan::where("id_riskregister", $riskregister->id)
+            ->get()->keyBy("id");
         if (!empty($validated["tindakan_to_delete"])) {
-            foreach (
-                $validated["tindakan_to_delete"]
-                as $tindakanId => $deleteFlag
-            ) {
-                if ($deleteFlag) {
-                    // Hapus data Tindakan jika di-flag untuk dihapus
-                    $tindakanToDelete = $existingTindakan->get($tindakanId);
-                    if ($tindakanToDelete) {
-                        // Hapus Realisasi terkait Tindakan
-                        Realisasi::where(
-                            "id_tindakan",
-                            $tindakanToDelete->id
-                        )->delete();
-                        // Hapus Tindakan
-                        $tindakanToDelete->delete();
-                    }
+            foreach ($validated["tindakan_to_delete"] as $tId => $toDel) {
+                if ($toDel && isset($existingTindakan[$tId])) {
+                    // hapus realisasi & tindakan
+                    Realisasi::where("id_tindakan", $tId)->delete();
+                    $existingTindakan[$tId]->delete();
                 }
             }
         }
 
-        // Update atau buat tindakan baru
-        foreach ($validated["tindakan"] as $key => $tindakan) {
-            $tglPenyelesaian = isset($validated["tgl_penyelesaian"][$key])
-                ? $validated["tgl_penyelesaian"][$key]
-                : null;
+        // 5. Update atau buat tindakan baru
+        foreach ($validated["tindakan"] as $key => $namaTindakan) {
+            $pic = $validated["targetpic"][$key] ?? null;
+            $tgl = $validated["tgl_penyelesaian"][$key] ?? null;
 
-            if (!empty($tindakan) && !empty($validated["targetpic"][$key])) {
+            if (!empty($namaTindakan) && !empty($pic)) {
                 if (isset($existingTindakan[$key])) {
-                    // Update tindakan yang ada
                     $existingTindakan[$key]->update([
-                        "nama_tindakan" => $tindakan,
-                        "targetpic" => $validated["targetpic"][$key],
-                        "tgl_penyelesaian" => $tglPenyelesaian,
+                        "nama_tindakan"   => $namaTindakan,
+                        "targetpic"       => $pic,
+                        "tgl_penyelesaian" => $tgl,
                     ]);
                 } else {
-                    // Buat tindakan baru jika tidak ada
-                    $newTindakan = Tindakan::create([
+                    $new = Tindakan::create([
                         "id_riskregister" => $riskregister->id,
-                        "nama_tindakan" => $tindakan,
-                        "targetpic" => $validated["targetpic"][$key],
-                        "tgl_penyelesaian" => $tglPenyelesaian,
+                        "nama_tindakan"   => $namaTindakan,
+                        "targetpic"       => $pic,
+                        "tgl_penyelesaian" => $tgl,
                     ]);
-
-                    // Simpan data ke tabel Realisasi untuk tindakan baru
                     Realisasi::create([
                         "id_riskregister" => $riskregister->id,
-                        "id_tindakan" => $newTindakan->id,
-                        "nama_realisasi" => null, // Realisasi baru, nama_realisasi belum diisi
-                        "presentase" => 0, // Realisasi baru dimulai dari 0
-                        "status" => "ON PROGRES", // Status default ON PROGRES
+                        "id_tindakan"     => $new->id,
+                        "nama_realisasi"  => null,
+                        "presentase"      => 0,
+                        "status"          => "ON PROGRES",
                     ]);
                 }
             }
         }
 
-        // Cek semua tindakan untuk menentukan status realisasi
-        $realisasiRecords = Realisasi::where(
-            "id_riskregister",
-            $riskregister->id
-        )->get();
-        foreach ($realisasiRecords as $realisasi) {
-            if ($realisasi->status === "CLOSE") {
-                $isAllRealisasiComplete = true; // Tetap CLOSE jika ada yang sudah CLOSE
-            } else {
-                $isAllRealisasiComplete = false; // Ada yang ON PROGRES atau tidak selesai
-            }
-        }
+        // 6. Update atau buat Resiko record
+        $namaResiko = !empty($validated["nama_resiko"]) ? array_shift($validated["nama_resiko"]) : null;
+        $before     = !empty($validated["before"])      ? array_shift($validated["before"])      : null;
+        $after      = !empty($validated["after"])       ? array_shift($validated["after"])       : null;
 
-        // Ambil nilai pertama dari array 'nama_resiko', 'before', 'after', dan lainnya
-        $nama_resiko = !empty($validated["nama_resiko"])
-            ? array_shift($validated["nama_resiko"])
-            : null;
-        $before = !empty($validated["before"])
-            ? array_shift($validated["before"])
-            : null;
-        $after = !empty($validated["after"])
-            ? array_shift($validated["after"])
-            : null;
-
-        // Update atau buat Resiko record
         $resiko = Resiko::firstOrNew(["id_riskregister" => $riskregister->id]);
-        $resiko
-            ->fill([
-                "nama_resiko" => $nama_resiko,
-                "before" => $before,
-                "after" => $after,
-            ])
-            ->save();
+        $resiko->fill([
+            "nama_resiko" => $namaResiko,
+            "before"      => $before,
+            "after"       => $after,
+        ])->save();
 
-        // Redirect setelah update
+        // 7. Redirect dengan pesan sukses
         return redirect()
             ->route("riskregister.tablerisk", ["id" => $validated["id_divisi"]])
-            ->with("success", "Data berhasil diperbarui!.✅");
+            ->with("success", "Data berhasil diperbarui! ✅");
     }
+
 
     private function calculateTingkatan($probability, $severity)
     {
@@ -542,8 +514,8 @@ class RiskController extends Controller
             $jumlahEntry = Realisasi::where(
                 "id_riskregister",
                 $form->id
-                )->count();
-                // dd($form->id);
+            )->count();
+            // dd($form->id);
             $form->nilai_actual =
                 $jumlahEntry > 0
                 ? round($totalNilaiAkhir / $jumlahEntry, 2)
@@ -713,6 +685,7 @@ class RiskController extends Controller
                 "issue" => $riskregister->issue,
                 "inex" => $riskregister->inex,
                 "pihak" => $riskregister->pihak,
+                "keterangan" => $riskregister->keterangan,
                 "tindak" => $riskregister->tindakan->pluck(
                     "divisi.nama_divisi"
                 ),
@@ -1252,26 +1225,40 @@ class RiskController extends Controller
 
     public function updatePihak(Request $request, $id)
     {
-        // Validasi input
+        // 1) Validasi input
         $data = $request->validate([
-            'pihak'       => 'nullable|array',
-            'pihak.*'     => 'string',
-            'pihak_other' => 'nullable|string',
+            'pihak'            => 'nullable|array',
+            'pihak.*'          => 'string',
+            'pihak_custom'     => 'nullable|array',
+            'pihak_custom.*'   => 'nullable|string',
+            'keterangan'       => 'nullable|array',
+            'keterangan.*'     => 'nullable|string',
         ]);
 
-        // Ambil array pilihan pihak
-        $pilihan = $data['pihak'] ?? [];
+        // 2) Bangun array final pihak
+        $inputs       = $data['pihak']         ?? [];
+        $customInputs = $data['pihak_custom']  ?? [];
+        $finalPihak   = [];
 
-        // Jika ada input Other, tambahkan ke array
-        if (!empty($data['pihak_other'])) {
-            $pilihan[] = $data['pihak_other'];
+        foreach ($inputs as $i => $val) {
+            if ($val === 'Other') {
+                // ambil custom jika ada
+                $custom = trim($customInputs[$i] ?? '');
+                if ($custom !== '') {
+                    $finalPihak[] = $custom;
+                }
+            } elseif ($val !== '') {
+                // dropdown biasa
+                $finalPihak[] = $val;
+            }
         }
 
-        // Temukan record dan update kolom 'pihak' sebagai string CSV
+        // 3) Temukan record & update
         $risk = Riskregister::findOrFail($id);
-        $risk->pihak = implode(',', $pilihan);
+        $risk->pihak      = count($finalPihak) ? implode(',', $finalPihak) : null;
+        $risk->keterangan = $data['keterangan'] ?? [];  // simpan array langsung (cast to array)
         $risk->save();
 
-        return back()->with('success', 'Pihak berkepentingan berhasil diupdate.');
+        return back()->with('success', 'Pihak berkepentingan berhasil di‐update.');
     }
 }

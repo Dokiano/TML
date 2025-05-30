@@ -16,9 +16,15 @@ class Riskregister extends Model
         'target_penyelesaian',
         'peluang',
         'pihak',
+        'keterangan',
         'inex',
         'updated_at',
 
+    ];
+
+    protected $casts = [
+        'pihak'      => 'array',
+        'keterangan' => 'array',
     ];
 
     // Relasi ke model Divisi

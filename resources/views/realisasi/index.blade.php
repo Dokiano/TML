@@ -66,6 +66,7 @@
                     <th scope="col">Activity</th>
                     <th scope="col">PIC</th>
                     <th scope="col">Noted</th>
+                    <th scope="col">Evidence</th>
                     <th scope="col">Tanggal Penyelesaian</th>
                     <th scope="col">Persentase</th>
                     <th scope="col">Action</th>
@@ -93,6 +94,12 @@
                             </select>
                         </td>
                         <td>{{ $realisasi->desc ?? '-' }}</td>
+                        <td>
+                            <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal"
+                                data-bs-target="#evidenceModal{{ $realisasi->id }}">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </td>
                         <td>{{ $realisasi->tgl_realisasi ?? '-' }}</td>
                         <td>{{ $realisasi->presentase ?? '-' }}%</td>
                         <td>
@@ -110,6 +117,76 @@
                                 </button>
                             </form>
 
+                            {{-- Modal Evidence --}}
+                            <div class="modal fade" id="evidenceModal{{ $realisasi->id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Evidence for {{ $realisasi->nama_realisasi }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            @if (is_array($realisasi->evidencerealisasi) && count($realisasi->evidencerealisasi) > 0)
+                                                <div class="row">
+                                                    @foreach ($realisasi->evidencerealisasi as $path)
+                                                        <div class="col-md-4 mb-3">
+                                                            <div class="card">
+                                                                @php
+                                                                    // Ekstrak ekstensi file, lowercase
+                                                                    $ext = strtolower(
+                                                                        pathinfo($path, PATHINFO_EXTENSION),
+                                                                    );
+                                                                @endphp
+
+                                                                <div class="card-body">
+                                                                    <h5 class="card-title">{{ basename($path) }}</h5>
+
+                                                                    @if (in_array($ext, ['jpg', 'jpeg', 'png']))
+                                                                        {{-- Tampilkan gambar --}}
+                                                                        <img src="{{ Storage::url($path) }}"
+                                                                            alt="{{ basename($path) }}"
+                                                                            class="img-fluid mb-2" />
+                                                                        <div>
+                                                                            <a href="{{ Storage::url($path) }}"
+                                                                                target="_blank"
+                                                                                class="btn btn-primary btn-sm me-1">
+                                                                                View Image
+                                                                            </a>
+                                                                            <a href="{{ Storage::url($path) }}"
+                                                                                download="{{ basename($path) }}"
+                                                                                class="btn btn-secondary btn-sm">
+                                                                                Download
+                                                                            </a>
+                                                                        </div>
+                                                                    @else
+                                                                        {{-- Link untuk PDF / Excel --}}
+                                                                        <div class="mb-2">
+                                                                            <i class="fa fa-file-alt fa-2x fs-6"></i>
+                                                                            {{ strtoupper($ext) }} File
+                                                                        </div>
+                                                                        <a href="{{ Storage::url($path) }}"
+                                                                            download="{{ basename($path) }}"
+                                                                            class="btn btn-secondary btn-sm">
+                                                                            Download
+                                                                        </a>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <p>No evidence available.</p>
+                                            @endif
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Modal untuk Edit Data -->
                             <div class="modal fade" id="basicModal{{ $realisasi->id }}" tabindex="-1">
                                 <div class="modal-dialog">
@@ -120,7 +197,8 @@
                                                 aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form action="{{ route('realisasi.update', $realisasi->id) }}" method="POST">
+                                            <form action="{{ route('realisasi.update', $realisasi->id) }}" method="POST"
+                                                enctype="multipart/form-data">
                                                 @csrf
                                                 @method('PUT')
                                                 <div class="mb-3">
@@ -143,11 +221,47 @@
                                                 <div class="mb-3">
                                                     <label for="tgl_realisasi" class="form-label"><strong>Tanggal
                                                             Penyelesaian</strong></label>
-                                                    <input type="date" name="tgl_realisasi" class="form-control" required
-                                                        value="{{ $realisasi->tgl_realisasi }}">
+                                                    <input type="date" name="tgl_realisasi" class="form-control"
+                                                        required value="{{ $realisasi->tgl_realisasi }}">
+                                                </div>
+                                                {{-- Existing attachments --}}
+                                                <div class="mb-3">
+                                                    <label class="form-label"><strong>Existing Evidence</strong> <span
+                                                            class="text-danger">*</span>centang yang ingin dihapus</label>
+                                                    @if (is_array($realisasi->evidencerealisasi) && count($realisasi->evidencerealisasi) > 0)
+                                                        <div class="form-check">
+                                                            @foreach ($realisasi->evidencerealisasi as $path)
+                                                                <div class="mb-1">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        name="delete_attachments[]"
+                                                                        value="{{ $path }}"
+                                                                        id="del_{{ md5($path) }}">
+                                                                    <label class="form-check-label"
+                                                                        for="del_{{ md5($path) }}">
+                                                                        <a href="{{ Storage::url($path) }}"
+                                                                            target="_blank">
+                                                                            {{ basename($path) }}
+                                                                        </a>
+                                                                    </label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @else
+                                                        <p class="text-muted font-italic"">Tidak ada evidence yang
+                                                            diupload.</p>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Upload new files --}}
+                                                <div class="mb-3">
+                                                    <label for="attachments" class="form-label"><strong>Tambah
+                                                            Evidence</strong></label>
+                                                    <input type="file" name="attachments[]" class="form-control"
+                                                        accept=".jpg,.jpeg,.png,.pdf,.xls,.xlsx" multiple>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label for="desc" class="form-label"><strong>Noted</strong></label>
+                                                    <label for="desc"
+                                                        class="form-label"><strong>Noted</strong></label>
                                                     <textarea name="desc" class="form-control">{{ $realisasi->desc }}</textarea>
                                                 </div>
                                                 <div class="mb-3">

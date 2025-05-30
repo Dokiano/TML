@@ -10,6 +10,7 @@ use App\Models\Tindakan;
 use App\Models\Realisasi;
 use App\Models\Riskregister;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RealisasiController extends Controller
 {
@@ -144,90 +145,101 @@ class RealisasiController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        // Validasi input
-        $validated = $request->validate([
-            'nama_realisasi' => 'nullable|string|max:255',
-            'tgl_realisasi' => 'nullable|date',
-            'target' => 'nullable|string|max:255',
-            'desc' => 'nullable|string',
-            'presentase' => 'nullable|numeric|min:0|max:100',
-            'status' => 'nullable|in:ON PROGRES,CLOSE',
-        ]);
+{
 
-        // Temukan realisasi berdasarkan ID
-        $realisasi = Realisasi::findOrFail($id);
+    // 1) Validasi input, termasuk attachments baru dan daftar path yang akan dihapus
+    $validated = $request->validate([
+        'nama_realisasi'        => 'nullable|string|max:255',
+        'tgl_realisasi'         => 'nullable|date',
+        'target'                => 'nullable|string|max:255',
+        'desc'                  => 'nullable|string',
+        'presentase'            => 'nullable|numeric|min:0|max:100',
+        'status'                => 'nullable|in:ON PROGRES,CLOSE',
+        'delete_attachments'    => 'nullable|array',
+        'delete_attachments.*'  => 'string',
+        'attachments.*'         => 'file|mimes:jpg,jpeg,png,pdf,xls,xlsx|max:5120',
+    ]);
 
-        // Update field pada realisasi yang ditemukan
-        $realisasi->nama_realisasi = $validated['nama_realisasi'] ?? $realisasi->nama_realisasi;
-        $realisasi->target = $validated['target'] ?? $realisasi->target;
-        $realisasi->desc = $validated['desc'] ?? $realisasi->desc;
-        $realisasi->tgl_realisasi = $validated['tgl_realisasi'] ?? $realisasi->tgl_realisasi;
-        $realisasi->presentase = $validated['presentase'] ?? $realisasi->presentase;
+    // 2) Cari record
+    $realisasi = Realisasi::findOrFail($id);
 
-        // Update status jika ada
-        if (isset($validated['status'])) {
-            $realisasi->status = $validated['status'];
-        }
-
-        // Simpan perubahan untuk realisasi yang spesifik ini
-        $realisasi->save();
-
-        // Jika status 'CLOSE', maka update semua realisasi dengan id_tindakan yang sama menjadi 'CLOSE'
-        if ($realisasi->status == 'CLOSE') {
-            // Update semua realisasi dengan id_tindakan yang sama menjadi 'CLOSE'
-            Realisasi::where('id_tindakan', $realisasi->id_tindakan)
-                ->update(['status' => 'CLOSE']);
-        }
-
-        // Cek status semua realisasi yang tertaut dengan id_tindakan
-        $hasOpenStatus = Realisasi::where('id_tindakan', $realisasi->id_tindakan)
-            ->where('status', '!=', 'CLOSE')
-            ->exists(); // Jika ada yang statusnya bukan 'CLOSE'
-
-        // Jika ada yang statusnya bukan 'CLOSE', maka status resiko adalah 'ON PROGRES'
-        if ($hasOpenStatus) {
-            $statusResiko = 'ON PROGRES';
-        } else {
-            $statusResiko = 'CLOSE';
-        }
-
-        // Update status di tabel resiko berdasarkan status realisasi
-        $id_riskregister = $realisasi->id_riskregister;
-        $resiko = Resiko::where('id', $id_riskregister)->first();
-
-        if ($resiko) {
-            $resiko->status = $statusResiko;  // Update status resiko
-            $resiko->save();
-        }
-
-        // Menghitung total persentase dan jumlah aktivitas untuk id_tindakan
-        $id_tindakan = $realisasi->id_tindakan;
-        $realisasiList = Realisasi::where('id_tindakan', $id_tindakan)->get();
-        $totalPresentase = $realisasiList->sum('presentase');
-        $jumlahActivity = $realisasiList->count();
-
-        $nilaiAkhir = $jumlahActivity > 0 ? round($totalPresentase / $jumlahActivity, 2) : 0;
-
-        // Simpan nilai akhir di tabel realisasi untuk id_tindakan
-        Realisasi::where('id_tindakan', $id_tindakan)
-            ->update(['nilai_akhir' => $nilaiAkhir]); // Update semua nilai akhir untuk id_tindakan yang sama
-
-        // Hitung nilai_actual keseluruhan untuk id_riskregister yang sama
-        $nilaiActual = Realisasi::where('id_riskregister', $realisasi->id_riskregister)->sum('nilai_akhir');
-        $jumlahTindakan = Realisasi::where('id_riskregister', $realisasi->id_riskregister)->count('id_tindakan');
-
-        // Menghitung rata-rata nilai_actual
-        $rataNilaiActual = $jumlahTindakan > 0 ? round($nilaiActual / $jumlahTindakan, 2) : 0;
-
-        // Update nilai_actual di tabel realisasi untuk id_riskregister yang sama
-        Realisasi::where('id_riskregister', $realisasi->id_riskregister)
-            ->update(['nilai_actual' => $rataNilaiActual]);
-
-        // Redirect ke halaman index dengan pesan sukses
-        return redirect()->route('realisasi.index', ['id' => $realisasi->id_tindakan])
-            ->with('success', 'Activity berhasil diperbarui!✅');
+    // 3) Update field dasar
+    $realisasi->nama_realisasi  = $validated['nama_realisasi']  ?? $realisasi->nama_realisasi;
+    $realisasi->target           = $validated['target']           ?? $realisasi->target;
+    $realisasi->desc             = $validated['desc']             ?? $realisasi->desc;
+    $realisasi->tgl_realisasi    = $validated['tgl_realisasi']    ?? $realisasi->tgl_realisasi;
+    $realisasi->presentase       = $validated['presentase']       ?? $realisasi->presentase;
+    if (isset($validated['status'])) {
+        $realisasi->status = $validated['status'];
     }
+
+    // 4) Ambil array path lama dari kolom JSON
+    $existing = $realisasi->evidencerealisasi ?? [];
+
+    // 5) Hapus file & path yang dicentang user
+    foreach ($validated['delete_attachments'] ?? [] as $delPath) {
+        if (Storage::disk('public')->exists($delPath)) {
+            Storage::disk('public')->delete($delPath);
+        }
+        if (($idx = array_search($delPath, $existing)) !== false) {
+            unset($existing[$idx]);
+        }
+    }
+    $existing = array_values($existing);
+
+    // 6) Simpan upload baru (attachments[])
+    if ($request->hasFile('attachments')) {
+        foreach ($request->file('attachments') as $file) {
+            $path = $file->store('realisasi-attachments', 'public');
+            $existing[] = $path;
+        }
+    }
+
+    // 7) Tulis kembali ke kolom JSON
+    $realisasi->evidencerealisasi = $existing;
+
+    // 8) Simpan perubahan
+    $realisasi->save();
+
+    // 9) Jika status CLOSE, tutup semua realisasi di id_tindakan yang sama
+    if ($realisasi->status === 'CLOSE') {
+        Realisasi::where('id_tindakan', $realisasi->id_tindakan)
+            ->update(['status' => 'CLOSE']);
+    }
+
+    // 10) Update status Resiko
+    $hasOpen = Realisasi::where('id_tindakan', $realisasi->id_tindakan)
+                        ->where('status', '!=', 'CLOSE')
+                        ->exists();
+    $statusResiko = $hasOpen ? 'ON PROGRES' : 'CLOSE';
+    if ($resiko = Resiko::find($realisasi->id_riskregister)) {
+        $resiko->status = $statusResiko;
+        $resiko->save();
+    }
+
+    // 11) Hitung nilai_akhir per tindakan
+    $list = Realisasi::where('id_tindakan', $realisasi->id_tindakan)->get();
+    $avg  = $list->count()
+          ? round($list->sum('presentase') / $list->count(), 2)
+          : 0;
+    Realisasi::where('id_tindakan', $realisasi->id_tindakan)
+        ->update(['nilai_akhir' => $avg]);
+
+    // 12) Hitung nilai_actual per riskregister
+    $all  = Realisasi::where('id_riskregister', $realisasi->id_riskregister)->get();
+    $rata = $all->count()
+          ? round($all->sum('nilai_akhir') / $all->count('id_tindakan'), 2)
+          : 0;
+    Realisasi::where('id_riskregister', $realisasi->id_riskregister)
+        ->update(['nilai_actual' => $rata]);
+
+    // 13) Redirect kembali dengan pesan sukses
+    return redirect()
+        ->route('realisasi.index', ['id' => $realisasi->id_tindakan])
+        ->with('success', 'Activity berhasil diperbarui! ✅');
+}
+
+
 
     public function getDetail($id)
     {

@@ -14,7 +14,7 @@
         <form action="{{ route('resiko.update', $resiko->id) }}" method="POST">
             @csrf
 
-            <!-- Nama Resiko -->
+            <!-- Judul Matriks Before -->
             <div class="row mb-3">
                 <h1 class="card-title">TINGKATAN (Matriks Before)</h1>
                 <label for="nama_resiko" class="col-sm-2 col-form-label"><strong>Resiko</strong></label>
@@ -25,10 +25,9 @@
 
             <!-- Kriteria Dropdown -->
             <div class="row mb-3">
-                <label for="kriteria" class="col-sm-2 col-form-label"><strong>Kriteria</strong></label>
+                <label for="kriteriaSelect" class="col-sm-2 col-form-label"><strong>Kriteria</strong></label>
                 <div class="col-sm-4">
-                    <select name="kriteria" class="form-control" id="kriteriaSelect" required
-                        onchange="updateSeverityDropdown()">
+                    <select name="kriteria" class="form-control" id="kriteriaSelect" required>
                         <option value="">--Pilih Kriteria--</option>
                         @foreach ($kriteria as $k)
                             <option value="{{ $k->nama_kriteria }}"
@@ -40,31 +39,23 @@
                 </div>
             </div>
 
-            <!-- Severity Dropdown -->
+            <!-- Severity Before -->
             <div class="row mb-3">
                 <label for="severity" class="col-sm-2 col-form-label"><strong>Severity/Dampak</strong></label>
                 <div class="col-sm-4">
                     <select class="form-select" name="severity" id="severity">
                         <option value="">--Pilih Severity--</option>
-                        <!-- Isi opsi severity sesuai kriteria yang terpilih -->
                         @if (old('kriteria', $resiko->kriteria))
                             @foreach ($kriteria as $k)
                                 @if ($k->nama_kriteria == old('kriteria', $resiko->kriteria))
                                     @php
-                                        // Mendapatkan nilai dan deskripsi untuk opsi severity
-                                        $nilaiKriteriaArray = explode(
-                                            ',',
-                                            str_replace(['[', ']', '"'], '', $k->nilai_kriteria),
-                                        );
-                                        $descKriteriaArray = explode(
-                                            ',',
-                                            str_replace(['[', ']', '"'], '', $k->desc_kriteria),
-                                        );
+                                        $vals = explode(',', str_replace(['[', ']', '"'], '', $k->nilai_kriteria));
+                                        $descs = explode(',', str_replace(['[', ']', '"'], '', $k->desc_kriteria));
                                     @endphp
-                                    @foreach ($nilaiKriteriaArray as $index => $nilai)
-                                        <option value="{{ $nilai }}"
-                                            {{ old('severity', $resiko->severity) == $nilai ? 'selected' : '' }}>
-                                            {{ $nilai }} - {{ $descKriteriaArray[$index] ?? '' }}
+                                    @foreach ($vals as $i => $v)
+                                        <option value="{{ trim($v) }}"
+                                            {{ old('severity', $resiko->severity) == trim($v) ? 'selected' : '' }}>
+                                            {{ trim($v) }} - {{ $descs[$i] ?? '' }}
                                         </option>
                                     @endforeach
                                 @endif
@@ -74,70 +65,24 @@
                 </div>
             </div>
 
-
-            <style>
-                /* CSS untuk memaksimalkan ruang dan menampilkan deskripsi di bawah nilai */
-                #severity option {
-                    white-space: normal;
-                    /* Memungkinkan teks untuk membungkus ke baris baru */
-                    word-wrap: break-word;
-                    /* Membungkus kata jika panjangnya melebihi lebar dropdown */
-                }
-            </style>
-            <script>
-                // Fungsi untuk memperbarui dropdown severity berdasarkan kriteria yang dipilih
-                const kriteriaData = @json($kriteria);
-
-                function updateSeverityDropdown(targetDropdownId) {
-                    const selectedKriteria = document.getElementById('kriteriaSelect').value;
-                    const severitySelect = document.getElementById(targetDropdownId);
-                    severitySelect.innerHTML = '<option value="">--Pilih Severity--</option>'; // Hapus opsi sebelumnya
-
-                    if (selectedKriteria) {
-                        const filteredKriteria = kriteriaData.filter(k => k.nama_kriteria === selectedKriteria);
-
-                        filteredKriteria.forEach(kriteria => {
-                            const nilaiKriteriaArray = kriteria.nilai_kriteria.replace(/[\[\]"]+/g, '').split(',');
-                            const descKriteriaArray = kriteria.desc_kriteria.replace(/[\[\]"]+/g, '').split(',');
-
-                            for (let i = 0; i < nilaiKriteriaArray.length; i++) {
-                                const option = document.createElement('option');
-                                option.value = nilaiKriteriaArray[i];
-                                option.textContent = `${nilaiKriteriaArray[i]} - ${descKriteriaArray[i]}`;
-                                severitySelect.appendChild(option);
-                            }
-                        });
-                    }
-                }
-
-                document.getElementById('kriteriaSelect').addEventListener('change', function() {
-                    updateSeverityDropdown('severity');
-                    updateSeverityDropdown('severityrisk');
-                });
-            </script>
-
-            <!-- Probability -->
+            <!-- Probability Before -->
             <div class="row mb-3">
                 <label for="probability" class="col-sm-2 col-form-label"><strong>Probability / Kemungkinan
                         Terjadi</strong></label>
                 <div class="col-sm-4">
                     <select class="form-select" name="probability" id="probability" onchange="calculateTingkatan()">
                         <option value="">--Silahkan Pilih Probability--</option>
-                        <option value="1" {{ old('probability', $resiko->probability) == 1 ? 'selected' : '' }}>1.
-                            Sangat jarang terjadi</option>
-                        <option value="2" {{ old('probability', $resiko->probability) == 2 ? 'selected' : '' }}>2.
-                            Jarang terjadi</option>
-                        <option value="3" {{ old('probability', $resiko->probability) == 3 ? 'selected' : '' }}>3.
-                            Dapat Terjadi</option>
-                        <option value="4" {{ old('probability', $resiko->probability) == 4 ? 'selected' : '' }}>4.
-                            Sering terjadi</option>
-                        <option value="5" {{ old('probability', $resiko->probability) == 5 ? 'selected' : '' }}>5.
-                            Selalu terjadi</option>
+                        @foreach ([1 => 'Sangat jarang terjadi', 2 => 'Jarang terjadi', 3 => 'Dapat Terjadi', 4 => 'Sering terjadi', 5 => 'Selalu terjadi'] as $val => $label)
+                            <option value="{{ $val }}"
+                                {{ old('probability', $resiko->probability) == $val ? 'selected' : '' }}>
+                                {{ $val }}. {{ $label }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
             </div>
 
-            <!-- Tingkatan -->
+            <!-- Tingkatan Before -->
             <div class="row mb-3">
                 <label for="tingkatan" class="col-sm-2 col-form-label"><strong>Tingkatan</strong></label>
                 <div class="col-sm-4">
@@ -151,31 +96,23 @@
 
             <h1 class="card-title">ACTUAL RISK (Matriks After)</h1>
 
-            <!-- Severity Dropdown for Actual Risk -->
+            <!-- Severity After -->
             <div class="row mb-3">
                 <label for="severityrisk" class="col-sm-2 col-form-label"><strong>Severity/Dampak</strong></label>
                 <div class="col-sm-4">
                     <select class="form-select" name="severityrisk" id="severityrisk">
                         <option value="">--Pilih Severity--</option>
-                        <!-- Isi opsi severity sesuai kriteria yang terpilih -->
                         @if (old('kriteria', $resiko->kriteria))
                             @foreach ($kriteria as $k)
                                 @if ($k->nama_kriteria == old('kriteria', $resiko->kriteria))
                                     @php
-                                        // Mendapatkan nilai dan deskripsi untuk opsi severity
-                                        $nilaiKriteriaArray = explode(
-                                            ',',
-                                            str_replace(['[', ']', '"'], '', $k->nilai_kriteria),
-                                        );
-                                        $descKriteriaArray = explode(
-                                            ',',
-                                            str_replace(['[', ']', '"'], '', $k->desc_kriteria),
-                                        );
+                                        $vals = explode(',', str_replace(['[', ']', '"'], '', $k->nilai_kriteria));
+                                        $descs = explode(',', str_replace(['[', ']', '"'], '', $k->desc_kriteria));
                                     @endphp
-                                    @foreach ($nilaiKriteriaArray as $index => $nilai)
-                                        <option value="{{ $nilai }}"
-                                            {{ old('severityrisk', $resiko->severityrisk) == $nilai ? 'selected' : '' }}>
-                                            {{ $nilai }} - {{ $descKriteriaArray[$index] ?? '' }}
+                                    @foreach ($vals as $i => $v)
+                                        <option value="{{ trim($v) }}"
+                                            {{ old('severityrisk', $resiko->severityrisk) == trim($v) ? 'selected' : '' }}>
+                                            {{ trim($v) }} - {{ $descs[$i] ?? '' }}
                                         </option>
                                     @endforeach
                                 @endif
@@ -185,34 +122,24 @@
                 </div>
             </div>
 
-
-            <!-- Probability Risk -->
+            <!-- Probability After -->
             <div class="row mb-3">
                 <label for="probabilityrisk" class="col-sm-2 col-form-label"><strong>Probability / Kemungkinan
                         Terjadi</strong></label>
                 <div class="col-sm-4">
-                    <select name="probabilityrisk" class="form-control" id="probabilityrisk" onchange="calculateRisk()">
-                        <option value="">--Silahkan pilih Severity--</option>
-                        <option value="1"
-                            {{ old('probabilityrisk', $resiko->probabilityrisk) == 1 ? 'selected' : '' }}>1. Sangat jarang
-                            terjadi</option>
-                        <option value="2"
-                            {{ old('probabilityrisk', $resiko->probabilityrisk) == 2 ? 'selected' : '' }}>2. Jarang terjadi
-                        </option>
-                        <option value="3"
-                            {{ old('probabilityrisk', $resiko->probabilityrisk) == 3 ? 'selected' : '' }}>3. Dapat Terjadi
-                        </option>
-                        <option value="4"
-                            {{ old('probabilityrisk', $resiko->probabilityrisk) == 4 ? 'selected' : '' }}>4. Sering terjadi
-                        </option>
-                        <option value="5"
-                            {{ old('probabilityrisk', $resiko->probabilityrisk) == 5 ? 'selected' : '' }}>5. Selalu terjadi
-                        </option>
+                    <select class="form-select" name="probabilityrisk" id="probabilityrisk" onchange="calculateRisk()">
+                        <option value="">--Silahkan Pilih Probability--</option>
+                        @foreach ([1 => 'Sangat jarang terjadi', 2 => 'Jarang terjadi', 3 => 'Dapat Terjadi', 4 => 'Sering terjadi', 5 => 'Selalu terjadi'] as $val => $label)
+                            <option value="{{ $val }}"
+                                {{ old('probabilityrisk', $resiko->probabilityrisk) == $val ? 'selected' : '' }}>
+                                {{ $val }}. {{ $label }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
             </div>
 
-            <!-- Risk -->
+            <!-- Risk After -->
             <div class="row mb-3">
                 <label for="risk" class="col-sm-2 col-form-label"><strong>Tingkatan</strong></label>
                 <div class="col-sm-4">
@@ -221,9 +148,8 @@
                 </div>
             </div>
 
-            <!-- Status hanya muncul jika user memiliki role 'admin' -->
+            <!-- Status (admin only) -->
             @if (auth()->user()->role == 'admin')
-                <!-- Status -->
                 <div class="row mb-3">
                     <label for="status" class="col-sm-2 col-form-label"><strong>Status</strong></label>
                     <div class="col-sm-4">
@@ -238,62 +164,91 @@
                 </div>
             @endif
 
-            <!-- Submit Button -->
-            {{-- <a href="javascript:history.back()" class="btn btn-danger " title="Kembali">
-            <i class="ri-arrow-go-back-line"></i>
-        </a> --}}
-
-            <a class="btn btn-danger" href="{{ route('riskregister.tablerisk', ['id' => $three]) }}" title="Back"
-                style="border-radius: 0;">
+            <!-- Buttons -->
+            <a class="btn btn-danger" href="{{ route('riskregister.tablerisk', ['id' => $three]) }}">
                 <i class="ri-arrow-go-back-line"></i>
             </a>
-
-            <button type="submit" class="btn btn-success" title="Update" style="border-radius: 0;">Update
-                <i class="ri-save-3-fill"></i>
+            <button type="submit" class="btn btn-success">
+                Update <i class="ri-save-3-fill"></i>
             </button>
         </form>
-
     </div>
 
+    <style>
+        /* wrapping teks di severity dropdown */
+        #severity option,
+        #severityrisk option {
+            white-space: normal;
+            word-wrap: break-word;
+        }
+    </style>
+
     <script>
+        const kriteriaData = @json($kriteria);
+
+        function updateSeverityDropdown(targetId) {
+            const selKrit = document.getElementById('kriteriaSelect').value;
+            const sel = document.getElementById(targetId);
+            sel.innerHTML = '<option value="">--Pilih Severity--</option>';
+            if (!selKrit) return;
+            kriteriaData
+                .filter(k => k.nama_kriteria === selKrit)
+                .forEach(k => {
+                    const vals = k.nilai_kriteria.replace(/[\[\]"]+/g, '').split(',');
+                    const desc = k.desc_kriteria.replace(/[\[\]"]+/g, '').split(',');
+                    vals.forEach((v, i) => {
+                        const o = document.createElement('option');
+                        o.value = v.trim();
+                        o.textContent = v.trim() + ' - ' + (desc[i] || '');
+                        sel.appendChild(o);
+                    });
+                });
+        }
+
+        document.getElementById('kriteriaSelect').addEventListener('change', function() {
+            updateSeverityDropdown('severity');
+            updateSeverityDropdown('severityrisk');
+            // reset probabilities
+            document.getElementById('probability').value = '';
+            document.getElementById('probabilityrisk').value = '';
+            if (typeof calculateTingkatan === 'function') calculateTingkatan();
+            if (typeof calculateRisk === 'function') calculateRisk();
+        });
+
+        document.getElementById('severity').addEventListener('change', function() {
+            document.getElementById('probability').value = '';
+            if (typeof calculateTingkatan === 'function') calculateTingkatan();
+        });
+
+        document.getElementById('severityrisk').addEventListener('change', function() {
+            document.getElementById('probabilityrisk').value = '';
+            if (typeof calculateRisk === 'function') calculateRisk();
+        });
+
         function calculateTingkatan() {
-            var probability = document.getElementById('probability').value;
-            var severity = document.getElementById('severity').value;
-            var tingkatan = '';
-
-            if (probability && severity) {
-                var score = probability * severity;
-
-                if (score >= 1 && score <= 2) {
-                    tingkatan = 'LOW';
-                } else if (score >= 3 && score <= 4) {
-                    tingkatan = 'MEDIUM';
-                } else if (score >= 5 && score <= 25) {
-                    tingkatan = 'HIGH';
-                }
+            var p = +document.getElementById('probability').value;
+            var s = +document.getElementById('severity').value;
+            var t = '';
+            if (p && s) {
+                var score = p * s;
+                if (score <= 2) t = 'LOW';
+                else if (score <= 4) t = 'MEDIUM';
+                else if (score <= 25) t = 'HIGH';
             }
-
-            document.getElementById('tingkatan').value = tingkatan;
+            document.getElementById('tingkatan').value = t;
         }
 
         function calculateRisk() {
-            var probabilityrisk = document.getElementById('probabilityrisk').value;
-            var severityrisk = document.getElementById('severityrisk').value;
-            var risk = '';
-
-            if (probabilityrisk && severityrisk) {
-                var score = probabilityrisk * severityrisk;
-
-                if (score >= 1 && score <= 2) {
-                    risk = 'LOW';
-                } else if (score >= 3 && score <= 4) {
-                    risk = 'MEDIUM';
-                } else if (score >= 5 && score <= 25) {
-                    risk = 'HIGH';
-                }
+            var p = +document.getElementById('probabilityrisk').value;
+            var s = +document.getElementById('severityrisk').value;
+            var r = '';
+            if (p && s) {
+                var score = p * s;
+                if (score <= 2) r = 'LOW';
+                else if (score <= 4) r = 'MEDIUM';
+                else if (score <= 25) r = 'HIGH';
             }
-
-            document.getElementById('risk').value = risk;
+            document.getElementById('risk').value = r;
         }
     </script>
 @endsection

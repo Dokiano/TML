@@ -60,123 +60,157 @@
 
 
                 <!-- Interested Parties -->
-                <div class="row mb-3 align-items-center">
-                    <label class="col-sm-2 col-form-label mt-2"><strong>Pihak yang Berkepentingan</strong></label>
-                    <!-- Menambahkan margin-top -->
+                {{-- resources/views/…your-form.blade.php --}}
+
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label"><strong>Pihak yang Berkepentingan</strong></label>
                     <div class="col-sm-10">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button"
-                                id="dropdownDivisiAkses" data-bs-toggle="dropdown" aria-expanded="false">
-                                @if (old('pihak') || $selectedDivisi)
-                                    {{ implode(', ', old('pihak', $selectedDivisi ?? [])) }}
-                                @else
-                                    Pilih Pihak Berkepentingan
-                                @endif
-                            </button>
-                            <ul class="dropdown-menu checkbox-group" aria-labelledby="dropdownDivisiAkses">
-                                <li>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="select-all">
-                                        <label class="form-check-label" for="select-all">Pilih Semua</label>
-                                    </div>
-                                </li>
-                                @foreach ($divisi as $d)
-                                    <li>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="pihak[]"
-                                                value="{{ $d->nama_divisi }}" id="divisi{{ $d->id }}"
-                                                @if (in_array($d->nama_divisi, old('pihak', $selectedDivisi ?? []))) checked @endif>
-                                            <label class="form-check-label" for="divisi{{ $d->id }}">
-                                                {{ $d->nama_divisi }}
-                                            </label>
+                        @php
+                            // Daftar nama divisi dari DB
+                            $divisiNames = $divisi->pluck('nama_divisi')->toArray();
+
+                            // Fallback ke old() atau data awal
+                            $oldPihak = old('pihak', $selectedDivisi);
+                            $oldCustom = old('pihak_custom', []);
+                            $oldKet = old('keterangan', $riskregister->keterangan ?? []);
+                        @endphp
+
+                        <div id="pihak-list">
+                            @foreach ($oldPihak as $i => $p)
+                                @php
+                                    // Deteksi custom: jika $p tidak ada di daftar divisi
+                                    $isCustom = !in_array($p, $divisiNames);
+                                    // Jika custom, nilai pihak_custom default-nya $p, bukan oldCustom[$i]
+                                    $customValue = $isCustom ? $p : $oldCustom[$i] ?? '';
+                                @endphp
+
+                                <div class="mb-3 input-row">
+                                    <div class="row">
+                                        {{-- Dropdown --}}
+                                        <div class="col-sm-4">
+                                            <select name="pihak[]" class="form-select pihak-select">
+                                                <option value="">-- Pilih Pihak --</option>
+                                                @foreach ($divisi as $d)
+                                                    <option value="{{ $d->nama_divisi }}"
+                                                        {{ !$isCustom && $p === $d->nama_divisi ? 'selected' : '' }}>
+                                                        {{ $d->nama_divisi }}
+                                                    </option>
+                                                @endforeach
+                                                {{-- Option Other --}}
+                                                <option value="Other" {{ $isCustom ? 'selected' : '' }}>Other</option>
+                                            </select>
                                         </div>
-                                    </li>
-                                @endforeach
-                                <li>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="otherCheckbox"
-                                            @if (old('pihak_other') || in_array('Other', old('pihak', []))) checked @endif>
-                                        <label class="form-check-label" for="otherCheckbox">Other</label>
+
+                                        {{-- Keterangan --}}
+                                        <div class="col-sm-7">
+                                            <input type="text" name="keterangan[]" class="form-control"
+                                                placeholder="Keterangan" value="{{ $oldKet[$i] ?? '' }}">
+                                        </div>
+
+                                        {{-- Hapus --}}
+                                        <div class="col-sm-1 text-end">
+                                            <button type="button" class="btn btn-danger remove-row">×</button>
+                                        </div>
                                     </div>
-                                    <div class="mt-2" id="otherInputContainer"
-                                        style="display: @if (old('pihak_other') || in_array('Other', old('pihak', []))) block @else none @endif;">
-                                        <input type="text" class="form-control" name="pihak_other" id="pihakOther"
-                                            placeholder="Masukkan Pihak Berkepentingan Lainnya"
-                                            value="{{ old('pihak_other') }}">
+
+                                    {{-- Baris input Other, tampil jika isCustom --}}
+                                    <div class="row mt-2 pihak-custom-row"
+                                        style="display: {{ $isCustom ? 'flex' : 'none' }};">
+                                        <div class="col-sm-4">
+                                            <input type="text" name="pihak_custom[]" class="form-control pihak-custom"
+                                                placeholder="Masukkan Pihak Lainnya" value="{{ $customValue }}">
+                                        </div>
                                     </div>
-                                </li>
-                            </ul>
+                                </div>
+                            @endforeach
                         </div>
+
+
+                        <button type="button" id="add-row" class="btn btn-outline-primary btn-sm">
+                            + Tambah Pihak
+                        </button>
                     </div>
                 </div>
 
+
                 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const dropdownButton = document.getElementById('dropdownDivisiAkses');
-                        const checkboxes = document.querySelectorAll('.form-check-input');
-                        const otherCheckbox = document.getElementById('otherCheckbox');
-                        const otherInput = document.getElementById('pihakOther');
-                        const otherInputContainer = document.getElementById('otherInputContainer');
-                        const selectAllCheckbox = document.getElementById('select-all');
+                    document.addEventListener('DOMContentLoaded', () => {
+                        // 1) Ambil container sekali
+                        const list = document.getElementById('pihak-list');
+                        const addBtn = document.getElementById('add-row');
 
-                        // Toggle the input field for 'Other'
-                        otherCheckbox.addEventListener('change', function() {
-                            if (this.checked) {
-                                otherInputContainer.style.display = 'block'; // Show the input field
+                        // 2) Siapkan opsi dropdown
+                        const divisiOptions = `
+    @foreach ($divisi as $d)
+      <option value="{{ $d->nama_divisi }}">{{ $d->nama_divisi }}</option>
+    @endforeach
+    <option value="Other">Other</option>
+  `;
+
+                        // 3) Toggle baris .pihak-custom-row saat select berubah
+                        list.addEventListener('change', e => {
+                            if (!e.target.matches('.pihak-select')) return;
+                            const row = e.target.closest('.input-row');
+                            const customRow = row.querySelector('.pihak-custom-row');
+                            if (e.target.value === 'Other') {
+                                customRow.style.display = 'flex';
                             } else {
-                                otherInputContainer.style.display = 'none'; // Hide the input field
-                                otherInput.value = ''; // Clear the input if unchecked
+                                customRow.style.display = 'none';
+                                customRow.querySelector('.pihak-custom').value = '';
                             }
-                            updateDropdown();
                         });
 
-                        // Update dropdown text when checkboxes change
-                        checkboxes.forEach(checkbox => {
-                            checkbox.addEventListener('change', updateDropdown);
-                        });
-
-                        // Handle 'Select All' functionality
-                        selectAllCheckbox.addEventListener('change', function() {
-                            checkboxes.forEach(checkbox => {
-                                if (checkbox !== selectAllCheckbox) {
-                                    checkbox.checked = this.checked; // Check/uncheck all
-                                }
-                            });
-                            updateDropdown();
-                        });
-
-                        otherInput.addEventListener('input', updateDropdown); // Update on typing in "Other"
-
-                        function updateDropdown() {
-                            const selectedValues = [];
-
-                            // Collect checked checkboxes
-                            checkboxes.forEach(checkbox => {
-                                if (checkbox.checked && checkbox !== selectAllCheckbox && checkbox !== otherCheckbox) {
-                                    const label = document.querySelector(`label[for="${checkbox.id}"]`);
-                                    if (label) {
-                                        selectedValues.push(label.textContent.trim());
-                                    }
-                                }
-                            });
-
-                            // Add 'Other' input value if applicable
-                            if (otherCheckbox.checked && otherInput.value.trim() !== '') {
-                                selectedValues.push(otherInput.value.trim());
-                            }
-
-                            // Update the dropdown button text
-                            if (selectedValues.length > 0) {
-                                dropdownButton.textContent = selectedValues.join(', '); // Join values with a comma
-                            } else {
-                                dropdownButton.textContent = 'Pilih Pihak Berkepentingan'; // Default text
-                            }
+                        // 4) Fungsi buat baris baru (mirror struktur Blade)
+                        function newRow() {
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'mb-3 input-row';
+                            wrapper.innerHTML = `
+      <div class="row">
+        <div class="col-sm-4">
+          <select name="pihak[]" class="form-select pihak-select">
+            <option value="">-- Pilih Pihak --</option>
+            ${divisiOptions}
+          </select>
+        </div>
+        <div class="col-sm-7">
+          <input type="text"
+                 name="keterangan[]"
+                 class="form-control"
+                 placeholder="Keterangan">
+        </div>
+        <div class="col-sm-1 text-end">
+          <button type="button" class="btn btn-danger remove-row">×</button>
+        </div>
+      </div>
+      <div class="row mt-2 pihak-custom-row" style="display:none;">
+        <div class="col-sm-4">
+          <input type="text"
+                 name="pihak_custom[]"
+                 class="form-control pihak-custom"
+                 placeholder="Masukkan Pihak Lainnya">
+        </div>
+      </div>`;
+                            return wrapper;
                         }
 
-                        // Call updateDropdown when the page is loaded to handle old data
-                        updateDropdown();
+                        // 5) Tambah baris baru
+                        addBtn.addEventListener('click', () => {
+                            list.appendChild(newRow());
+                        });
+
+                        // 6) Hapus baris
+                        list.addEventListener('click', e => {
+                            if (e.target.matches('.remove-row')) {
+                                e.target.closest('.input-row').remove();
+                            }
+                        });
                     });
                 </script>
+
+
+
+
+
 
                 <!-- Target Penyelesaian -->
                 <div class="row mb-3 align-items-center">

@@ -148,7 +148,10 @@
                     <td class="col-int-ext align-top">{{ $data['inex'] }}</td>
                     <td class="align-top">{{ $data['pihak'] }}</td>
                     <td class="col-risiko align-top">{{ $data['risiko'] }}</td>
-                    <td class="align-bottom">{{ $data['peluang'] }}</td>
+                    <td class="align-bottom">
+                        <div class="col-risiko" style="opacity: 0;">{{ $data['risiko'] }}</div>
+                        <p>{{ $data['peluang'] }}</p>
+                    </td>
                     <td class="col-int-ext align-top">{{ $data['severity'] }}</td>
                     <td class="col-int-ext align-top">{{ $data['probability'] }}</td>
                     <td class="col-int-ext align-top">{{ $data['score'] }}</td>

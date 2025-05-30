@@ -285,7 +285,7 @@
                                     <th>No</th>
                                     <th>Issue</th>
                                     <th>I/E</th>
-                                    <th>Pihak Berkepentingan</th>
+                                    <th width="300px">Pihak Berkepentingan</th>
                                     <th>Risiko</th>
                                     <th>Peluang</th>
                                     <th>Tingkatan</th>
@@ -301,6 +301,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {{-- <?php dd($formattedData); ?> --}}
                                 @foreach ($formattedData as $data)
                                     <tr>
                                         <td>
@@ -310,15 +311,40 @@
                                         </td>
                                         <td>{{ $data['issue'] }}</td>
                                         <td>{{ $data['inex'] }}</td>
-                                        <td>{{ $data['pihak'] }}</td>
-
                                         <td>
-                                            @foreach ($data['risiko'] as $risiko)
-                                                {{ $risiko }}<br>
-                                            @endforeach
+                                            @php
+                                                // Ubah string "divisi1,divisi2,divisi3" jadi array
+                                                $pihakList = explode(',', $data['pihak'] ?? '');
+                                                $keterangan = $data['keterangan'] ?? [];
+                                            @endphp
+
+                                            <ul>
+                                                @foreach ($pihakList as $i => $pihak)
+                                                    <li>{{ trim($pihak) }} : {{ $keterangan[$i] ?? '-' }}</li>
+                                                @endforeach
+                                            </ul>
                                         </td>
 
-                                        <td>{{ $data['peluang'] }}</td>
+                                        <td>
+                                            <div id="source">
+                                                @if ($data['risiko'])
+                                                    @foreach ($data['risiko'] as $risiko)
+                                                        {{ $risiko }}<br>
+                                                    @endforeach
+                                                @endif
+                                            </div>
+                                            <hr>
+                                        </td>
+
+                                        <td>
+                                            <div id="target" style="opacity: 0;">
+                                                @foreach ($data['risiko'] as $risiko)
+                                                    {{ $risiko }}<br>
+                                                @endforeach
+                                            </div>
+                                            <hr>
+                                            <p>{{ $data['peluang'] }}</p>
+                                        </td>
 
                                         <td>
                                             @foreach ($data['tingkatan'] as $tingkatan)
@@ -343,17 +369,15 @@
                                         </td>
 
                                         <td>
-                                            <ul>
-                                                @foreach ($data['tindak'] as $index => $pihak)
-                                                    {{-- <li> --}}
-                                                    <strong>{{ $pihak }}</strong>
-                                                    <ul>
-                                                        <li>{{ $data['tindak_lanjut'][$index] }}</li>
-                                                    </ul>
-                                                    {{-- </li> --}}
-                                                    <hr>
-                                                @endforeach
-                                            </ul>
+                                            @foreach ($data['tindak'] as $index => $pihak)
+                                                {{-- <li> --}}
+                                                <strong>{{ $pihak }}</strong>
+                                                <ul>
+                                                    <li>{{ $data['tindak_lanjut'][$index] }}</li>
+                                                </ul>
+                                                {{-- </li> --}}
+                                                <hr>
+                                            @endforeach
                                         </td>
                                         <!-- Skor -->
 

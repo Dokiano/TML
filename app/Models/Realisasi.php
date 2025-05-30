@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Realisasi extends Model
 {
@@ -18,12 +18,14 @@ class Realisasi extends Model
         'target', // pic
         'desc', // noted
         'tgl_realisasi',
+        'evidencerealisasi',
         'status',
         'presentase'
     ];
 
     protected $casts = [
         'nama_realisasi' => 'array', // Casting sebagai array (JSON)
+        'evidencerealisasi' => 'array',
     ];
 
     public function tindakan()
