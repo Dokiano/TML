@@ -320,7 +320,9 @@
 
                                             <ul>
                                                 @foreach ($pihakList as $i => $pihak)
-                                                    <li>{{ trim($pihak) }} : {{ $keterangan[$i] ?? '-' }}</li>
+                                                    <li>{{ trim($pihak) }} @if (is_array($keterangan) && !empty($keterangan))
+                                                        : {{ $keterangan[$i] ?? '-' }}
+                                                    @endif</li>
                                                 @endforeach
                                             </ul>
                                         </td>
@@ -337,13 +339,22 @@
                                         </td>
 
                                         <td>
-                                            <div id="target" style="opacity: 0;">
-                                                @foreach ($data['risiko'] as $risiko)
-                                                    {{ $risiko }}<br>
+                                            <div id="target" style="width: 150px;opacity: 0;">
+                                                @foreach ($data['tindak'] as $index => $pihak)
+                                                    {{-- <li> --}}
+                                                    <hr>
+                                                    <strong>{{ $pihak }}</strong>
+                                                    <ul>
+                                                        <li>{{ $data['tindak_lanjut'][$index] }}</li>
+                                                    </ul>
+                                                    {{-- </li> --}}
                                                 @endforeach
                                             </div>
-                                            <hr>
-                                            <p>{{ $data['peluang'] }}</p>
+                                            @if ($data['peluang'])
+                                                <p
+                                                    style="border-color: #212529; border-top: 1px solid #2125293f; !important;">
+                                                    {{ $data['peluang'] }}</p>
+                                            @endif
                                         </td>
 
                                         <td>
@@ -369,15 +380,17 @@
                                         </td>
 
                                         <td>
-                                            @foreach ($data['tindak'] as $index => $pihak)
-                                                {{-- <li> --}}
-                                                <strong>{{ $pihak }}</strong>
-                                                <ul>
-                                                    <li>{{ $data['tindak_lanjut'][$index] }}</li>
-                                                </ul>
-                                                {{-- </li> --}}
-                                                <hr>
-                                            @endforeach
+                                            <div style="width: 150px;">
+                                                @foreach ($data['tindak'] as $index => $pihak)
+                                                    {{-- <li> --}}
+                                                    <strong>{{ $pihak }}</strong>
+                                                    <ul>
+                                                        <li>{{ $data['tindak_lanjut'][$index] }}</li>
+                                                    </ul>
+                                                    {{-- </li> --}}
+                                                    <hr>
+                                                @endforeach
+                                            </div>
                                         </td>
                                         <!-- Skor -->
 

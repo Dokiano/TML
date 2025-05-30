@@ -363,8 +363,10 @@
                                                 <div id="pihak-view-{{ $form->id }}">
                                                     @if (count($selectedDivisi))
                                                         @foreach ($selectedDivisi as $i => $divisiName)
-                                                            - <span class="fw-bold">{{ $divisiName }}</span> :
-                                                            {{ $keteranganList[$i] ?? '-' }}<br>
+                                                            - <span class="fw-semibold">{{ $divisiName }}</span> @if (is_array($keteranganList) && !empty($keteranganList))
+                                                                : {{ $keteranganList[$i] ?? '-' }}
+                                                            @endif
+                                                            <br>
                                                         @endforeach
                                                     @else
                                                         -

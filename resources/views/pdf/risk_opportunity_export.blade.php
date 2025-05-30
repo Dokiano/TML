@@ -155,16 +155,20 @@
 
                         <ul>
                             @foreach ($pihakList as $i => $pihak)
-                                <li>{{ trim($pihak) }} : {{ $keterangan[$i] ?? '-' }}</li>
+                                <li>{{ trim($pihak) }} @if (is_array($keterangan) && !empty($keterangan))
+                                    : {{ $keterangan[$i] ?? '' }}
+                                @endif</li>
                             @endforeach
                         </ul>
                     </td>
                     <td class="col-risiko align-top">{{ $data['risiko'] }}
-                        <hr class="separator">
                     </td>
                     <td class="align-top">
-                        <div class="col-risiko" style="opacity: 0;">{{ $data['risiko'] }}</div>
-                        <hr class="separator">
+                        <div class="col-tindakan" style="opacity: 0;">
+                            @foreach ($data['tindak_lanjut'] as $index => $tindak_lanjut)
+                            <p style="margin-bottom: 15px; margin-top: 0 !important">{{ $index + 1 }}. {{ $tindak_lanjut }}<br></p>
+                        @endforeach
+                        </div>
                         <p>{{ $data['peluang'] }}</p>
                     </td>
                     <td class="col-int-ext align-top">{{ $data['severity'] }}</td>
@@ -173,26 +177,17 @@
                     <td class="align-top">{{ $data['tingkatan'] }}</td>
                     <td class="col-tindakan align-top">
                         @foreach ($data['tindak_lanjut'] as $index => $tindak_lanjut)
-                            {{ $index + 1 }}. {{ $tindak_lanjut }}<br>
-                            @if (!$loop->last)
-                                <hr class="separator">
-                            @endif
+                            <p style="margin-bottom: 15px; margin-top: 0 !important">{{ $index + 1 }}. {{ $tindak_lanjut }}<br></p>
                         @endforeach
                     </td>
                     <td class="col-target-pic align-top">
                         @foreach ($data['targetpic'] as $index => $targetpic)
-                            {{ $index + 1 }}. {{ $targetpic }}<br>
-                            @if (!$loop->last)
-                                <hr class="separator">
-                            @endif
+                            <p style="margin-bottom: 15px; margin-top: 0 !important">{{ $index + 1 }}. {{ $targetpic }}<br></p>
                         @endforeach
                     </td>
                     <td class="align-top">
                         @foreach ($data['tgl_penyelesaian'] as $index => $tgl_penyelesaian)
-                            {{ $index + 1 }}. {{ $tgl_penyelesaian }}<br>
-                            @if (!$loop->last)
-                                <hr class="separator">
-                            @endif
+                            <p style="margin-bottom: 15px; margin-top: 0 !important">{{ $index + 1 }}. {{ $tgl_penyelesaian }}<br></p>
                         @endforeach
                     </td>
                     <td class="align-top">{{ $data['status'] }}</td>
