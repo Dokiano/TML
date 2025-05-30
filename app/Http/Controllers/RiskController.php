@@ -85,8 +85,12 @@ class RiskController extends Controller
                 "severity" => "required|integer|min:1|max:5",
                 "nama_tindakan" => "required|array",
                 "nama_tindakan.*" => "required|string",
-                "pihak" => "required|array", // Pastikan pihak berupa array jika memilih beberapa divisi
-                "pihak.*" => "required|string", // Validasi pihak sebagai string (nama divisi)
+                "pihak"            => "required|array",
+                "pihak.*"          => "string",
+                "pihak_custom"     => "nullable|array",
+                "pihak_custom.*"   => "nullable|string",
+                "keterangan"       => "nullable|array",
+                "keterangan.*"     => "nullable|string",
                 "targetpic" => "required|array",
                 "targetpic.*" => "required|string",
                 "tgl_penyelesaian" => "required|array",
@@ -114,12 +118,19 @@ class RiskController extends Controller
                 $validated["severity"]
             );
 
-            // Tambahkan pihak_other ke array pihak jika ada
-            if (
-                $request->has("pihak_other") &&
-                $request->filled("pihak_other")
-            ) {
-                $validated["pihak"][] = $validated["pihak_other"]; // Tambahkan ke array pihak
+            $pihakInputs  = $validated['pihak'];
+            $customInputs = $validated['pihak_custom'] ?? [];
+            $pihakFinal   = [];
+
+            foreach ($pihakInputs as $i => $val) {
+                if ($val === 'Other') {
+                    // kalau pilih Other, ambil dari customInputs
+                    if (!empty($customInputs[$i])) {
+                        $pihakFinal[] = $customInputs[$i];
+                    }
+                } else {
+                    $pihakFinal[] = $val;
+                }
             }
 
             // Simpan data ke tabel riskregister
@@ -132,6 +143,7 @@ class RiskController extends Controller
                     : null, // Simpan nama divisi
                 "target_penyelesaian" => $validated["target_penyelesaian"],
                 "peluang" => $validated["peluang"] ?? null, // Simpan peluang, jika ada
+                "keterangan"          => $validated["keterangan"] ?? null,
             ]);
 
             // Simpan data ke tabel resiko, jika ada risiko yang diisi
@@ -200,7 +212,7 @@ class RiskController extends Controller
             ? explode(",", $riskregister->pihak)
             : [];
 
-            // dd($riskregister->pihak);
+        // dd($riskregister->pihak);
 
         $keterangan = $riskregister->keterangan ?? [];
 
