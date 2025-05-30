@@ -146,10 +146,25 @@
                     <td class="align-top">{{ $index + 1 }}</td>
                     <td class="align-top">{{ $data['issue'] }}</td>
                     <td class="col-int-ext align-top">{{ $data['inex'] }}</td>
-                    <td class="align-top">{{ $data['pihak'] }}</td>
-                    <td class="col-risiko align-top">{{ $data['risiko'] }}</td>
-                    <td class="align-bottom">
+                    <td class="align-top">
+                        @php
+                            // Ubah string "divisi1,divisi2,divisi3" jadi array
+                            $pihakList = explode(',', $data['pihak'] ?? '');
+                            $keterangan = $data['keterangan'] ?? [];
+                        @endphp
+
+                        <ul>
+                            @foreach ($pihakList as $i => $pihak)
+                                <li>{{ trim($pihak) }} : {{ $keterangan[$i] ?? '-' }}</li>
+                            @endforeach
+                        </ul>
+                    </td>
+                    <td class="col-risiko align-top">{{ $data['risiko'] }}
+                        <hr class="separator">
+                    </td>
+                    <td class="align-top">
                         <div class="col-risiko" style="opacity: 0;">{{ $data['risiko'] }}</div>
+                        <hr class="separator">
                         <p>{{ $data['peluang'] }}</p>
                     </td>
                     <td class="col-int-ext align-top">{{ $data['severity'] }}</td>

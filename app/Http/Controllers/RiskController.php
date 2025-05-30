@@ -200,6 +200,8 @@ class RiskController extends Controller
             ? explode(",", $riskregister->pihak)
             : [];
 
+            // dd($riskregister->pihak);
+
         $keterangan = $riskregister->keterangan ?? [];
 
 
@@ -1046,6 +1048,7 @@ class RiskController extends Controller
                     "issue" => $riskregister->issue,
                     "inex" => $riskregister->inex,
                     "pihak" => $riskregister->pihak,
+                    "keterangan" => $riskregister->keterangan,
                     "risiko" => $resiko->nama_resiko,
                     "peluang" => $riskregister->peluang,
                     "probability" => $resiko->probability,

@@ -23,7 +23,6 @@ class Riskregister extends Model
     ];
 
     protected $casts = [
-        'pihak'      => 'array',
         'keterangan' => 'array',
     ];
 

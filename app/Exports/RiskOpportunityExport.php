@@ -51,38 +51,68 @@ class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping
 
     public function map($row): array
     {
-        // Pastikan data yang berupa array
-        $pihak = is_array($row['pihak']) ? array_unique($row['pihak']) : [$row['pihak']];
-        $tindak_lanjut = is_array($row['tindak_lanjut']) ? $row['tindak_lanjut'] : [$row['tindak_lanjut']];
-        $targetpic = is_array($row['targetpic']) ? $row['targetpic'] : [$row['targetpic']];
-        $tgl_penyelesaian = is_array($row['tgl_penyelesaian']) ? $row['tgl_penyelesaian'] : [$row['tgl_penyelesaian']];
+        // 1) Siapkan array pihak, risiko, peluang, tindakan, dst.
+        $pihak            = is_array($row['pihak'])      ? array_unique($row['pihak'])      : [$row['pihak']];
+        $risikoList       = is_array($row['risiko'])     ? $row['risiko']                   : [$row['risiko']];
+        $peluangList      = is_array($row['peluang'])    ? $row['peluang']                  : [$row['peluang']];
+        $tindakLanjut     = is_array($row['tindak_lanjut']) ? $row['tindak_lanjut']         : [$row['tindak_lanjut']];
+        $targetpic        = is_array($row['targetpic'])  ? $row['targetpic']                : [$row['targetpic']];
+        $tglPenyelesaian  = is_array($row['tgl_penyelesaian'])
+            ? $row['tgl_penyelesaian']      : [$row['tgl_penyelesaian']];
 
         $mappedRows = [];
-        // Hitung baris maksimal untuk detail (jika ada lebih dari satu data)
-        $maxRows = max(count($pihak), count($tindak_lanjut), count($targetpic), count($tgl_penyelesaian));
 
-        for ($i = 0; $i < $maxRows; $i++) {
+        // 2) Baris‐baris untuk RISIKO (kolom peluang tetap kosong)
+        foreach ($risikoList as $i => $ris) {
             $mappedRows[] = [
+                // kolom A–C hanya di baris pertama
                 $i === 0 ? $this->counter++ : '',
                 $i === 0 ? $row['issue'] : '',
                 $i === 0 ? implode(', ', $pihak) : '',
-                $i === 0 ? $row['risiko'] : '',
-                $i === 0 ? $row['peluang'] : '',
+                // kolom D = risiko, kolom E = kosong
+                $ris,
+                '',
+                // kolom F
                 $i === 0 ? $row['tingkatan'] : '',
-                $tindak_lanjut[$i] ?? '',
-                $targetpic[$i] ?? '',
-                $tgl_penyelesaian[$i] ?? '',
-                $i === 0 ? $row['status'] : '',
-                $i === 0 ? $row['scores'] : '',
-                $i === 0 ? $row['before'] : '',
-                $i === 0 ? $row['after'] : '',
+                // kolom G–I (tindakan lanjut, PIC, tanggal)
+                $tindakLanjut[$i]    ?? '',
+                $targetpic[$i]       ?? '',
+                $tglPenyelesaian[$i] ?? '',
+                // kolom J–M hanya di baris pertama
+                $i === 0 ? $row['status']  : '',
+                $i === 0 ? $row['scores']  : '',
+                $i === 0 ? $row['before']  : '',
+                $i === 0 ? $row['after']   : '',
             ];
         }
-        // Baris kosong sebagai pemisah antar record
-        $mappedRows[] = ['', '', '', '', '', '', '', '', '', '', '', '', ''];
+
+        // 3) Baris‐baris untuk PELUANG (kolom risiko kosong)
+        if (!empty($peluangList)) {
+            foreach ($peluangList as $j => $pel) {
+                $mappedRows[] = [
+                    // kolom A–D kosong
+                    '',
+                    '',
+                    '',
+                    '',
+                    // kolom E = peluang
+                    $pel,
+                    // kolom F–M kosong
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                ];
+            }
+        }
 
         return $mappedRows;
     }
+
 
     public function styles(Worksheet $sheet)
     {
