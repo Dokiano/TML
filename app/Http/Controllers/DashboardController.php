@@ -12,7 +12,7 @@ class DashboardController extends Controller
     public function index(Request $request)
 {
     $user = Auth::user();
-    $allowedDivisi = json_decode($user->type, true); // Memastikan type adalah JSON array
+    $allowedDivisi = $user ? json_decode($user->type, true) : [];
 
     // Ambil filter departemen dari request
     $selectedDepartemen = $request->input('departemen');
@@ -41,6 +41,7 @@ class DashboardController extends Controller
             $resiko->peluang = $riskregister->peluang;
             $resiko->id_divisi = $riskregister->id_divisi;
             $resiko->nama_divisi = $riskregister->divisi->nama_divisi ?? 'Unknown';
+            $resiko->jenis_iso_id = $riskregister->jenis_iso_id;
             return $resiko;
         });
     });

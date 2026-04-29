@@ -47,13 +47,13 @@
 
 
 
-
+                 {{--       
                 <!-- Switch Button -->
                 <div class="form-check form-switch ms-2 me-0">
                     <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
                 </div>
 
-                <!-- Export PDF Button (ISO 37001) -->
+                <!-- Export PDF Button (ISO 37001) 
                 <a href="{{ route(
                     'riskregister.export-pdf',
                     array_merge(['id' => $divisiList->first()->id ?? '', 'layout' => 'layout_b'], request()->query()),
@@ -68,7 +68,7 @@
                         title="Export Excel" style="border-radius: 0 !important;">
                         <i class="bi bi-file-earmark-excel me-1"></i> EXCEL ISO 37001
                     </a>
-                @endif
+                @endif --}} 
 
             </div>
 
@@ -93,7 +93,7 @@
 
             .table-wrapper {
                 position: relative;
-                max-height: 400px;
+                max-height: 1000px;
                 /* Adjust height as needed */
                 overflow-y: auto;
             }
@@ -483,6 +483,7 @@
                 </div>
             </div>
         </div>
+        
 
         <script>
             document.getElementById("flexSwitchCheckDefault").addEventListener("change", function() {

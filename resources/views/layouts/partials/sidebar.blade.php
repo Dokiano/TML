@@ -21,13 +21,17 @@
             <ul id="tables-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
                 <li>
                     <a href="/riskregister">
-                        <i class="bi bi-circle"></i><span>Create Risk & Opportunity Register</span>
+                        <i class="bi bi-circle"></i><span>Create Risk & Opportunity Register </span>
                     </a>
                     @if (in_array(auth()->user()->role, ['admin', 'manager', 'manajemen', 'supervisor']))
                         <a href="/bigrisk">
-                            <i class="bi bi-circle"></i><span>Report</span>
+                            <i class="bi bi-circle"></i><span>Report ISO 9001/45001</span>
+                        </a>
+                         <a href="/bigrisk-iso37001">
+                            <i class="bi bi-circle"></i><span>Report ISO 37001</span>
                         </a>
                     @endif
+                    
 
                 </li>
             </ul>
@@ -37,7 +41,7 @@
         <!-- Proses Peningkatan Kinerja Nav -->
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-file-earmark-bar-graph"></i><span class="text-dark">Proses Peningkatan Kinerja</span><i
+                <i class="bi bi-file-earmark-bar-graph"></i><span class="text-dark">Mekanisme Pencegahan dan Peningkatan (PPK)</span><i
                     class="bi bi-chevron-down ms-auto"></i>
             </a>
             <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
@@ -52,7 +56,6 @@
             </ul>
         </li>
 
-        <!-- End Proses Peningkatan Kinerja Nav -->
 
         <!-- Admin/Management Actions -->
         @if (auth()->user()->role == 'admin' || auth()->user()->role == 'manajemen')
@@ -72,14 +75,46 @@
                         <a href="/kriteria">
                             <i class="bi bi-circle"></i><span>Kelola Kriteria Risk & Opportunity Register</span>
                         </a>
+                        <a href="{{ route('kriteriaSwot.index') }}">
+                            <i class="bi bi-circle"></i><span>Kelola Swot</span>
+                        </a>
+                        <a href="{{ route('iso.create') }}">
+                            <i class="bi bi-circle"></i><span>Kelola ISO</span>
+                        </a>
                         <a href="/statusppk">
                             <i class="bi bi-circle"></i><span>Kelola Status Proses Peningkatan Kinerja</span>
+                        </a>
+                        <a href="{{ route('dokumen.index') }}">
+                            <i class="bi bi-circle"></i><span>Kelola Dokumen</span>
                         </a>
                     </li>
                 </ul>
             </li>
         @endif
-        <!-- End Admin/Management Actions -->
+       
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#document-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-folder-fill"></i><span class="text-dark">Dokumen TML</span><i
+                    class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="document-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="{{ route('dok.dashboard') }}">
+                        <i class="bi bi-circle"></i><span>Master List</span>
+                    </a>
+                    <a href="{{ route('dokumenReview.index') }}">
+                        <i class="bi bi-circle"></i><span>Dokumen Review</span>
+                    </a>
+                    {{-- <a href="{{ route('dokumen.pengajuan') }}">
+                        <i class="bi bi-circle"></i><span>Tes Pengajuan</span>
+                    </a>  --}}
+                    <a href="{{ route('dokumenReview.masterListDR') }}">
+                        <i class="bi bi-circle"></i><span>Master List Dokumen Review</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
 
     </ul>
 

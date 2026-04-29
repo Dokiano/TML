@@ -14,6 +14,7 @@ use App\Models\Ppkketiga;
 use App\Models\StatusPpk;
 use App\Exports\PpkExport;
 use Illuminate\Http\Request;
+use App\Exports\ExportAllPPK;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
@@ -72,46 +73,49 @@ class PpkController extends Controller
 
     public function index2(Request $request)
     {
-        // Ambil semua input filter
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-        $semester = $request->input('semester');
-        $userFilter = $request->input('user');
-        $keyword = $request->input('keyword');
-        $status = $request->input('status');
-        $divisiPenerima = $request->input('divisi_penerima');
-        $divisiPengirim = $request->input('divisi_pengirim');
-        $jenis = $request->input('jenis');
-        $tipeFilter = $request->input('filter', 'ALL'); // nilai default = ALL
+        // 1) Tangkap semua input filter, termasuk 'year'
+        $startDate       = $request->input('start_date');
+        $endDate         = $request->input('end_date');
+        $semester        = $request->input('semester');
+        $userFilter      = $request->input('user');
+        $keyword         = $request->input('keyword');
+        $status          = $request->input('status');
+        $divisiPenerima  = $request->input('divisi_penerima');
+        $divisiPengirim  = $request->input('divisi_pengirim');
+        $jenis           = $request->input('jenis');
+        $tipeFilter      = $request->input('filter', 'ALL'); // default = ALL
+        $year            = $request->input('year');          // **tahun yang baru**
 
-        $statusPpkList = StatusPpk::all();
+        $statusPpkList  = StatusPpk::all();
 
-        // Query builder
+        // 2) Query builder dengan kondisi‐kondisi dan ditambahkan filter tahun:
         $ppks = Ppk::query()
-            ->when($startDate, fn($query) => $query->whereDate('created_at', '>=', $startDate))
-            ->when($endDate, fn($query) => $query->whereDate('created_at', '<=', $endDate))
-            ->when($semester, fn($query) => $query->where('nomor_surat', 'like', "%$semester%"))
-            ->when($userFilter, function ($query) use ($userFilter) {
-                $query->where(function ($query) use ($userFilter) {
-                    $query->where('pembuat', $userFilter)
-                        ->orWhere('penerima', $userFilter);
-                });
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->when($semester, fn($q) => $q->where('nomor_surat', 'like', "%{$semester}%"))
+            ->when($userFilter, function ($q) use ($userFilter) {
+                $q->where(
+                    fn($sub) =>
+                    $sub->where('pembuat', $userFilter)
+                        ->orWhere('penerima', $userFilter)
+                );
             })
-            ->when($keyword, fn($query) => $query->where('nomor_surat', 'like', "%$keyword%"))
-            ->when($status, fn($query) => $query->where('statusppk', $status))
-            ->when($jenis, fn($query) => $query->where('jenisketidaksesuaian', 'like', "%$jenis%"))
-            ->when($divisiPenerima, fn($query) => $query->where('divisipenerima', '=', $divisiPenerima))
-            ->when($divisiPengirim, fn($query) => $query->where('divisipembuat', '=', $divisiPengirim))
-            ->when($tipeFilter === 'IA', fn($query) => $query->where('nomor_surat', 'like', '%/IA/%'))
-            ->when($tipeFilter === 'MFG', fn($query) => $query->where('nomor_surat', 'like', '%/MFG/%'))
+            ->when($keyword, fn($q) => $q->where('nomor_surat', 'like', "%{$keyword}%"))
+            ->when($status, fn($q) => $q->where('statusppk', $status))
+            ->when($jenis, fn($q) => $q->where('jenisketidaksesuaian', 'like', "%{$jenis}%"))
+            ->when($divisiPenerima, fn($q) => $q->where('divisipenerima', $divisiPenerima))
+            ->when($divisiPengirim, fn($q) => $q->where('divisipembuat', $divisiPengirim))
+            ->when($tipeFilter === 'IA', fn($q) => $q->where('nomor_surat', 'like', '%/IA/%'))
+            ->when($tipeFilter === 'MFG', fn($q) => $q->where('nomor_surat', 'like', '%/MFG/%'))
+            ->when($year, fn($q) => $q->whereYear('created_at', $year))
             ->get();
 
-        // Ambil data dropdown
-        $user = auth()->user();
-        $userList = User::orderBy('nama_user', 'asc')->pluck('nama_user', 'id');
+        // 3) Ambil data dropdown
+        $user       = auth()->user();
+        $userList   = User::orderBy('nama_user', 'asc')->pluck('nama_user', 'id');
         $divisiList = Divisi::orderBy('nama_divisi', 'asc')->pluck('nama_divisi', 'id');
 
-        // Kirim semua ke view
+        // 4) Kembalikan ke view dengan compact data
         return view('ppk.index2', compact(
             'ppks',
             'userList',
@@ -119,10 +123,55 @@ class PpkController extends Controller
             'statusPpkList',
             'status',
             'user',
-            'tipeFilter'
+            'tipeFilter',
+            'year'           // kita kirim juga year agar di‐Blade bisa men‐set default pilihan
         ));
     }
 
+    public function export(Request $request)
+    {
+        // 1) Tangkap input filter, sama dengan index2:
+        $startDate       = $request->input('start_date');
+        $endDate         = $request->input('end_date');
+        $semester        = $request->input('semester');
+        $userFilter      = $request->input('user');
+        $keyword         = $request->input('keyword');
+        $status          = $request->input('status');
+        $divisiPenerima  = $request->input('divisi_penerima');
+        $divisiPengirim  = $request->input('divisi_pengirim');
+        $jenis           = $request->input('jenis');
+        $tipeFilter      = $request->input('filter', 'ALL');
+        $year            = $request->input('year');  // filter tahun
+
+        // 2) Bangun query dengan kondisi‐kondisi, termasuk filter tahun:
+        $query = Ppk::query()
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->when($semester, fn($q) => $q->where('nomor_surat', 'like', "%{$semester}%"))
+            ->when(
+                $userFilter,
+                fn($q) =>
+                $q->where(
+                    fn($sub) =>
+                    $sub->where('pembuat', $userFilter)
+                        ->orWhere('penerima', $userFilter)
+                )
+            )
+            ->when($keyword, fn($q) => $q->where('nomor_surat', 'like', "%{$keyword}%"))
+            ->when($status, fn($q) => $q->where('statusppk', $status))
+            ->when($jenis, fn($q) => $q->where('jenisketidaksesuaian', 'like', "%{$jenis}%"))
+            ->when($divisiPenerima, fn($q) => $q->where('divisipenerima', $divisiPenerima))
+            ->when($divisiPengirim, fn($q) => $q->where('divisipembuat', $divisiPengirim))
+            ->when($tipeFilter === 'IA', fn($q) => $q->where('nomor_surat', 'like', '%/IA/%'))
+            ->when($tipeFilter === 'MFG', fn($q) => $q->where('nomor_surat', 'like', '%/MFG/%'))
+            ->when($year, fn($q) => $q->whereYear('created_at', $year));
+
+        // 3) Ambil koleksi hasil query
+        $ppkCollection = $query->get();
+
+        // 4) Return Excel download dengan ExportAllPPK
+        return Excel::download(new ExportAllPPK($ppkCollection), 'PPK_List.xlsx');
+    }
 
 
     public function detail($id)
@@ -1535,4 +1584,5 @@ class PpkController extends Controller
             return back()->withErrors(['error' => 'Gagal menyimpan data: ' . $e->getMessage()]);
         }
     }
+   
 }

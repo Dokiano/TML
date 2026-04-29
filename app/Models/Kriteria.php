@@ -16,5 +16,16 @@ class Kriteria extends Model
         'nama_kriteria',
         'desc_kriteria',
         'nilai_kriteria',
+        'divisi_id',
+        'jenis_iso_id'
+
     ];
+
+    public function divisi(){
+        return $this->belongsTo(\App\Models\Divisi::class, 'divisi_id');
+    }
+     public function jenisIso()
+    {
+        return $this->belongsTo(JenisIso::class, 'jenis_iso_id');
+    }
 }

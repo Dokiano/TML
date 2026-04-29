@@ -47,7 +47,18 @@
                                         style="width: 50px; height: 50px; border-radius: 50%; background-color: #F6F9FF;">
                                         <i class="bi bi-file-earmark-text"></i>
                                     </div>
-                                    <span style="color: #00286F;">PPK-IA</span>
+                                    <span style="color: #00286F;">Laporan Audit Internal (PPK-IA)</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="{{ route('laporan.index') }}" class="text-decoration-none">
+                            <div class="hover-scale rounded-3 px-3 py-2 " style="background-color: white;">
+                                <div class="d-flex flex-row gap-3 align-items-center fs-3" style="color: #4154f1;">
+                                    <div class="d-flex justify-content-center align-items-center"
+                                        style="width: 50px; height: 50px; border-radius: 50%; background-color: #F6F9FF;">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </div>
+                                    <span style="color: #00286F;">Laporan Audit Internal (PPK-LA)</span>
                                 </div>
                             </div>
                         </a>

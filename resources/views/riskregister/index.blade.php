@@ -27,7 +27,7 @@
                     <tr>
                         <td style="text-align: center; vertical-align: middle;">{{$loop->iteration}}</td>
                         <td>
-                            <a href="{{ route('riskregister.tablerisk', $d->id) }}" class="btn btn-info">
+                            <a href="{{ route('riskregister.pilihISO', ['id' => $d->id]) }}" class="btn btn-info">
                                 {{$d->nama_divisi}}
                             </a>
                         </td>

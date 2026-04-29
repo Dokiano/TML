@@ -94,17 +94,26 @@
     <table class="table table-bordered text-center">
         <thead>
             <tr>
-                {{-- <th rowspan="2">No</th> --}}
                 <th rowspan="2"></th>
                 <th rowspan="2">Severity / Keparahan<br><small>{{ $kategori }}</small></th>
                 <th colspan="5">Probability / Dampak (Likelihood)</th>
             </tr>
             <tr>
-                <th>1 (Sangat Jarang Terjadi)</th>
-                <th>2 (Jarang Terjadi)</th>
-                <th>3 (Dapat Terjadi)</th>
-                <th>4 (Sering Terjadi)</th>
-                <th>5 (Selalu Terjadi)</th>
+                @if($isISO37001)
+                    {{-- Label untuk ISO 37001 --}}
+                    <th>{{ $probabilityLabels[0] }}</th>
+                    <th>{{ $probabilityLabels[1] }}</th>
+                    <th>{{ $probabilityLabels[2] }}</th>
+                    <th>{{ $probabilityLabels[3] }}</th>
+                    <th>{{ $probabilityLabels[4] }}</th>
+                @else
+                    {{-- Label untuk ISO General --}}
+                    <th>{{ $probabilityLabels[0] }}</th>
+                    <th>{{ $probabilityLabels[1] }}</th>
+                    <th>{{ $probabilityLabels[2] }}</th>
+                    <th>{{ $probabilityLabels[3] }}</th>
+                    <th>{{ $probabilityLabels[4] }}</th>
+                @endif
             </tr>
         </thead>
         <tbody>

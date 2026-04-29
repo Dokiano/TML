@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping, WithStyles
 {
@@ -37,14 +38,21 @@ class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping
                 'Pihak Berkepentingan',
                 'Risiko',
                 'Peluang',
+                'Pre mitigate Severity (S)',
+                'Pre mitigate likelihood (Probability)(P)',
+                'Score Pre Mitigate (P x S)',
                 'Tingkatan',
                 'Tindakan Lanjut',
                 'Target PIC',
                 'Tanggal Penyelesaian',
                 'Status',
-                'Actual Risk',
+                'Post mitigate Severity ( S )',
+                'Post mitigate likelihood (Probability)(P)',
+                'Score Post mitigate (P x S)',
+                'Actual Risk Level',
                 'Before',
                 'After',
+                'Kategori Q / HS / E'
             ],
         ];
     }
@@ -59,6 +67,9 @@ class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping
         $targetpic        = is_array($row['targetpic'])  ? $row['targetpic']                : [$row['targetpic']];
         $tglPenyelesaian  = is_array($row['tgl_penyelesaian'])
             ? $row['tgl_penyelesaian']      : [$row['tgl_penyelesaian']];
+        $severity        = $row['severity'] ?? '';
+        $probability     = $row['probability'] ?? '';
+        $scoreRisk       = ($severity && $probability) ? $severity * $probability : '';
 
         $mappedRows = [];
 
@@ -72,6 +83,9 @@ class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping
                 // kolom D = risiko, kolom E = kosong
                 $ris,
                 '',
+                $i === 0 ? $row['severity'] : '',
+                $i === 0 ? $row['probability'] : '',
+                $i === 0 ? $row['scores'] : '',
                 // kolom F
                 $i === 0 ? $row['tingkatan'] : '',
                 // kolom G–I (tindakan lanjut, PIC, tanggal)
@@ -80,9 +94,13 @@ class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping
                 $tglPenyelesaian[$i] ?? '',
                 // kolom J–M hanya di baris pertama
                 $i === 0 ? $row['status']  : '',
-                $i === 0 ? $row['scores']  : '',
+                $i === 0 ? $row['severityrisk'] : '',
+                $i === 0 ? $row['probabilityrisk'] : '',
+                $i === 0 ? ($row['severityrisk'] * $row['probabilityrisk']) : '',
+                '',
                 $i === 0 ? $row['before']  : '',
                 $i === 0 ? $row['after']   : '',
+                '',
             ];
         }
 
@@ -98,6 +116,7 @@ class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping
                     // kolom E = peluang
                     $pel,
                     // kolom F–M kosong
+                    '',
                     '',
                     '',
                     '',
@@ -123,15 +142,15 @@ class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
         // Atur tinggi baris untuk judul dan header
         $sheet->getRowDimension(1)->setRowHeight(30);
-        $sheet->getRowDimension(3)->setRowHeight(20);
+        $sheet->getRowDimension(3)->setRowHeight(40);
 
         // Styling untuk header (baris ke-3)
-        $sheet->getStyle('A3:M3')->getFont()->setBold(true);
-        $sheet->getStyle('A3:M3')->getAlignment()->setHorizontal('center');
-        $sheet->getStyle('A3:M3')->getAlignment()->setVertical('center');
-        $sheet->getStyle('A3:M3')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle('A3:T3')->getFont()->setBold(true);
+        $sheet->getStyle('A3:T3')->getAlignment()->setHorizontal('center');
+        $sheet->getStyle('A3:T3')->getAlignment()->setVertical('center');
+        $sheet->getStyle('A3:T3')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
         // Aktifkan AutoFilter pada header
-        $sheet->setAutoFilter('A3:M3');
+        $sheet->setAutoFilter('A3:T3');
 
         // Set lebar kolom agar sesuai
         $sheet->getColumnDimension('A')->setWidth(5);   // No
@@ -139,19 +158,30 @@ class RiskOpportunityExport implements FromCollection, WithHeadings, WithMapping
         $sheet->getColumnDimension('C')->setWidth(25);  // Pihak Berkepentingan
         $sheet->getColumnDimension('D')->setWidth(15);  // Risiko
         $sheet->getColumnDimension('E')->setWidth(15);  // Peluang
-        $sheet->getColumnDimension('F')->setWidth(15);  // Tingkatan
-        $sheet->getColumnDimension('G')->setWidth(20);  // Tindakan Lanjut
-        $sheet->getColumnDimension('H')->setWidth(15);  // Target PIC
-        $sheet->getColumnDimension('I')->setWidth(15);  // Tanggal Penyelesaian
-        $sheet->getColumnDimension('J')->setWidth(15);  // Status
-        $sheet->getColumnDimension('K')->setWidth(30);  // Actual Risk
-        $sheet->getColumnDimension('L')->setWidth(15);  // Before
-        $sheet->getColumnDimension('M')->setWidth(15);  // After
+        $sheet->getColumnDimension('F')->setWidth(18);  // S
+        $sheet->getColumnDimension('G')->setWidth(18);  // P
+        $sheet->getColumnDimension('H')->setWidth(18);  // S x P
+        $sheet->getColumnDimension('I')->setWidth(15);  // Tingkatan
+        $sheet->getColumnDimension('J')->setWidth(20);  // Tindakan Lanjut
+        $sheet->getColumnDimension('K')->setWidth(15);  // Target PIC
+        $sheet->getColumnDimension('L')->setWidth(15);  // Tanggal Penyelesaian
+        $sheet->getColumnDimension('M')->setWidth(15);  // Status
+        $sheet->getColumnDimension('N')->setWidth(18);  // S
+        $sheet->getColumnDimension('O')->setWidth(18);  // P
+        $sheet->getColumnDimension('P')->setWidth(18);  // Level
+        $sheet->getColumnDimension('Q')->setWidth(30);  // Actual Risk
+        $sheet->getColumnDimension('R')->setWidth(15);  // Before
+        $sheet->getColumnDimension('S')->setWidth(15);  // After
+        $sheet->getColumnDimension('T')->setWidth(15);  // After
 
         // Terapkan border pada seluruh data (mulai baris 4 hingga baris terakhir)
         $highestRow = $sheet->getHighestRow();
-        $sheet->getStyle("A4:M{$highestRow}")->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle("A4:T{$highestRow}")->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
         // Aktifkan wrap text pada seluruh data agar isi sel dibungkus
-        $sheet->getStyle("A4:M{$highestRow}")->getAlignment()->setWrapText(true);
+        $sheet->getStyle("A4:T{$highestRow}")->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A3:Z4')->getAlignment()
+        ->setWrapText(true)
+        ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+        ->setVertical(Alignment::VERTICAL_CENTER);
     }
 }

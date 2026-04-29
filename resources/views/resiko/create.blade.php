@@ -36,7 +36,7 @@
                 <input type="number" class="form-control" name="severity" id="severity" min="1" max="5" oninput="calculateTingkatan()">
             </div>
             <div class="col-sm-5">
-                <p class="form-text"><strong>1. Sangat jarang terjadi | 2. Jarang terjadi | 3. Dapat Terjadi | 4. Sering terjadi | 5. Selalu terjadi</strong></p>
+                <p class="form-text"><strong>1. Sangat jarang terjadi ( < 2 kejadian dalam 1 tahun) | 2. Jarang terjadi ( 3-5 kejadian dalam 1 tahun)| 3. Dapat Terjadi ( 6-8 kejadian dalam 1 tahun) | 4. Sering terjadi ( 9-11 kejadian dalam 1 tahun)| 5. Selalu terjadi ( > 12 kejadian dalam 1 tahun)</strong></p>
             </div>
         </div>
         <hr>
@@ -47,8 +47,7 @@
                 <input type="number" class="form-control" name="probability" id="probability" min="1" max="5" oninput="calculateTingkatan()">
             </div>
             <div class="col-sm-5">
-                <p class="form-text"><strong>1. Sangat jarang terjadi | 2. Jarang terjadi | 3. Dapat Terjadi | 4. Sering terjadi | 5. Selalu terjadi</strong></p>
-            </div>
+                <p class="form-text"><strong>1. Sangat jarang terjadi ( < 2 kejadian dalam 1 tahun) | 2. Jarang terjadi ( 3-5 kejadian dalam 1 tahun)| 3. Dapat Terjadi ( 6-8 kejadian dalam 1 tahun) | 4. Sering terjadi ( 9-11 kejadian dalam 1 tahun)| 5. Selalu terjadi ( > 12 kejadian dalam 1 tahun)</strong></p>
         </div>
         <hr>
 

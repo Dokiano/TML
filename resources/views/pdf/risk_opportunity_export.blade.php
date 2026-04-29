@@ -133,10 +133,11 @@
                 <th>Status</th>
                 <th>S</th>
                 <th>P</th>
-                <th>Level</th>
                 <th>Actual Risk</th>
+                <th>Level</th>
                 <th>Before</th>
                 <th>After</th>
+                <th>Kategori Q / HS / E</th>
                 <th>Dibuat Pada</th>
             </tr>
         </thead>
@@ -197,6 +198,7 @@
                     <td class="align-top">{{ $data['risk'] }}</td>
                     <td class="align-top">{{ $data['before'] }}</td>
                     <td class="align-top">{{ $data['after'] }}</td>
+                    <td class="align-top">--</td>
                     <td class="col-target-pic" style="text-align: center;">
                         @if (isset($data['updated_at']))
                             {{ \Carbon\Carbon::parse($data['updated_at'])->format('d-m-Y') }}

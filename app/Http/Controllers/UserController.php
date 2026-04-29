@@ -58,7 +58,8 @@ class UserController extends Controller
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $request->session()->regenerate();
-            return redirect('/')->with('success', 'Selamat Datang!');
+            return redirect()->intended('/')->with('success', 'Selamat Datang!');
+            // return redirect()->intended('/')->with('success', 'Selamat Datang!');
         }
 
         // Jika login gagal, kita tambahkan flash message error

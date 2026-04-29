@@ -4,7 +4,7 @@
 
     <!-- Check for success message -->
     @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert -success alert-dismissible fade show" role="alert">
             <strong>Success!</strong> {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -58,8 +58,14 @@
                 <!-- New Issue Button -->
                 <a href="{{ route('riskregister.create', ['id' => $id]) }}" class="btn btn-success"
                     style="font-weight: 500;border-radius: 0; font-size: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 5px;">
-                    <i class="fa fa-plus" style="font-size: 14px;"></i> New Issue
+                    <i class="fa fa-plus" style="font-size: 14px;"></i> New Issue Resiko
                 </a>
+                <a href="{{ route('riskregister.create', ['id' => $id, 'type' => 'peluang']) }}" 
+                   class="btn btn-warning"
+                   style="font-weight: 500;border-radius: 0; font-size: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 5px;">
+                    <i class="fa fa-plus" style="font-size: 14px;"></i> New Issue Peluang
+                </a>
+
                 <a href="{{ url()->current() }}" class="btn btn-secondary"
                     style="font-weight: 500; font-size: 12px; border-radius: 0;padding: 6px 12px; display: flex; align-items: center; gap: 5px;">
                     <i class="fa fa-refresh" style="font-size: 14px;"></i> Reset
@@ -216,16 +222,21 @@
                         <thead>
                             <tr>
                                 <th scope="col">No</th>
+                                {{-- 
+                                <th scope="col" style="min-width: 180px; white-space: nowrap;">NO. ROR </th>
+                                <th scope="col">Strategi</th>  
+                                <th scope="col">Q/H/S/E</th>
+                                 --}}
                                 <th scope="col" style="width: 300px;">Issue (Int:Ex)</th>
-                                <th scope="col">I/E</th>
+                                <th scope="col">I/E </th>
                                 <th scope="col" style="width: 200px;">Pihak Berkepentingan</th>
                                 <th scope="col">Resiko</th>
                                 <th scope="col">Peluang</th>
-                                <th scope="col">Tingkatan</th>
+                                <th scope="col">Tingkatan Penialaian</th>
                                 <th scope="col" style="width: 300px;">Tindakan Lanjut</th>
                                 <th scope="col">Target Penyelesaian</th>
                                 <th scope="col">Status</th>
-                                <th scope="col">Actual Risk</th>
+                                <th scope="col">Actual Penilaian</th>
                                 <th scope="col">Before</th>
                                 <th scope="col">After</th>
                                 <th scope="col">Action</th>
@@ -252,6 +263,11 @@
                                     <tr>
                                         <td>{{ $no++ }}
                                         </td>
+                                        {{--  
+                                        <td style="min-width: 180px; white-space: nowrap;">{{ $form->kode_swot_full ?? '-' }}</td>
+                                        <td>{{ $form->kode_swot ?? '-' }}</td>
+                                        <td>{{ $form->kategori_swot ?? '-' }}</td>
+                                        --}}
                                         <td>
                                             <form method="POST"
                                                 action="{{ route('riskregister.updateissue', $form->id) }}"
@@ -930,13 +946,13 @@
                                                 </div>
 
                                                 <span id="date-text-{{ $form->id }}">
-                                                    {{ $form->target_penyelesaian }}
+                                                  {{ ($form->target_penyelesaian) }}
                                                 </span>
 
                                                 <input type="date" name="target_penyelesaian"
                                                     id="date-input-{{ $form->id }}"
                                                     class="form-control form-control-sm mt-2 d-none" {{-- Convert format d-m-Y → Y-m-d untuk date input --}}
-                                                    value="{{ \Carbon\Carbon::createFromFormat('d-m-Y', $form->target_penyelesaian)->format('Y-m-d') }}">
+                                                    value="{{ $form->target_penyelesaian ?? '' }}">
 
                                                 <button type="submit" id="date-save-{{ $form->id }}"
                                                     class="btn btn-primary btn-sm mt-2 d-none">
@@ -1220,6 +1236,7 @@
                 }
             });
         });
+
     </script>
 
 @endsection

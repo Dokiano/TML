@@ -6,7 +6,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Edit Kriteria</h5>
+                        <h5 class="card-title">Edit Kriteria - {{ $kriteria->divisi->nama_divisi ?? 'Divisi tidak ditemukan' }}</h5>
 
                         <form action="{{ route('admin.kriteria.update', $kriteria->id) }}" method="POST">
                             @csrf

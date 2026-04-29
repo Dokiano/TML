@@ -14,11 +14,44 @@
                         </a>
 
                         <!-- Filter Form -->
-                        <form method="GET" action="{{ route('admin.kriteria') }}" class="mb-4">
-                            <div class="row">
-                                <!-- Dropdown untuk Nama Kriteria -->
+                        <form method="GET" action="{{ route('admin.kriteria') }}" class="mb-4" id="filterForm">
+                            <div class="row g-2">
+
+                                {{-- 1. Dropdown Divisi --}}
+                                <div class="col-md-5">
+                                    <label class="form-label fw-semibold mb-1">Divisi</label>
+                                    <select name="divisi_id" class="form-select" style="border-radius: 0px"
+                                        onchange="document.getElementById('filterForm').submit()">
+                                        <option value="">-- Pilih Divisi --</option>
+                                        @foreach ($divisiList as $id => $nama)
+                                            <option value="{{ $id }}"
+                                                {{ request('divisi_id') == $id ? 'selected' : '' }}>
+                                                {{ $nama }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- 2. Dropdown Jenis ISO --}}
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold mb-1">Jenis ISO</label>
+                                    <select name="jenis_iso_id" class="form-select" style="border-radius: 0px"
+                                        onchange="document.getElementById('filterForm').submit()">
+                                        <option value="">-- Pilih Jenis ISO --</option>
+                                        @foreach ($jenisIsoList as $id => $nama)
+                                            <option value="{{ $id }}"
+                                                {{ request('jenis_iso_id') == $id ? 'selected' : '' }}>
+                                                {{ $nama }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- 3. Dropdown Nama Kriteria (kosong jika belum pilih divisi & iso) --}}
                                 <div class="col-md-4">
-                                    <select name="nama_kriteria" class="form-select" style="border-radius: 0px">
+                                    <label class="form-label fw-semibold mb-1">Nama Kriteria</label>
+                                    <select name="nama_kriteria" class="form-select" style="border-radius: 0px"
+                                        {{ (!request('divisi_id') || !request('jenis_iso_id')) ? 'disabled' : '' }}>
                                         <option value="">-- Pilih Nama Kriteria --</option>
                                         @foreach ($namaKriteriaList as $nama)
                                             <option value="{{ $nama }}"
@@ -29,23 +62,17 @@
                                     </select>
                                 </div>
 
-                                <!-- Input Text untuk Deskripsi -->
-                                <div class="col-md-4">
-                                    <input type="text" name="desc_kriteria" class="form-control"
-                                        style="border-radius: 0px" placeholder="Cari berdasarkan Deskripsi"
-                                        value="{{ request('desc_kriteria') }}">
-                                </div>
-
-                                <!-- Tombol Filter -->
-                                <div class="col-md-4 d-flex align-items-center">
-                                    <button type="submit" class="btn btn-primary me-2" style="border-radius: 0px">
-                                        <i class="bi bi-search"></i>
+                                {{-- 4. Tombol Filter & Reset --}}
+                                <div class="col-md-3 d-flex align-items-end gap-2">
+                                    <button type="submit" class="btn btn-primary" style="border-radius: 0px">
+                                        <i class="bi bi-search"></i> Filter
                                     </button>
                                     <a href="{{ route('admin.kriteria') }}" class="btn btn-secondary"
                                         style="border-radius: 0px">
-                                        <i class="bi bi-arrow-clockwise"></i>
+                                        <i class="bi bi-arrow-clockwise"></i> Reset
                                     </a>
                                 </div>
+
                             </div>
                         </form>
                         <!-- End Filter Form -->

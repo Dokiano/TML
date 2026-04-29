@@ -30,37 +30,60 @@ class Resiko extends Model
     {
         if ($this->probability && $this->severity) {
             $score = $this->probability * $this->severity;
-
-            if (in_array($this->kriteria, ['Reputasi', 'Kinerja', 'Operational', 'Financial'])) {
-                $this->tingkatan = $this->calculateNewCategories(); // Menggunakan metode baru
+    
+            // Cek apakah ISO 37001
+            $isISO37001 = optional($this->riskregister)->jenis_iso_id == 2;
+    
+            if ($isISO37001) {
+                // Skala ISO 37001
+                if ($score >= 1 && $score <= 3) {
+                    $this->tingkatan = 'LOW';
+                } elseif ($score >= 4 && $score <= 12) {
+                    $this->tingkatan = 'MEDIUM';
+                } elseif ($score >= 13 && $score <= 25) {
+                    $this->tingkatan = 'HIGH';
+                }
+            } elseif (in_array($this->kriteria, ['Reputasi', 'Kinerja', 'Operational', 'Financial'])) {
+                $this->tingkatan = $this->calculateNewCategories();
             } else {
-                // Kategori lama
-                if ($score >= 1 && $score <= 2) { // HIJAU
+                // Skala ISO lainnya (ISO 9001 dll)
+                if ($score >= 1 && $score <= 2) {
                     $this->tingkatan = 'LOW';
                 } elseif ($score >= 3 && $score <= 4) {
-                    $this->tingkatan = 'MEDIUM'; // BIRU
+                    $this->tingkatan = 'MEDIUM';
                 } elseif ($score >= 5 && $score <= 25) {
-                    $this->tingkatan = 'HIGH'; // KUNING
+                    $this->tingkatan = 'HIGH';
                 }
             }
         }
     }
-
+    
     public function calculateRisk()
     {
         if ($this->probabilityrisk && $this->severityrisk) {
             $scorerisk = $this->probabilityrisk * $this->severityrisk;
 
-            if (in_array($this->kriteria, ['Reputasi', 'Kinerja', 'Operational', 'Financial'])) {
-                $this->risk = $this->calculateRiskNew(); // Menggunakan metode baru
-            } else {
-                // Kategori lama
-                if ($scorerisk >= 1 && $scorerisk <= 2) { // HIJAU
+            // Cek apakah ISO 37001
+            $isISO37001 = optional($this->riskregister)->jenis_iso_id == 2;
+
+            if ($isISO37001) {
+                if ($scorerisk >= 1 && $scorerisk <= 3) {
                     $this->risk = 'LOW';
-                } elseif ($scorerisk >= 3 && $scorerisk <= 4) {
-                    $this->risk = 'MEDIUM'; // BIRU
+                } elseif ($scorerisk >= 4 && $scorerisk <= 12) {
+                    $this->risk = 'MEDIUM';
+                } elseif ($scorerisk >= 13 && $scorerisk <= 25) {
+                    $this->risk = 'HIGH';
+                }
+            } elseif (in_array($this->kriteria, ['Reputasi', 'Kinerja', 'Operational', 'Financial'])) {
+                $this->risk = $this->calculateRiskNew();  // ← jadikan return value
+            } else {
+                // ISO 9001 & lainnya
+                if ($scorerisk >= 1 && $scorerisk <= 3) {
+                    $this->risk = 'LOW';
+                } elseif ($scorerisk == 4) {
+                    $this->risk = 'MEDIUM';
                 } elseif ($scorerisk >= 5 && $scorerisk <= 25) {
-                    $this->risk = 'HIGH'; // KUNING
+                    $this->risk = 'HIGH';
                 }
             }
         }
@@ -84,23 +107,25 @@ class Resiko extends Model
         return null; // Jika tidak ada kategori yang cocok
     }
 
-    public function calculateRiskNew()
+   public function calculateRiskNew()
     {
         if ($this->probabilityrisk && $this->severityrisk) {
             $scorerisk = $this->probabilityrisk * $this->severityrisk;
-
-            if ($scorerisk >= 1 && $scorerisk <= 2) { // LOW
-                $this->risk = 'LOW';
+    
+            if ($scorerisk >= 1 && $scorerisk <= 2) {
+                return 'LOW';
             } elseif ($scorerisk >= 2 && $scorerisk < 5) {
-                $this->risk = 'MEDIUM'; // MEDIUM
+                return 'MEDIUM';
             } elseif ($scorerisk > 4 && $scorerisk <= 21) {
-                $this->risk = 'HIGH'; // HIGH
+                return 'HIGH';
             }
         }
+        return null;
     }
 
     public function riskregister()
     {
         return $this->belongsTo(Riskregister::class, 'id_riskregister', 'id');
     }
+    
 }

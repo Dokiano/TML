@@ -11,6 +11,28 @@
                             @csrf
 
                             <!-- Input untuk nama_kriteria -->
+                             {{-- Pilih Divisi --}}
+                            <div class="row mb-3">
+                              <label class="col-sm-2 col-form-label"><strong>Divisi:</strong></label>
+                              <div class="col-sm-10">
+                                <select name="divisi_id" class="form-control" required>
+                                  @foreach($divisis as $d)
+                                    <option value="{{ $d->id }}">{{ $d->nama_divisi }}</option>
+                                  @endforeach
+                                </select>
+                              </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label"><strong>Jenis ISO:</strong></label>
+                                <div class="col-sm-10">
+                                    <select name="jenis_iso_id" class="form-control">
+                                        <option value="">-- Pilih Jenis ISO (Opsional) --</option>
+                                        @foreach($jenisIsos as $iso)
+                                            <option value="{{ $iso->id }}">{{ $iso->jenis_iso }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                             <div class="row mb-3">
                                 <label for="nama_kriteria" class="col-sm-2 col-form-label"><strong>Nama
                                         Kriteria:</strong></label>
@@ -23,7 +45,7 @@
                             <!-- Input dinamis untuk desc_kriteria dan nilai_kriteria -->
                             <div id="desc-container">
                                 <div class="row mb-3">
-                                    <label class="col-sm-2 col-form-label"><strong>Deskripsi Kriteria:</strong></label>
+                                    <label class="col-sm-2 col-form-label"><strong>Deskripsi Severity:</strong></label>
                                     <div class="col-sm-8">
                                         <input type="text" name="desc_kriteria[]" class="form-control"
                                             placeholder="Deskripsi">
@@ -35,7 +57,7 @@
                                 </div>
                             </div>
 
-                            <button type="button" class="btn btn-sm btn-success" id="add-desc-field"
+                             <button type="button" class="btn btn-sm btn-success" id="add-desc-field"
                                 style="border-radius: 0;">
                                 <i class="fas fa-plus"></i>
                             </button>

@@ -18,4 +18,8 @@ class Divisi extends Model
     {
         return $this->hasMany(Riskregister::class, 'id_divisi');
     }
+    public function dokumens()
+    {
+        return $this->hasMany(Dokumen::class, 'divisi_id', 'id');
+    }
 }

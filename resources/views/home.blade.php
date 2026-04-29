@@ -5,63 +5,169 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
         body {
-            background: linear-gradient(135deg, #f0f4f8, #e2e2e2);
+            background: #f5f7fa;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        .animate-card {
-            transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
+        .home-wrapper {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .home-greeting {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .home-greeting h4 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #8a95a3;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+
+        .home-greeting h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a2332;
+            margin: 0;
+        }
+
+        .home-greeting h2 span {
+            color: #2e7d32;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 960px;
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                max-width: 420px;
+            }
+        }
+
+        @media (max-width: 992px) and (min-width: 769px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 640px;
+            }
+        }
+
+        .nav-card {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1.5px solid #eaecf0;
+            padding: 2rem 1.75rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            position: relative;
             overflow: hidden;
         }
 
-        .animate-card:hover {
-            transform: scale(1.05);
-            background-color: #ffffff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--card-accent);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
         }
 
-        .animate-card:active {
-            transform: scale(0.95);
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+            border-color: transparent;
         }
 
-        .clicked {
-            animation: clickEffect 0.3s forwards;
+        .nav-card:hover::before {
+            transform: scaleX(1);
         }
 
-        @keyframes clickEffect {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(0.95);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+        .nav-card:active {
+            transform: translateY(-2px);
         }
 
-        .card-icon {
-            background-color: #007bff;
-            padding: 12px;
-            border-radius: 50%;
-            font-size: 32px;
-            color: white;
+        .nav-card .card-icon-wrap {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: var(--card-icon-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-        h6 {
+        .nav-card .card-icon-wrap i {
+            font-size: 1.5rem;
+            color: var(--card-accent);
+        }
+
+        .nav-card .card-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a2332;
+            line-height: 1.4;
             margin: 0;
-            font-weight: bold;
-            color: #333;
-            line-height: 1.5;
         }
+
+        .nav-card .card-desc {
+            font-size: 0.78rem;
+            color: #8a95a3;
+            margin: 0.2rem 0 0;
+            font-weight: 400;
+        }
+
+        .nav-card .card-arrow {
+            margin-top: auto;
+            font-size: 0.8rem;
+            color: var(--card-accent);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            opacity: 0;
+            transform: translateX(-6px);
+            transition: all 0.25s ease;
+        }
+
+        .nav-card:hover .card-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Card color themes */
+        .card-risk   { --card-accent: #2563eb; --card-icon-bg: #eff6ff; }
+        .card-ppk    { --card-accent: #059669; --card-icon-bg: #ecfdf5; }
+        .card-dok    { --card-accent: #7c3aed; --card-icon-bg: #f5f3ff; }
 
         .alert {
-            margin-bottom: 20px;
-            font-weight: bold;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            border-radius: 12px;
+            font-size: 0.9rem;
         }
     </style>
 
@@ -178,61 +284,62 @@
         @endforeach
 
 
-        <br>
-        <div class="container-fluid">
-            <div class="row justify-content-center">
+        <div class="home-wrapper">
 
-                @if (session('success'))
-                    <div class="alert alert-success" style="border-radius: 0">
-                        {{ session('success') }} {{ Auth::user()->nama_user }} 👋
+            @if (session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }} {{ Auth::user()->nama_user }} 👋
+                </div>
+            @endif
+
+            <div class="home-greeting">
+                <h4>Selamat datang</h4>
+                <h2>Document Control <span>Management System</span></h2>
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="cards-grid">
+
+                <!-- Risk & Opportunity Card -->
+                <a class="nav-card card-risk" href="{{ route('dashboard.index') }}">
+                    <div class="card-icon-wrap">
+                        <i class="bi bi-file-text-fill"></i>
                     </div>
-                @endif
-
-                <!-- Card Container -->
-                <div class="d-flex flex-wrap justify-content-center align-items-start">
-
-                    <!-- Risk & Opportunity Card -->
-                    <div class="col-xxl-4 col-md-6 mb-4">
-                        <div class="card info-card sales-card">
-                            <button class="card-body btn btn-light animate-card"
-                                style="border: none; padding: 0; text-align: left;"
-                                onclick="window.location.href='{{ route('dashboard.index') }}'">
-                                <div class="d-flex align-items-center">
-                                    <div class="card-icon">
-                                        <i class="bi bi-file-text-fill"></i>
-                                    </div>
-                                    <div class="ps-3">
-                                        <h6>Risk & Opportunity <br>Register</h6>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
+                    <div>
+                        <p class="card-label">Risk & Opportunity Register</p>
+                      
                     </div>
-                    <!-- End Risk & Opportunity Card -->
+                    <span class="card-arrow">Buka <i class="bi bi-arrow-right"></i></span>
+                </a>
 
-                    <!-- PPK Card -->
-                    <!-- HAPUS TEKS: d-none untuk menampilkan PPK PERSIS DIBAWAH -->
-                    <div class="col-xxl-4 col-md-6 mb-4">
-                        <div class="card info-card sales-card">
-                            <button class="card-body btn btn-light animate-card"
-                                style="border: none; padding: 0; text-align: left;"
-                                onclick="window.location.href='{{ route('ppk.dashboardPPK') }}'">
-                                <div class="d-flex align-items-center">
-                                    <div class="card-icon">
-                                        <i class="bi bi-bar-chart-fill"></i>
-                                    </div>
-                                    <div class="ps-3">
-                                        <h6>Proses Peningkatan <br>Kinerja (PPK)</h6>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
+                <!-- PPK Card -->
+                <a class="nav-card card-ppk" href="{{ route('ppk.dashboardPPK') }}">
+                    <div class="card-icon-wrap">
+                        <i class="bi bi-bar-chart-fill"></i>
                     </div>
-                    <!-- End PPK Card -->
-                </div><!-- End Card Container -->
+                    <div>
+                        <p class="card-label">Proses Peningkatan Kinerja (PPK)</p>
+                       
+                    </div>
+                    <span class="card-arrow">Buka <i class="bi bi-arrow-right"></i></span>
+                </a>
 
+                <!-- Master List Dokumen Card -->
+                <a class="nav-card card-dok" href="{{ route('dok.dashboard') }}">
+                    <div class="card-icon-wrap">
+                        <i class="bi bi-folder-fill"></i>
+                    </div>
+                    <div>
+                        <p class="card-label">Master List Dokumen</p>
+                      
+                    </div>
+                    <span class="card-arrow">Buka <i class="bi bi-arrow-right"></i></span>
+                </a>
 
+            </div><!-- End Cards Grid -->
 
+        </div><!-- End home-wrapper -->
+    </section><!-- End dashboard section -->
 
                 <!-- Include Chart.js -->
                 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

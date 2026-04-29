@@ -64,11 +64,21 @@
                 <th colspan="5">Probability / Dampak (Likelihood)</th>
             </tr>
             <tr>
-                <th>1 (Sangat Jarang Terjadi)</th>
-                <th>2 (Jarang Terjadi)</th>
-                <th>3 (Dapat Terjadi)</th>
-                <th>4 (Sering Terjadi)</th>
-                <th>5 (Selalu Terjadi)</th>
+                @if($isISO37001)
+                    {{-- Label untuk ISO 37001 --}}
+                    <th>{{ $probabilityLabels[0] }}</th>
+                    <th>{{ $probabilityLabels[1] }}</th>
+                    <th>{{ $probabilityLabels[2] }}</th>
+                    <th>{{ $probabilityLabels[3] }}</th>
+                    <th>{{ $probabilityLabels[4] }}</th>
+                @else
+                    {{-- Label untuk ISO General --}}
+                    <th>{{ $probabilityLabels[0] }}</th>
+                    <th>{{ $probabilityLabels[1] }}</th>
+                    <th>{{ $probabilityLabels[2] }}</th>
+                    <th>{{ $probabilityLabels[3] }}</th>
+                    <th>{{ $probabilityLabels[4] }}</th>
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -105,11 +115,21 @@
                 <th colspan="5">Probability / Dampak (Likelihood)</th>
             </tr>
             <tr>
-                <th>1 (Sangat Jarang Terjadi)</th>
-                <th>2 (Jarang Terjadi)</th>
-                <th>3 (Dapat Terjadi)</th>
-                <th>4 (Sering Terjadi)</th>
-                <th>5 (Selalu Terjadi)</th>
+                 @if($isISO37001)
+                    {{-- Label untuk ISO 37001 --}}
+                    <th>{{ $probabilityLabels[0] }}</th>
+                    <th>{{ $probabilityLabels[1] }}</th>
+                    <th>{{ $probabilityLabels[2] }}</th>
+                    <th>{{ $probabilityLabels[3] }}</th>
+                    <th>{{ $probabilityLabels[4] }}</th>
+                @else
+                    {{-- Label untuk ISO General --}}
+                    <th>{{ $probabilityLabels[0] }}</th>
+                    <th>{{ $probabilityLabels[1] }}</th>
+                    <th>{{ $probabilityLabels[2] }}</th>
+                    <th>{{ $probabilityLabels[3] }}</th>
+                    <th>{{ $probabilityLabels[4] }}</th>
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -137,7 +157,7 @@
     </table>
 
 
-    <a class="btn btn-danger" href="{{ route('riskregister.tablerisk', ['id' => $three]) }}" title="Back">
+    <a class="btn btn-danger" href="/riskregister" title="Back">
         <i class="ri-arrow-go-back-line"></i>
     </a>
 

@@ -30,12 +30,14 @@
                 </div>
 
                 <!-- Noted -->
+                @if(optional($form->riskregister)->jenis_iso_id != 2)
                 <div class="row mb-3">
                     <label for="desc" class="col-sm-2 col-form-label"><strong>Noted</strong></label>
                     <div class="col-sm-10">
                         <textarea name="desc" class="form-control mb-2" rows="3">{{ old('desc.' . $loop->index, $item->desc) }}</textarea>
                     </div>
                 </div>
+                
 
                 <!-- Tanggal Penyelesaian -->
                 <div class="row mb-3">

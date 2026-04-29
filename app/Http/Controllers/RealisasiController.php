@@ -17,12 +17,10 @@ class RealisasiController extends Controller
     public function index($id)
     {
         // Ambil data tindakan berdasarkan ID
-        $form = Tindakan::findOrFail($id);
-
-        // Ambil data realisasi yang terkait dengan id_tindakan
+        $form = Tindakan::with('riskregister')->findOrFail($id);
+     
         $realisasiList = Realisasi::where('id_tindakan', $id)->get();
-        // dd($realisasiList);
-        $tindak = Tindakan::where('id', $id)->value('nama_tindakan');
+        $tindak = $form->nama_tindakan; // Mengambil langsung dari $form
 
         // Ambil targetpic (user_id) dan nama_user
         $targetpicId = $form->targetpic;
@@ -86,7 +84,7 @@ class RealisasiController extends Controller
                     'id_riskregister' => $id_riskregister,
                     'status' => $validated['status'] ?? null,
                     'nama_realisasi' => $validated['nama_realisasi'][$key],
-                    'tgl_realisasi' => $tgl_realisasi,
+                    'tgl_realisasi' => $tgl_realisasi ?? null ,
                     'target' => $validated['target'][$key] ?? null,
                     'desc' => $validated['desc'][$key] ?? null,
                     'presentase' => $validated['presentase'][$key] ?? null,
@@ -239,8 +237,6 @@ class RealisasiController extends Controller
         ->with('success', 'Activity berhasil diperbarui! ✅');
 }
 
-
-
     public function getDetail($id)
     {
         // Mengambil data track record berdasarkan ID
@@ -287,18 +283,45 @@ class RealisasiController extends Controller
     }
 
     public function updateStatusByTindakan(Request $request, $id)
-    {
-        // Validasi input
-        $request->validate([
-            'status' => 'required|in:ON PROGRES,CLOSE',
-        ]);
+{
+    $request->validate([
+        'status' => 'required|in:ON PROGRES,CLOSE',
+    ]);
+    
 
-        // Update semua baris realisasi dengan id_tindakan = $tindakanId
-        Realisasi::where('id_tindakan', $id)
-            ->update(['status' => $request->status]);
+    // Update semua realisasi dengan id_tindakan ini
+    Realisasi::where('id_tindakan', $id)
+        ->update(['status' => $request->status]);
 
-        return back()->with('success', 'Status semua realisasi berhasil diperbarui.');
+    // Jika status CLOSE, cek tindakan lain dalam riskregister yang sama
+    if ($request->status === 'CLOSE') {
+        $tindakan = Tindakan::findOrFail($id);
+        $id_riskregister = $tindakan->id_riskregister;
+
+        // Cari tindakan lain yang belum CLOSE dalam riskregister yang sama
+        $tindakanLain = Tindakan::where('id_riskregister', $id_riskregister)
+            ->where('id', '!=', $id)
+            ->whereHas('realisasi', function ($q) {
+                $q->where('status', '!=', 'CLOSE');
+            })
+            ->first();
+
+        if ($tindakanLain) {
+            // Ada tindakan lain yang belum close → redirect ke sana
+            return redirect()
+                ->route('realisasi.index', ['id' => $tindakanLain->id])
+                ->with('success', 'Status diupdate. Lanjutkan tindakan berikutnya! ✅');
+        }
     }
+
+    // Tidak ada tindakan lain / status bukan CLOSE → pakai redirect_to atau back
+    $redirectTo = $request->input('redirect_to');
+    if ($redirectTo) {
+        return redirect($redirectTo)->with('success', 'Status berhasil diupdate. ✅');
+    }
+
+    return back()->with('success', 'Status berhasil diupdate. ✅');
+}
 
 
     public function updateBatch(Request $request, $riskregisterId)
@@ -330,6 +353,7 @@ class RealisasiController extends Controller
                     $request->input("tgl_penyelesaian.$tindakanId")
                 )->format('Y-m-d');
                 $t->targetpic          = $request->input("targetpic.$tindakanId");
+                $t->acuan            = $request->input("acuan.$tindakanId");
                 $t->save();
             }
         }
@@ -340,13 +364,21 @@ class RealisasiController extends Controller
             if (trim($namaBaru) === '') {
                 continue;
             }
-            Tindakan::create([
+             $newT = Tindakan::create([
                 'id_riskregister'   => $riskregisterId,
                 'nama_tindakan'     => $namaBaru,
                 'tgl_penyelesaian'  => Carbon::parse(
                     $request->input("tgl_penyelesaian_new.$key")
                 )->format('Y-m-d'),
                 'targetpic'           => $request->input("targetpic_new.$key"),
+                'acuan'             => $request->input("acuan_new.$key"),
+            ]);
+            Realisasi::create([
+                'id_riskregister' => $riskregisterId,
+                'id_tindakan'     => $newT->id,
+                'nama_realisasi'  => null,
+                'presentase'      => 0,
+                'status'          => 'ON PROGRES',
             ]);
         }
 

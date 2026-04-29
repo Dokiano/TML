@@ -36,7 +36,15 @@
                         <textarea name="issue" id="issue" class="form-control">{{ old('issue', $riskregister->issue) }}</textarea>
                     </div>
                 </div>
-
+                {{--
+             @if($isISO37001 == 1)
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label"><strong>Aktifitas Kunci</strong></label>
+                    <div class="col-sm-10">
+                        <textarea name="aktifitas_kunci" class="form-control">{{ old('aktifitas_kunci', $riskregister->aktifitas_kunci) }}</textarea>
+                    </div>
+                </div>
+            @endif  --}}
                 <!-- Ext/Int -->
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label mt-1"><strong>I/E</strong></label>
@@ -207,11 +215,6 @@
                     });
                 </script>
 
-
-
-
-
-
                 <!-- Target Penyelesaian -->
                 <div class="row mb-3 align-items-center">
                     <label class="col-sm-2 col-form-label mt-2"><strong>Target Penyelesaian</strong></label>
@@ -299,6 +302,14 @@
                                 </div>
                             </div>
 
+                     {{--   @if($isISO37001 == 1)
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label"><strong>Acuan</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="acuan[{{ $tindakan->id }}]" class="form-control" value="{{ old('acuan.'.$tindakan->id, $tindakan->acuan) }}">
+                                </div>
+                            </div>
+                        @endif  --}}
                             @if (isset($tindakan))
                                 <div class="row mb-3">
                                     <div class="col-sm-8 offset-sm-2">
@@ -347,7 +358,7 @@
             <div class="row mb-3">
                 <label for="inputTindakan" class="col-sm-2 col-form-label"><strong>Tindakan Lanjut</strong></label>
                 <div class="col-sm-7">
-                    <textarea placeholder="Masukkan Tindakan Lanjut" name="tindakan[]" class="form-control" rows="3" required></textarea>
+                    <textarea placeholder="Masukan Tindakan Lanjut" name="tindakan[]" class="form-control" rows="3" required></textarea>
                 </div>
             </div>
             <div class="row mb-3">

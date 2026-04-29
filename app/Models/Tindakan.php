@@ -16,7 +16,8 @@ class Tindakan extends Model
         'nama_tindakan',
         'targetpic',
         'peluang',
-        'tgl_penyelesaian'
+        'tgl_penyelesaian',
+        'acuan'
     ];
 
     // Relasi ke model Riskregister
@@ -41,10 +42,10 @@ class Tindakan extends Model
         return $this->hasMany(Realisasi::class, 'id_tindakan');
     }
     // Tindakan.php
-public function user()
-{
-    return $this->belongsTo(User::class, 'targetpic', 'id'); // 'targetpic' adalah kolom yang menyimpan ID user
-}
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'targetpic', 'id'); // 'targetpic' adalah kolom yang menyimpan ID user
+    }
 
 }
 

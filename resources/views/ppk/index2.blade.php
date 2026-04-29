@@ -32,7 +32,7 @@
                 position: sticky;
                 top: 0;
                 background-color: #ffffff;
-                /* Optional: to make sure the header has a white background */
+                /* Ensure the header has a white background */
                 z-index: 1;
                 /* Ensure the header is above the table rows */
             }
@@ -45,63 +45,239 @@
 
             .judul {
                 width: 300px;
-                /* Atur lebar kolom sesuai kebutuhan */
+                /* Adjust column width as needed */
             }
 
             .no {
                 width: 30px;
-                /* Atur lebar kolom sesuai kebutuhan */
+                /* Adjust column width as needed */
             }
 
             .surat {
                 width: 260px;
-                /* Atur lebar kolom sesuai kebutuhan */
+                /* Adjust column width as needed */
                 word-wrap: break-word;
             }
 
             .tanggal {
                 width: 150px;
-                /* Atur lebar kolom sesuai kebutuhan */
+                /* Adjust column width as needed */
             }
         </style>
 
-        <!-- Form Filter Tanggal -->
+        {{-- ==========================
+             SATUKAN SEMUA FILTER KE SATU FORM
+             ========================== --}}
         <form method="GET" action="{{ route('ppk.index2') }}" class="mb-4">
+            {{-- Baris atas: tombol modal filter, tombol ALL/IA/MFG, tombol Setting PPK --}}
             <div class="d-flex justify-content-between align-items-center gap-3 mt-3">
-                <!-- Tombol Filter -->
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal"
-                    style="font-weight: 500; font-size: 12px; padding: 6px 12px;">
-                    <i class="fa fa-filter" style="font-size: 14px;"></i> Filter Options
-                </button>
+                {{-- Tombol membuka Modal Filter --}}
+                <div class="d-flex gap-3">
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                        data-bs-target="#filterModal" style="font-weight: 500; font-size: 12px; padding: 6px 12px;">
+                        <i class="fa fa-filter" style="font-size: 14px;"></i>
+                        Filter Options
+                    </button>
 
-                <div class="btn-group" role="group">
-                    <a href="{{ route('ppk.index2', ['filter' => 'ALL']) }}"
-                        class="btn {{ $tipeFilter === 'ALL' ? 'btn-primary' : 'btn-outline-primary' }}"
-                        style="font-weight: 500; font-size: 12px;">ALL</a>
-                    <a href="{{ route('ppk.index2', ['filter' => 'IA']) }}"
-                        class="btn {{ $tipeFilter === 'IA' ? 'btn-primary' : 'btn-outline-primary' }}"
-                        style="font-weight: 500; font-size: 12px;">IA</a>
-                    <a href="{{ route('ppk.index2', ['filter' => 'MFG']) }}"
-                        class="btn {{ $tipeFilter === 'MFG' ? 'btn-primary' : 'btn-outline-primary' }}"
-                        style="font-weight: 500; font-size: 12px;">MFG</a>
+                    <a href="{{ route('ppk.export', request()->all()) }}" class="btn btn-outline-success"
+                        style="font-weight: 500; font-size: 12px; padding: 6px 12px;">
+                        <i class="fa fa-file-excel me-2"></i> Export Excel
+                    </a>
                 </div>
 
+                {{-- Tombol ALL / IA / MFG (submit dengan nilai “filter”) --}}
+                <div class="btn-group" role="group">
+                    <button type="submit" name="filter" value="ALL"
+                        class="btn {{ request('filter', 'ALL') === 'ALL' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        style="font-weight: 500; font-size: 12px;">
+                        ALL
+                    </button>
+                    <button type="submit" name="filter" value="IA"
+                        class="btn {{ request('filter') === 'IA' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        style="font-weight: 500; font-size: 12px;">
+                        IA
+                    </button>
+                    <button type="submit" name="filter" value="MFG"
+                        class="btn {{ request('filter') === 'MFG' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        style="font-weight: 500; font-size: 12px;">
+                        MFG
+                    </button>
+                </div>
 
-                <!-- Tombol Setting PPK -->
+                {{-- Tombol Setting PPK (hanya admin) --}}
                 @if (auth()->user()->role === 'admin')
                     <a href="{{ route('admin.statusppk') }}" class="btn btn-primary" title="Setting PPK"
                         style="font-weight: 500; font-size: 12px; padding: 6px 12px;">
                         <i class="ri-settings-5-line"></i>
                     </a>
                 @else
-                    <div class=""></div>
+                    <div style="width: 100px;"></div>
                 @endif
+            </div>
+
+            {{-- BAGIAN MODAL FILTER (semua input berada di dalam form utama) --}}
+            <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="filterModalLabel">Filter Options</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            {{-- Filter Tanggal, Semester --}}
+                            <div class="row mb-4">
+                                {{-- Tanggal Awal --}}
+                                <div class="col-md-4">
+                                    <label for="start_date" class="form-label"><strong>Tanggal Awal</strong></label>
+                                    <input type="date" id="start_date" name="start_date" class="form-control"
+                                        value="{{ request('start_date') }}">
+                                </div>
+
+                                {{-- Tanggal Akhir --}}
+                                <div class="col-md-4">
+                                    <label for="end_date" class="form-label"><strong>Tanggal Akhir</strong></label>
+                                    <input type="date" id="end_date" name="end_date" class="form-control"
+                                        value="{{ request('end_date') }}">
+                                </div>
+
+                                {{-- Semester --}}
+                                <div class="col-md-4">
+                                    <label for="semester" class="form-label"><strong>Semester</strong></label>
+                                    <select id="semester" name="semester" class="form-select">
+                                        <option value="">Pilih Semester</option>
+                                        <option value="SEM 1" {{ request('semester') == 'SEM 1' ? 'selected' : '' }}>SEM 1
+                                        </option>
+                                        <option value="SEM 2" {{ request('semester') == 'SEM 2' ? 'selected' : '' }}>SEM 2
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- Filter Pengguna, Divisi Penerima, Divisi Pembuat --}}
+                            <div class="row mb-4">
+                                {{-- Pengguna --}}
+                                <div class="col-md-4">
+                                    <label for="user" class="form-label"><strong>Pengguna</strong></label>
+                                    <select id="user" name="user" class="form-select">
+                                        <option value="">Pilih Pengguna</option>
+                                        @foreach ($userList as $id => $nama_user)
+                                            <option value="{{ $id }}"
+                                                {{ request('user') == $id ? 'selected' : '' }}>
+                                                {{ $nama_user }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Divisi Penerima --}}
+                                <div class="col-md-4">
+                                    <label for="divisi_penerima" class="form-label"><strong>Divisi Penerima</strong></label>
+                                    <select id="divisi_penerima" name="divisi_penerima" class="form-select">
+                                        <option value="">Pilih Divisi</option>
+                                        @foreach ($divisiList as $id => $divisi)
+                                            <option value="{{ $divisi }}"
+                                                {{ request('divisi_penerima') == $divisi ? 'selected' : '' }}>
+                                                {{ $divisi }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Divisi Pembuat --}}
+                                <div class="col-md-4">
+                                    <label for="divisi_pengirim" class="form-label"><strong>Divisi
+                                            Pembuat</strong></label>
+                                    <select id="divisi_pengirim" name="divisi_pengirim" class="form-select">
+                                        <option value="">Pilih Divisi</option>
+                                        @foreach ($divisiList as $id => $divisi)
+                                            <option value="{{ $divisi }}"
+                                                {{ request('divisi_pengirim') == $divisi ? 'selected' : '' }}>
+                                                {{ $divisi }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- Filter Status PPK, Jenis Ketidaksesuaian, Keyword --}}
+                            <div class="row mb-4">
+                                {{-- Status PPK --}}
+                                <div class="col-md-4">
+                                    <label for="status" class="form-label"><strong>Status PPK</strong></label>
+                                    <select id="status" name="status" class="form-select">
+                                        <option value="">Pilih Status</option>
+                                        @foreach ($statusPpkList as $statusItem)
+                                            <option value="{{ $statusItem->nama_statusppk }}"
+                                                {{ request('status') == $statusItem->nama_statusppk ? 'selected' : '' }}>
+                                                {{ $statusItem->nama_statusppk }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Jenis Ketidaksesuaian --}}
+                                <div class="col-md-4">
+                                    @php $jenisArr = ['SISTEM', 'PROSES', 'PRODUK', 'AUDIT']; @endphp
+                                    <label for="jenis" class="form-label"><strong>Jenis
+                                            Ketidaksesuaian</strong></label>
+                                    <select id="jenis" name="jenis" class="form-select">
+                                        <option value="">Pilih Jenis</option>
+                                        @foreach ($jenisArr as $jeniss)
+                                            <option value="{{ $jeniss }}"
+                                                {{ request('jenis') == $jeniss ? 'selected' : '' }}>
+                                                {{ $jeniss }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Cari Tahun --}}
+                                <div class="col-md-4">
+                                    <label for="year" class="form-label"><strong>Filter Tahun</strong></label>
+                                    <input type="text" name="year" id="year" class="form-control"
+                                        placeholder="Ketik atau pilih tahun" value="{{ request('year') }}"
+                                        list="yearList">
+                                    <datalist id="yearList">
+                                        @php
+                                            $currentYear = date('Y');
+                                            $startYear = $currentYear - 5;
+                                        @endphp
+                                        @for ($y = $startYear; $y <= $currentYear; $y++)
+                                            <option value="{{ $y }}"></option>
+                                        @endfor
+                                    </datalist>
+                                </div>
+                            </div>
+                            <div class="row mb-4">
+                                {{-- Cari Nomor PPK --}}
+                                <div class="col-md-4">
+                                    <label for="keyword" class="form-label"><strong>Cari Nomor PPK</strong></label>
+                                    <textarea name="keyword" id="keyword" class="form-control" rows="3" placeholder="Masukkan nomor PPK">{{ request('keyword') }}</textarea>
+                                </div>
+                            </div>
+                            {{-- Tombol Reset dan Submit di dalam Modal --}}
+                            <div class="row">
+                                <div class="col-md-12 d-flex justify-content-between">
+                                    <button type="button" class="btn btn-warning px-4 d-flex align-items-center"
+                                        onclick="resetForm()">
+                                        <i class="bi bi-arrow-clockwise me-2"></i> Reset
+                                    </button>
+
+                                    <button type="submit" class="btn btn-primary px-4 d-flex align-items-center">
+                                        <i class="fa fa-filter me-2"></i> Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
 
-
-
-
+        {{-- ==========================
+             TABEL UTAMA PPK
+             ========================== --}}
         <div class="card">
             <div class="card text-center">
                 <h5 class="card-title" style="font-size: 30px; font-weight: 700; letter-spacing: 2px;">
@@ -146,7 +322,8 @@
                                                 title="Export to PDF">
                                                 {{ $ppk->nomor_surat ?? 'Tidak ada nomor surat' }}
                                             </a>
-                                        <td>
+                                        </td>
+                                        <td class="surat">
                                             {{ implode(' ', array_slice(explode(' ', $ppk->judul), 0, 15)) }}
                                             @if (str_word_count($ppk->judul) > 15)
                                                 ...
@@ -174,8 +351,8 @@
                                                     }
                                                 @endphp
                                                 <div class="dropdown">
-                                                    <button class="btn {{ $btnClass }} dropdown-toggle" type="button"
-                                                        data-bs-toggle="dropdown" aria-expanded="false"
+                                                    <button class="btn {{ $btnClass }} dropdown-toggle"
+                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
                                                         style="font-size: 10px;">
                                                         {{ $ppk->statusppk }}
                                                     </button>
@@ -186,9 +363,11 @@
                                                                     method="POST">
                                                                     @csrf
                                                                     @method('PATCH')
-                                                                    <button class="dropdown-item" type="submit"
-                                                                        name="status" style="font-size: 10px;"
-                                                                        value="{{ $statusItem->nama_statusppk }}">{{ $statusItem->nama_statusppk }}</button>
+                                                                    <button type="submit" name="status"
+                                                                        value="{{ $statusItem->nama_statusppk }}"
+                                                                        class="dropdown-item" style="font-size: 10px;">
+                                                                        {{ $statusItem->nama_statusppk }}
+                                                                    </button>
                                                                 </form>
                                                             </li>
                                                         @endforeach
@@ -198,7 +377,10 @@
                                                 {{ $ppk->statusppk }}
                                             @endif
                                         </td>
-                                        <td>{{ $ppk->formppk2->updated_at ? \Carbon\Carbon::parse($ppk->formppk2->updated_at)->addMonth()->format('d / m / Y') : 'Form Identifikasi belum diisi' }}
+                                        <td>
+                                            {{ $ppk->formppk2->updated_at
+                                                ? \Carbon\Carbon::parse($ppk->formppk2->updated_at)->addMonth()->format('d / m / Y')
+                                                : 'Form Identifikasi belum diisi' }}
                                         </td>
                                         <td>{{ $ppk->divisipembuat }}</td>
                                         <td>{{ $ppk->pembuatUser->nama_user ?? 'null' }}</td>
@@ -208,36 +390,27 @@
                                         <td class="text-center">
                                             @if (strpos($ppk->jenisketidaksesuaian, 'SISTEM') !== false)
                                                 <i class="fa fa-check"></i>
-                                                <!-- Menampilkan ikon ceklis jika ada 'SISTEM' -->
                                             @endif
                                         </td>
-
                                         <td class="text-center">
                                             @if (strpos($ppk->jenisketidaksesuaian, 'PROSES') !== false)
                                                 <i class="fa fa-check"></i>
-                                                <!-- Menampilkan ikon ceklis jika ada 'PROSES' -->
                                             @endif
                                         </td>
-
                                         <td class="text-center">
                                             @if (strpos($ppk->jenisketidaksesuaian, 'PRODUK') !== false)
                                                 <i class="fa fa-check"></i>
-                                                <!-- Menampilkan ikon ceklis jika ada 'PRODUK' -->
                                             @endif
                                         </td>
-
                                         <td class="text-center">
                                             @if (strpos($ppk->jenisketidaksesuaian, 'AUDIT') !== false)
                                                 <i class="fa fa-check"></i>
-                                                <!-- Menampilkan ikon ceklis jika ada 'AUDIT' -->
                                             @endif
                                         </td>
-
                                         <td
                                             style="max-width: 100%; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
                                             {!! str_replace(',', '<br>', $ppk->cc_email) !!}
                                         </td>
-
                                         <td>{{ $ppk->emailpembuat }}</td>
                                         @if (auth()->user()->role === 'admin')
                                             <td>
@@ -305,6 +478,7 @@
             </div>
         </div>
 
+        {{-- TABLE SENDING & ACCEPTING --}}
         <hr>
         <div class="card">
             <div class="card text-center">
@@ -326,7 +500,6 @@
                                 @foreach ($ppks as $ppk)
                                     <tr>
                                         @if (auth()->id() == $ppk->pembuat || auth()->id() == $ppk->penerima)
-                                            <!-- Kolom Sending -->
                                             @if ($ppk->pembuatUser && $ppk->pembuat == $user->id)
                                                 <td style="text-align: center;">
                                                     <a href="{{ route('ppk.pdf', $ppk->id) }}" target="_blank"
@@ -348,16 +521,13 @@
                                                 <td style="text-align: center;">-</td>
                                             @endif
                                         @else
-                                            <!-- Jika bukan pembuat atau penerima, tampilkan tanda minus hanya sekali -->
                                             @if ($loop->first)
-                                                <!-- Kondisi ini memastikan hanya sekali menampilkan tanda minus -->
                                                 <td style="text-align: center;">-</td>
                                                 <td style="text-align: center;">-</td>
                                             @endif
                                         @endif
                                     </tr>
                                 @endforeach
-
                             </tbody>
                         </table>
                     </div>
@@ -365,156 +535,14 @@
             </div>
         </div>
 
-        {{-- Modal --}}
-        <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="filterModalLabel">Filter Options</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="GET" action="{{ route('ppk.index2') }}">
-                            <div class="row mb-4">
-                                <!-- Filter Tanggal -->
-                                <div class="row mb-4">
-                                    <!-- Tanggal Awal -->
-                                    <div class="col-md-4">
-                                        <label for="start_date" class="form-label"><strong>Tanggal Awal</strong></label>
-                                        <input type="date" id="start_date" name="start_date" class="form-control"
-                                            value="{{ request('start_date') }}">
-                                    </div>
-
-                                    <!-- Tanggal Akhir -->
-                                    <div class="col-md-4">
-                                        <label for="end_date" class="form-label"><strong>Tanggal Akhir</strong></label>
-                                        <input type="date" id="end_date" name="end_date" class="form-control"
-                                            value="{{ request('end_date') }}">
-                                    </div>
-
-                                    <!-- Semester -->
-                                    <div class="col-md-4">
-                                        <label for="semester" class="form-label"><strong>Semester</strong></label>
-                                        <select id="semester" name="semester" class="form-select">
-                                            <option value="">Pilih Semester</option>
-                                            <option value="SEM 1" {{ request('semester') == 'SEM 1' ? 'selected' : '' }}>
-                                                SEM 1</option>
-                                            <option value="SEM 2" {{ request('semester') == 'SEM 2' ? 'selected' : '' }}>
-                                                SEM 2</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-4">
-                                    <!-- Pengguna -->
-                                    <div class="col-md-4">
-                                        <label for="user" class="form-label"><strong>Pengguna</strong></label>
-                                        <select id="user" name="user" class="form-select">
-                                            <option value="">Pilih Pengguna</option>
-                                            @foreach ($userList as $id => $nama_user)
-                                                <option value="{{ $id }}"
-                                                    {{ request('user') == $id ? 'selected' : '' }}>{{ $nama_user }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    {{-- Divisi Penerima --}}
-                                    <div class="col-md-4">
-                                        <label for="divisi_penerima" class="form-label"><strong>Divisi
-                                                Penerima</strong></label>
-                                        <select id="divisi_penerima" name="divisi_penerima" class="form-select">
-                                            <option value="">Pilih Divisi</option>
-                                            @foreach ($divisiList as $id => $divisi)
-                                                <option value="{{ $divisi }}"
-                                                    {{ request('divisi_penerima') == $divisi ? 'selected' : '' }}>
-                                                    {{ $divisi }}
-                                                </option>
-                                            @endforeach
-
-                                        </select>
-                                    </div>
-
-                                    {{-- Divisi Pembuat --}}
-                                    <div class="col-md-4">
-                                        <label for="divisi_pengirim" class="form-label"><strong>Divisi
-                                                Pembuat</strong></label>
-                                        <select id="divisi_pengirim" name="divisi_pengirim" class="form-select">
-                                            <option value="">Pilih Divisi</option>
-                                            @foreach ($divisiList as $id => $divisi)
-                                                <option value="{{ $divisi }}"
-                                                    {{ request('divisi_pengirim') == $divisi ? 'selected' : '' }}>
-                                                    {{ $divisi }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mb-4">
-                                <!-- Status PPK -->
-                                <div class="col-md-4">
-                                    <label for="status" class="form-label"><strong>Status PPK</strong></label>
-                                    <select id="status" name="status" class="form-select">
-                                        <option value="">Pilih Status</option>
-                                        @foreach ($statusPpkList as $statusItem)
-                                            <option value="{{ $statusItem->nama_statusppk }}"
-                                                {{ request('status') == $statusItem->nama_statusppk ? 'selected' : '' }}>
-                                                {{ $statusItem->nama_statusppk }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <?php
-                                    $jenis = ['SISTEM', 'PROSES', 'PRODUK', 'AUDIT'];
-                                    ?>
-                                    <label for="jenis" class="form-label"><strong>Jenis
-                                            Ketidaksesuaian</strong></label>
-                                    <select id="jenis" name="jenis" class="form-select">
-                                        <option value="">Pilih Status</option>
-                                        @foreach ($jenis as $jeniss)
-                                            <option value="{{ $jeniss }}"
-                                                {{ request('jenis') == $jeniss ? 'selected' : '' }}>
-                                                {{ $jeniss }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Nomor PPK -->
-                                <div class="col-md-4">
-                                    <label for="keyword" class="form-label"><strong>Cari Nomor PPK</strong></label>
-                                    <textarea name="keyword" id="keyword" class="form-control" placeholder="Masukkan nomor PPK" rows="3">{{ request('keyword') }}</textarea>
-                                </div>
-                            </div>
-
-
-                            <!-- Tombol Filter -->
-                            <div class="row">
-                                <div class="col-md-12 d-flex justify-content-between">
-                                    <button type="button" class="btn btn-warning px-4 d-flex align-items-center"
-                                        onclick="resetForm()">
-                                        <i class="bi bi-arrow-clockwise me-2"></i> Reset
-                                    </button>
-
-                                    <script>
-                                        function resetForm() {
-                                            const form = document.querySelector('form');
-                                            form.reset();
-                                            window.location.href = "{{ route('ppk.index2') }}";
-                                        }
-                                    </script>
-                                    <button type="submit" class="btn btn-primary px-4 d-flex align-items-center">
-                                        <i class="fa fa-filter"></i> Filter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
+
+    {{-- Script Reset --}}
+    <script>
+        function resetForm() {
+            const form = document.querySelector('form');
+            form.reset();
+            window.location.href = "{{ route('ppk.index2') }}";
+        }
+    </script>
 @endsection

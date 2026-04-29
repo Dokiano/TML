@@ -10,12 +10,16 @@ use App\Models\Resiko;
 use App\Models\Kriteria;
 use App\Models\Tindakan;
 use App\Models\Realisasi;
+use App\Models\Swot;
+use App\Models\KriteriaSwot;
 use App\Models\Riskregister;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\RiskOpportunityExport;
+use App\Models\JenisIso;
+use Illuminate\Validation\Rule;
 
 
 class RiskController extends Controller
@@ -30,21 +34,31 @@ class RiskController extends Controller
         $divisi = Divisi::whereIn("id", $accesArray)
             ->orderBy("nama_divisi", "asc")
             ->get();
-        // $divisi = Divisi::whereIn('id',$acces)->get();
 
+        // ===== OPTIMIZED: Single query dengan GROUP BY alih-alih loop dengan multiple queries =====
+        // Query ini mengambil stats semua divisi sekaligus, bukan per divisi
+        $divisiStats = Riskregister::select('id_divisi')
+            ->whereIn('id_divisi', $accesArray)
+            ->selectRaw('COUNT(DISTINCT riskregister.id) as total')
+            ->selectRaw(
+                'COUNT(DISTINCT CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM resiko 
+                        WHERE resiko.id_riskregister = riskregister.id 
+                        AND resiko.status = "close"
+                    ) 
+                    THEN riskregister.id 
+                END) as done'
+            )
+            ->groupBy('id_divisi')
+            ->get()
+            ->keyBy('id_divisi'); // Convert ke array dengan key = id_divisi
+
+        // Inject stats ke dalam collection divisi
         foreach ($divisi as $d) {
-            // Hitung total data
-            $totalData = Riskregister::where("id_divisi", $d->id)->count();
-            // Hitung jumlah data yang sudah berstatus 'close' atau 'Done'
-            $doneCount = Riskregister::where("id_divisi", $d->id)
-                ->whereHas("resikos", function ($query) {
-                    $query->where("status", "close"); // Ganti 'close' dengan 'Done' jika sesuai
-                })
-                ->count();
-
-            // Simpan hasil hitungan ke dalam properti divisi
-            $d->jumlah_data = $totalData - $doneCount; // Kurangi data 'Done' dari total
-            $d->done_count = $doneCount; // Data yang berstatus 'Done'
+            $stats = $divisiStats[$d->id] ?? null;
+            $d->jumlah_data = ($stats->total ?? 0) - ($stats->done ?? 0);
+            $d->done_count = $stats->done ?? 0;
         }
 
         return view("riskregister.index", compact("divisi"));
@@ -54,7 +68,16 @@ class RiskController extends Controller
     {
         $enchan = $id;
         $divisi = Divisi::all()->sortBy("nama_divisi");
-        $kriteria = Kriteria::all();
+       // $kriteria = Kriteria::where('divisi_id', $id)
+       //         ->orderBy('nama_kriteria')
+       //         ->get(['id','nama_kriteria','desc_kriteria','nilai_kriteria']);
+       $kriteria = Kriteria::where('divisi_id', $id)
+                ->where(function($q) {
+                    $q->where('jenis_iso_id', '!=', 2)
+                      ->orWhereNull('jenis_iso_id');
+                })
+                ->orderBy('nama_kriteria')
+                ->get(['id','nama_kriteria','desc_kriteria','nilai_kriteria']);
 
         // Ambil nama divisi berdasarkan id yang diberikan
         $divisiData = Divisi::findOrFail($id);
@@ -63,9 +86,14 @@ class RiskController extends Controller
         // Filter users berdasarkan nama divisi yang sesuai
         $users = User::orderBy("nama_user", "asc")->get();
 
+        $swots = Swot::all();
+        $kriteriaSwot = KriteriaSwot::all();
+        $jenisIsos = JenisIso::orderBy('jenis_iso')->get();
+        
+        
         return view(
             "riskregister.create",
-            compact("enchan", "divisi", "id", "kriteria", "users")
+            compact("enchan", "divisi", "id", 'swots','kriteriaSwot',"kriteria", "users","jenisIsos")
         );
     }
 
@@ -74,13 +102,14 @@ class RiskController extends Controller
         try {
             // Validasi input
             // dd($request->all());
-            $validated = $request->validate([
+            $rules = [
                 "id_divisi" => "required|exists:divisi,id",
                 "issue" => "required|string",
+                "aktifitas_kunci" => "nullable|string",
                 "inex" => "nullable|in:I,E",
                 "nama_resiko" => "nullable|required_without:peluang|string",
                 "peluang" => "nullable|required_without:nama_resiko|string",
-                "kriteria" => "nullable|string",
+                "kriteria" => ['nullable','string',Rule::exists('kriteria','nama_kriteria')->where(fn($q)=>$q->where('divisi_id', $request->id_divisi)),],
                 "probability" => "required|integer|min:1|max:5",
                 "severity" => "required|integer|min:1|max:5",
                 "nama_tindakan" => "required|array",
@@ -95,11 +124,27 @@ class RiskController extends Controller
                 "targetpic.*" => "required|string",
                 "tgl_penyelesaian" => "required|array",
                 "tgl_penyelesaian.*" => "required|date",
-                "target_penyelesaian" => "required|date",
+                //"target_penyelesaian" => "nullable|date",
                 "status" => "nullable|in:OPEN,ON PROGRES,CLOSE",
                 "before" => "nullable|string",
                 "pihak_other" => "nullable|string", // Validasi untuk pihak lainnya jika ada input
-            ]);
+                "acuan"              => "nullable|array",
+                "acuan.*"            => "nullable|string",
+                'kriteria_swot' => 'nullable|string',
+                'swot_id'            => 'nullable|integer|exists:swots,id',
+                'kategori_swot' => 'nullable|string',
+                'jenis_iso_id' => 'nullable|exists:jenis_isos,id',
+
+
+            ];
+
+            if ($request->jenis_iso_id == 2) { 
+                $rules["target_penyelesaian"] = "nullable|date";  // ISO 37001
+            } else { 
+                $rules["target_penyelesaian"] = "required|date";  // ISO 9001
+            }
+            
+            $validated = $request->validate($rules);
 
             // Cek apakah kedua field 'risiko' dan 'peluang' diisi, dan jika iya, kembalikan error
             if (
@@ -115,7 +160,8 @@ class RiskController extends Controller
             // Hitung tingkatan berdasarkan probability dan severity
             $tingkatan = $this->calculateTingkatan(
                 $validated["probability"],
-                $validated["severity"]
+                $validated["severity"],
+                $validated["jenis_iso_id"] ?? null  // tambahkan ini
             );
 
             $pihakInputs  = $validated['pihak'];
@@ -137,13 +183,19 @@ class RiskController extends Controller
             $riskregister = Riskregister::create([
                 "id_divisi" => $validated["id_divisi"],
                 "issue" => $validated["issue"],
-                "inex" => $validated["inex"],
+                "aktifitas_kunci"     => $validated["aktifitas_kunci"] ?? null,
+                "inex" => $validated["inex"]?? null,
                 "pihak" => $validated["pihak"]
                     ? implode(",", $validated["pihak"])
                     : null, // Simpan nama divisi
-                "target_penyelesaian" => $validated["target_penyelesaian"],
+                "target_penyelesaian" => $validated["target_penyelesaian"] ?? null,
                 "peluang" => $validated["peluang"] ?? null, // Simpan peluang, jika ada
                 "keterangan"          => $validated["keterangan"] ?? null,
+                'swot_id'           => $validated['swot_id'] ?? null,
+                'kriteria_swot'  => $validated['kriteria_swot'] ?? null,
+                'kategori_swot' => $validated['kategori_swot'] ?? null,
+                'jenis_iso_id' => $validated['jenis_iso_id'] ?? null,
+                
             ]);
 
             // Simpan data ke tabel resiko, jika ada risiko yang diisi
@@ -158,7 +210,7 @@ class RiskController extends Controller
                 "status" => $status,
                 "before" => $validated["before"] ?? null,
             ]);
-
+            $firstTindakanId = null;
             // Simpan data ke tabel tindakan dan realisasi
             foreach ($validated["nama_tindakan"] as $key => $nama_tindakan) {
                 $tindakan = Tindakan::create([
@@ -166,6 +218,7 @@ class RiskController extends Controller
                     "nama_tindakan" => $nama_tindakan,
                     "targetpic" => $validated["targetpic"][$key],
                     "tgl_penyelesaian" => $validated["tgl_penyelesaian"][$key],
+                    "acuan"            => $validated["acuan"][$key] ?? null,
                 ]);
 
                 // Simpan data ke tabel realisasi dengan status otomatis ON PROGRES
@@ -176,13 +229,24 @@ class RiskController extends Controller
                     "presentase" => 0, // Realisasi baru dimulai dari 0
                     "status" => "ON PROGRES", // Status default ON PROGRES
                 ]);
+                if ($firstTindakanId === null) {
+                    $firstTindakanId = $tindakan->id; // ← simpan id tindakan pertama
+                }
             }
 
+           // ✅ Redirect berdasarkan jenis ISO
+        if ($riskregister->jenis_iso_id == 2) {
             return redirect()
-                ->route("riskregister.tablerisk", [
-                    "id" => $riskregister->id_divisi,
-                ])
+                ->route("realisasi.index", $firstTindakanId)    
                 ->with("success", "Data berhasil disimpan!.✅");
+        }
+        
+        return redirect()
+            ->route("riskregister.tablerisk", [
+                "id" => $riskregister->id_divisi,
+            ])
+            ->with("success", "Data berhasil disimpan!.✅");
+
         } catch (\Exception $e) {
             return back()->withErrors([
                 "error" => "Data gagal disimpan: " . $e->getMessage(),
@@ -197,11 +261,15 @@ class RiskController extends Controller
 
         // Ambil semua data divisi
         $divisi = Divisi::all()->sortBy("nama_divisi");
-        $kriteria = Kriteria::all();
+        
 
         $one = Resiko::where("id_riskregister", $id)->firstOrFail();;
         $two = Riskregister::where("id", $one->id_riskregister)->first();
-        $three = $two->id_divisi;
+        $three = $riskregister->id_divisi;
+
+        $kriteria = Kriteria::where('divisi_id', $three)
+                ->orderBy('nama_kriteria')
+                ->get(['id','nama_kriteria','desc_kriteria','nilai_kriteria']);
 
         // Ambil tindakan yang terkait dengan Riskregister
         $tindakanList = Tindakan::where("id_riskregister", $id)->get();
@@ -244,6 +312,7 @@ class RiskController extends Controller
         $validated = $request->validate([
             "id_divisi"        => "required|exists:divisi,id",
             "issue"            => "required|string",
+            "aktifitas_kunci" => "nullable|string",
             "inex"             => "nullable|in:I,E",
             "peluang"          => "nullable|string",
             "tindakan"         => "nullable|array",
@@ -263,7 +332,9 @@ class RiskController extends Controller
             "nama_resiko"      => "nullable|array",
             "before"           => "nullable|array",
             "after"            => "nullable|array",
-            "target_penyelesaian" => "required|date",
+            "target_penyelesaian" => "nullable|date",
+            "acuan"            => "nullable|array",
+            "acuan.*"          => "nullable|string",
         ]);
 
         // 2. Merge input pihak + custom
@@ -287,9 +358,10 @@ class RiskController extends Controller
         $riskregister->update([
             "id_divisi"           => $validated["id_divisi"],
             "issue"               => $validated["issue"],
-            "inex"                => $validated["inex"],
-            "peluang"             => $validated["peluang"],
-            "target_penyelesaian" => $validated["target_penyelesaian"],
+            "aktifitas_kunci"     => $validated["aktifitas_kunci"] ?? null,
+            "inex"                => $validated["inex"] ?? null,
+            "peluang"             => $validated["peluang"]?? null,
+            "target_penyelesaian" => $validated["target_penyelesaian"] ?? null,
             "pihak"               => implode(',', $pihakFinal),
             "keterangan"          => $validated["keterangan"] ?? null,
         ]);
@@ -306,11 +378,11 @@ class RiskController extends Controller
                 }
             }
         }
-
         // 5. Update atau buat tindakan baru
         foreach ($validated["tindakan"] as $key => $namaTindakan) {
             $pic = $validated["targetpic"][$key] ?? null;
             $tgl = $validated["tgl_penyelesaian"][$key] ?? null;
+            $acuan = $validated["acuan"][$key] ?? null;
 
             if (!empty($namaTindakan) && !empty($pic)) {
                 if (isset($existingTindakan[$key])) {
@@ -318,13 +390,15 @@ class RiskController extends Controller
                         "nama_tindakan"   => $namaTindakan,
                         "targetpic"       => $pic,
                         "tgl_penyelesaian" => $tgl,
+                        "acuan"            => $acuan,
                     ]);
                 } else {
                     $new = Tindakan::create([
                         "id_riskregister" => $riskregister->id,
                         "nama_tindakan"   => $namaTindakan,
-                        "targetpic"       => $pic,
+                        "targetpic"       => $pic,  
                         "tgl_penyelesaian" => $tgl,
+                        "acuan"            => $validated["acuan"][$key] ?? null,
                     ]);
                     Realisasi::create([
                         "id_riskregister" => $riskregister->id,
@@ -350,26 +424,53 @@ class RiskController extends Controller
         ])->save();
 
         // 7. Redirect dengan pesan sukses
-        return redirect()
-            ->route("riskregister.tablerisk", ["id" => $validated["id_divisi"]])
-            ->with("success", "Data berhasil diperbarui! ✅");
+        //return redirect()
+        //    ->route("riskregister.tablerisk", ["id" => $validated["id_divisi"]])
+        //    ->with("success", "Data berhasil diperbarui! ✅");
+
+            if ($riskregister->jenis_iso_id == 2) {
+                return redirect()
+                    ->route("riskregister.tablerisk.iso37001", [
+                        "id" => $riskregister->id_divisi,
+                    ])
+                    ->with("success", "Data berhasil diupdate!.✅")
+                     ->with('open_preview_id', $id);
+            }
+
+    return redirect()
+    ->route("riskregister.tablerisk", [
+        "id" => $riskregister->id_divisi,
+    ])
+    ->with("success", "Data berhasil diupdate!.✅");
     }
 
 
-    private function calculateTingkatan($probability, $severity)
-    {
-        $scorerisk = $probability * $severity;
+   private function calculateTingkatan($probability, $severity, $jenis_iso_id = null)
+{
+    $scorerisk = $probability * $severity;
 
-        if ($scorerisk >= 1 && $scorerisk <= 2) {
-            return "LOW"; // HIJAU
-        } elseif ($scorerisk >= 3 && $scorerisk <= 4) {
-            return "MEDIUM"; // KUNING
-        } elseif ($scorerisk >= 5 && $scorerisk <= 25) {
-            return "HIGH"; // MERAH
+    if ($jenis_iso_id == 2) {
+        // ISO 37001
+        if ($scorerisk >= 1 && $scorerisk <= 3) {
+            return "LOW";
+        } elseif ($scorerisk >= 4 && $scorerisk <= 12) {
+            return "MEDIUM";
+        } elseif ($scorerisk >= 13 && $scorerisk <= 25) {
+            return "HIGH";
         }
-
-        return "UNKNOWN";
+    } else {
+        // ISO 9001 & lainnya
+        if ($scorerisk >= 1 && $scorerisk <= 2) {
+            return "LOW";
+        } elseif ($scorerisk >= 3 && $scorerisk <= 4) {
+            return "MEDIUM";
+        } elseif ($scorerisk >= 5 && $scorerisk <= 25) {
+            return "HIGH";
+        }
     }
+
+    return "UNKNOWN";
+}
 
     public function tablerisk(Request $request, $id)
     {
@@ -385,7 +486,9 @@ class RiskController extends Controller
         $allowedDivisi = json_decode($user->type, true);
 
         // Start the query
-        $query = Riskregister::where("id_divisi", $id);
+        $query = Riskregister::where("id_divisi", $id)
+                               // ->whereIn("jenis_iso_id", [1, null])
+                                ->with(['swot', 'KriteriaSwot']);
 
         // Filter by allowed divisi
         $query->when($allowedDivisi, function ($query) use ($allowedDivisi) {
@@ -463,6 +566,7 @@ class RiskController extends Controller
 
         // Get filtered riskregister records
         $forms = $query->get();
+        
         $data = [];
 
         // Get tindakan list filtered by targetpic search
@@ -538,7 +642,7 @@ class RiskController extends Controller
             // Format target_penyelesaian
             $form->target_penyelesaian = $form->target_penyelesaian
                 ? Carbon::parse($form->target_penyelesaian)->format("d-m-Y")
-                : "-";
+                : null;
         }
 
         // Sort by highest_score if required
@@ -579,7 +683,13 @@ class RiskController extends Controller
             "tindakan.realisasi",
             "resikos",
             "divisi",
+            "swot",
+            "KriteriaSwot"
         ]);
+        $query->where(function ($q) {
+            $q->where("jenis_iso_id", "!=", 2)
+              ->orWhereNull("jenis_iso_id");
+        });
 
         // Filter hanya data yang terkait dengan tipe user
         if (!empty($allowedDivisi)) {
@@ -697,15 +807,13 @@ class RiskController extends Controller
             $formattedData[] = [
                 "id" => $riskregister->id,
                 "issue" => $riskregister->issue,
+                'aktifitas_kunci'  => $riskregister->aktifitas_kunci,
                 "inex" => $riskregister->inex,
                 "pihak" => $riskregister->pihak,
                 "keterangan" => $riskregister->keterangan,
-                "tindak" => $riskregister->tindakan->pluck(
-                    "divisi.nama_divisi"
-                ),
-                "tindak_lanjut" => $riskregister->tindakan->pluck(
-                    "nama_tindakan"
-                ),
+                "tindak" => $riskregister->tindakan->pluck("divisi.nama_divisi"),
+                "tindak_lanjut" => $riskregister->tindakan->pluck("nama_tindakan" ),
+                
                 "risiko" => $resikoData->pluck("nama_resiko"),
                 "peluang" => $riskregister->peluang,
                 "tingkatan" => $riskregister->resikos->pluck("tingkatan"),
@@ -724,6 +832,13 @@ class RiskController extends Controller
                 $jumlahEntry > 0
                     ? round(($nilai_actual / 100) * 100, 2)
                     : 0, // Adjust 100 if needed
+                "swot_id" => $riskregister->swot_id, 
+                "jenis_swot" => $riskregister->swot->jenis_swot ?? "-",
+                "kriteria_swot" => $riskregister->kriteria_swot,
+                "kategori_swot" => $riskregister->kategori_swot,
+                "kode_swot_full"  => $riskregister->kode_swot_full ?? "-", // Pastikan property ini ada di model
+                "kode_swot"       => $riskregister->kode_swot ?? "-",
+
             ];
         }
 
@@ -807,6 +922,11 @@ class RiskController extends Controller
         // Inisialisasi query
         $query = Riskregister::with(["tindakan.realisasi", "resikos"]);
 
+        $layout = $request->query('layout', 'layout_a');
+        if ($layout === 'layout_b') {
+            $query->where("jenis_iso_id", 2);
+        }
+
         // Terapkan filter umum
         if ($tingkatanFilter) {
             $query->whereHas("resikos", function ($q) use ($tingkatanFilter) {
@@ -872,11 +992,14 @@ class RiskController extends Controller
                             "nama_tindakan"   => $tindakan->nama_tindakan,
                             "targetpic"       => $targetpicName,
                             "tgl_penyelesaian" => $tindakan->tgl_penyelesaian,
+                            "acuan"           => $tindakan->acuan ?? null, 
                         ];
                     }
                 }
                 $formattedData[] = [
                     "issue"          => $riskregister->issue,
+                    "bagian"          => $riskregister->pihak,
+                    "aktifitas_kunci" => $riskregister->aktifitas_kunci ?? null,   
                     "inex"           => $riskregister->inex ?? null,
                     "pihak"          => $riskregister->pihak,
                     "risiko"         => $resiko->nama_resiko,
@@ -886,7 +1009,8 @@ class RiskController extends Controller
                     "tingkatan"      => $resiko->tingkatan,
                     "tindak_lanjut"  => array_column($tindakanData, "nama_tindakan"),
                     "targetpic"      => array_column($tindakanData, "targetpic"),
-                    "tgl_penyelesaian" => array_column($tindakanData, "tgl_penyelesaian"),
+                    "acuan"            => array_column($tindakanData, "acuan"),
+                    "tgl_penyelesaian" => array_column($tindakanData, "tgl_penyelesaian"), 
                     "status"         => $resiko->status,
                     "scores"         => $resiko->probability * $resiko->severity,
                     "before"         => $resiko->before,
@@ -961,7 +1085,9 @@ class RiskController extends Controller
 
         // Initialize the query
         $query = Riskregister::with(["tindakan.realisasi", "resikos"]);
-
+        if ($layout === 'layout_b') {
+            $query->where("jenis_iso_id", 2);
+        }
         // Apply division filter based on user type
         if (!empty($allowedDivisi)) {
             $query->whereHas("divisi", function ($q) use ($allowedDivisi) {
@@ -1048,6 +1174,8 @@ class RiskController extends Controller
                         "nama_tindakan" => $tindakan->nama_tindakan,
                         "targetpic" => $targetpicName,
                         "tgl_penyelesaian" => $tglRealisasiTerakhir,
+                        "acuan"           => $tindakan->acuan ?? null, 
+                        
                     ];
                 }
 
@@ -1066,15 +1194,10 @@ class RiskController extends Controller
                     "probability" => $resiko->probability,
                     "severity" => $resiko->severity,
                     "tingkatan" => $resiko->tingkatan,
-                    "tindak_lanjut" => array_column(
-                        $tindakanData,
-                        "nama_tindakan"
-                    ),
+                    "tindak_lanjut" => array_column($tindakanData,"nama_tindakan"),
                     "targetpic" => array_column($tindakanData, "targetpic"),
-                    "tgl_penyelesaian" => array_column(
-                        $tindakanData,
-                        "tgl_penyelesaian"
-                    ),
+                    "acuan"            => array_column($tindakanData, "acuan"), 
+                    "tgl_penyelesaian" => array_column($tindakanData,"tgl_penyelesaian" ),
                     "status" => $resiko->status,
                     "risk" => $resiko->risk,
                     "before" => $resiko->before,
@@ -1087,6 +1210,9 @@ class RiskController extends Controller
                     "sort_tanggal" => $sortingTanggal,
                     "scorerisk" =>
                     $resiko->probabilityrisk * $resiko->severityrisk,
+                    "bagian"          => $riskregister->pihak,                 // atau rapikan dengan implode/trim
+                    "aktifitas_kunci" => $riskregister->aktifitas_kunci ?? null,
+
                 ];
             }
         }
@@ -1134,7 +1260,7 @@ class RiskController extends Controller
         // Generate PDF
         $pdf = PDF::loadView($print, [
             "formattedData" => $formattedData,
-        ])->setPaper("A3", "landscape");
+        ])->setPaper("A2", "landscape");
 
         $fileName =
             $print === "pdf.risk_opportunity_export2"
@@ -1177,7 +1303,7 @@ class RiskController extends Controller
 
         // Redirect dengan pesan sukses
         return redirect()
-            ->route("riskregister.biglist")
+            ->route("riskregister.index")
             ->with("success", "Data berhasil dihapus!. ✅");
     }
 
@@ -1196,6 +1322,16 @@ class RiskController extends Controller
         $risk->issue = $request->issue;
         $risk->save();
         return back()->with('success', 'Issue berhasil diupdate.');
+    }
+    
+     public function updateAktifitas(Request $request, $id)
+    {
+        $aktifitas_kunci = RiskRegister::findOrFail($id);
+        $aktifitas_kunci->update([
+            'aktifitas_kunci' => $request->aktifitas_kunci
+        ]);
+    
+        return back()->with('success', 'Aktifitas Kunci berhasil diperbarui');
     }
 
     public function updateResiko(Request $request, $id)
@@ -1237,6 +1373,7 @@ class RiskController extends Controller
         $Date->save();
         return back()->with('success', 'Date berhasil diupdate.');
     }
+   
 
     public function updatePihak(Request $request, $id)
     {
@@ -1276,4 +1413,619 @@ class RiskController extends Controller
 
         return back()->with('success', 'Pihak berkepentingan berhasil di‐update.');
     }
+
+    public function getKriteriaBySwotId(Request $request)
+    {
+        $swotId = $request->input('swot_id'); 
+        if (empty($swotId) || !is_numeric($swotId)) {
+        return response()->json([]);
+    }
+        $kriteriaSwot = KriteriaSwot::where('swot_id', $swotId)
+                                    ->orderBy('kode_swot', 'asc')
+                                    ->get(['id', 'kode_swot', 'kriteria_swot']);
+    
+        return response()->json($kriteriaSwot);
+    }
+    public function pilihISO($id)
+    {
+        $enchan = $id;
+        $user = Auth::user();
+        $allowedDivisi = json_decode($user->type, true);
+        
+        // Ambil data divisi yang dipilih
+        $divisi = Divisi::findOrFail($id);
+        
+        // Validasi apakah user punya akses ke divisi ini
+        if (!in_array($id, $allowedDivisi)) {
+            abort(403, 'Unauthorized access');
+        }
+        
+        
+        return view('riskregister.pilihISO', compact('divisi','enchan'));
+    }
+    public function tableriskIso37001(Request $request,$id)
+    {
+        $targetPicSearch = $request->input("targetpic");
+        $tingkatanFilter = $request->input("tingkatan");
+        $statusFilter = $request->input("status");
+        $yearFilter = $request->input("year");
+        $kategoriFilter = $request->input("kriteria");
+        $top10Filter = $request->input("top10");
+        $keywordFilter = $request->input("keyword");
+
+        $user = Auth::user();
+        $allowedDivisi = json_decode($user->type, true);
+
+        // Start the query
+        $query = Riskregister::where("id_divisi", $id)
+                                ->where("jenis_iso_id", 2)
+                                ->with(['swot', 'KriteriaSwot']);
+
+        // Filter by allowed divisi
+        $query->when($allowedDivisi, function ($query) use ($allowedDivisi) {
+            return $query->whereHas("divisi", function ($q) use (
+                $allowedDivisi
+            ) {
+                $q->whereIn("id", $allowedDivisi);
+            });
+        });
+
+        // Filter by tingkatan
+        $query->when($tingkatanFilter, function ($query) use (
+            $tingkatanFilter
+        ) {
+            return $query->whereHas("resikos", function ($q) use (
+                $tingkatanFilter
+            ) {
+                $q->where("tingkatan", $tingkatanFilter);
+            });
+        });
+
+        // Mengubah filter keyword untuk mencakup nama_tindakan, resiko, dan peluang
+        if ($keywordFilter) {
+            $query->where(function ($q) use ($keywordFilter) {
+                $q->where("issue", "like", "%" . $keywordFilter . "%")
+                    ->orWhereHas("tindakan", function ($q) use (
+                        $keywordFilter
+                    ) {
+                        $q->where(
+                            "nama_tindakan",
+                            "like",
+                            "%" . $keywordFilter . "%"
+                        );
+                    })
+                    ->orWhereHas("resikos", function ($q) use ($keywordFilter) {
+                        $q->where(
+                            "nama_resiko",
+                            "like",
+                            "%" . $keywordFilter . "%"
+                        );
+                    })
+                    ->orWhere("peluang", "like", "%" . $keywordFilter . "%");
+            });
+        }
+
+        // Filter by status
+        $query->when($statusFilter, function ($query) use ($statusFilter) {
+            if ($statusFilter === "open_on_progres") {
+                return $query->whereHas("resikos", function ($q) {
+                    $q->whereIn("status", ["OPEN", "ON PROGRES"]);
+                });
+            }
+            return $query->whereHas("resikos", function ($q) use (
+                $statusFilter
+            ) {
+                $q->where("status", $statusFilter);
+            });
+        });
+
+        // Filter by kategori (kriteria)
+        if ($kategoriFilter) {
+            $query->whereHas("resikos", function ($q) use ($kategoriFilter) {
+                $q->where("kriteria", $kategoriFilter);
+            });
+        }
+
+        // Filter by year
+        $query->when($yearFilter, function ($query) use ($yearFilter) {
+            return $query->whereHas("tindakan.realisasi", function ($q) use (
+                $yearFilter
+            ) {
+                $q->whereYear("tgl_penyelesaian", $yearFilter);
+            });
+        });
+
+        // Get filtered riskregister records
+        $forms = $query->get();
+        
+        $data = [];
+
+        // Get tindakan list filtered by targetpic search
+        $tindakanList = Tindakan::whereIn(
+            "id_riskregister",
+            $forms->pluck("id")
+        );
+
+        // Apply filter for targetpic if provided
+        if ($targetPicSearch) {
+            $tindakanList->whereHas("user", function ($query) use (
+                $targetPicSearch
+            ) {
+                $query->where(
+                    "nama_user",
+                    "like",
+                    "%" . $targetPicSearch . "%"
+                );
+            });
+        }
+
+        // Get and format the tindakan data
+        $tindakanList = $tindakanList->get()->groupBy("id_riskregister");
+
+        // Process forms and add filtered tindakan
+        foreach ($forms as $form) {
+            $tindakanFiltered = $tindakanList
+                ->get($form->id, collect())
+                ->map(function ($tindakan) {
+                    $tindakan->isClosed = Realisasi::where(
+                        "id_tindakan",
+                        $tindakan->id
+                    )
+                        ->where("status", "CLOSE")
+                        ->exists();
+
+                    $tindakan->isOnProgress = Realisasi::where(
+                        'id_tindakan',
+                        $tindakan->id
+                    )
+                        ->where('status', 'ON PROGRES')
+                        ->exists();
+
+                    $tindakan->tgl_penyelesaian = $tindakan->tgl_penyelesaian
+                        ? Carbon::parse($tindakan->tgl_penyelesaian)->format(
+                            "d-m-Y"
+                        )
+                        : "-";
+
+                    $tindakan->targetpic = $tindakan->targetpic ?? "-";
+                    $tindakan->acuan = $tindakan->acuan ?? "-";
+
+                    return $tindakan;
+                });
+
+            $data[$form->id] = $tindakanFiltered;
+
+            // Calculate actual value
+            $totalNilaiAkhir = Realisasi::where(
+                "id_riskregister",
+                $form->id
+            )->sum("nilai_akhir");
+
+            $jumlahEntry = Realisasi::where(
+                "id_riskregister",
+                $form->id
+            )->count();
+            // dd($form->id);
+            $form->nilai_actual =
+                $jumlahEntry > 0
+                ? round($totalNilaiAkhir / $jumlahEntry, 2)
+                : 0;
+
+            // Format target_penyelesaian
+            $form->target_penyelesaian = $form->target_penyelesaian
+                ? Carbon::parse($form->target_penyelesaian)->format("d-m-Y")
+                : "-";
+        }
+
+        // Sort by highest_score if required
+        if ($top10Filter) {
+            $forms = $forms->sortByDesc("highest_score")->take(10);
+        } else {
+            $forms = $forms->sortByDesc("highest_score");
+        }
+
+        // Get divisi and users for dropdown
+        $divisiData = Divisi::findOrFail($id);
+        $nama_divisi = $divisiData->nama_divisi;
+        $users = User::orderBy("nama_user", "asc")->get();
+
+        $divisiList = $nama_divisi;
+        return view('riskregister.tablerisk_iso37001', compact("forms", "data", "id", "users", "divisiList"));
+    }
+
+    public function createIso37001($id)
+    {
+       $enchan = $id;
+       $user = auth()->user();
+       $typeIds = json_decode($user->type, true);
+      $divisi = Divisi::whereIn('id', $typeIds)
+            ->orderBy('nama_divisi')
+            ->get();
+       $kriteria = Kriteria::where('divisi_id', $id)
+                ->where('jenis_iso_id', 2)
+                ->orderBy('nama_kriteria')
+                ->get(['id','nama_kriteria','desc_kriteria','nilai_kriteria']);
+        // Ambil nama divisi berdasarkan id yang diberikan
+        $divisiData = Divisi::findOrFail($id);
+        $nama_divisi = $divisiData->nama_divisi;
+
+        // Filter users berdasarkan nama divisi yang sesuai
+        $users = User::orderBy("nama_user", "asc")->get();
+
+        $swots = Swot::all();
+        $kriteriaSwot = KriteriaSwot::all();
+        $jenisIsos = JenisIso::orderBy('jenis_iso')->get();
+        
+        
+        return view(
+            "riskregister.create_iso37001",
+            
+            compact("enchan", "divisi", "id", 'swots','kriteriaSwot',"kriteria", "users","jenisIsos")
+        );
+    }
+
+    public function editIso37001($id)
+    {
+        // Ambil data Riskregister berdasarkan ID
+        $riskregister = Riskregister::findOrFail($id);
+
+        // Ambil semua data divisi
+        $divisi = Divisi::all()->sortBy("nama_divisi");
+        
+
+        $one = Resiko::where("id_riskregister", $id)->firstOrFail();;
+        $two = Riskregister::where("id", $one->id_riskregister)->first();
+        $three = $riskregister->id_divisi;
+
+        $kriteria = Kriteria::where('divisi_id', $three)
+                ->orderBy('nama_kriteria')
+                ->get(['id','nama_kriteria','desc_kriteria','nilai_kriteria']);
+
+        // Ambil tindakan yang terkait dengan Riskregister
+        $tindakanList = Tindakan::where("id_riskregister", $id)->get();
+        $resikoList = Resiko::where("id_riskregister", $id)->get();
+
+        // Mendapatkan divisi yang dipilih untuk kolom pihak (dipecah dengan koma)
+        $selectedDivisi = $riskregister->pihak
+            ? explode(",", $riskregister->pihak)
+            : [];
+
+        // dd($riskregister->pihak);
+
+        $keterangan = $riskregister->keterangan ?? [];
+
+        $firstResiko = $resikoList->first();
+        $totalNilaiAkhir = Realisasi::where('id_riskregister', $id)->sum('nilai_akhir');
+        $jumlahEntry = Realisasi::where('id_riskregister', $id)->count();
+        $nilai_actual = $jumlahEntry > 0 ? round($totalNilaiAkhir / $jumlahEntry, 2) : 0;
+        // Ambil target PIC berdasarkan targetpicId
+        $targetpicId = $riskregister->targetpic;
+        $users = User::orderBy("nama_user", "asc")->get();
+
+        // Kembalikan tampilan edit dengan data yang diperlukan
+        return view(
+            "riskregister.edit_iso37001",
+            compact(
+                "riskregister",
+                "divisi",
+                "tindakanList",
+                "resikoList",
+                "selectedDivisi",
+                "keterangan",
+                "users",
+                "three",
+                "kriteria",
+                "firstResiko",
+                "nilai_actual"
+            )
+        );
+    }
+
+    public function biglistIso37001(Request $request)
+    {
+        // Ambil parameter filter dari request
+        $tingkatanFilter = $request->input("tingkatan");
+        $statusFilter = $request->input("status");
+        $divisiFilter = $request->input("nama_divisi");
+        $yearFilter = $request->input("year");
+        $keywordFilter = $request->input("keyword");
+        $kategoriFilter = $request->input("kriteria");
+        $top10Filter = $request->input("top10"); // Tambahkan filter top 10
+
+        $user = Auth::user();
+        $allowedDivisi = json_decode($user->type, true); // Ambil tipe dari user
+
+        $query = Riskregister::with([
+            "tindakan.realisasi",
+            "resikos",
+            "divisi",
+            "swot",
+            "KriteriaSwot"
+        ]);
+        $query->where("jenis_iso_id", 2);
+
+        // Filter hanya data yang terkait dengan tipe user
+        if (!empty($allowedDivisi)) {
+            $query->whereHas("divisi", function ($q) use ($allowedDivisi) {
+                $q->whereIn("id", $allowedDivisi);
+            });
+        }
+
+        if ($tingkatanFilter) {
+            $query->whereHas("resikos", function ($q) use ($tingkatanFilter) {
+                $q->where("tingkatan", $tingkatanFilter);
+            });
+        }
+
+        if ($statusFilter == "open_on_progres") {
+            $query->whereHas("resikos", function ($q) {
+                $q->whereIn("status", ["OPEN", "ON PROGRES"]);
+            });
+        } elseif ($statusFilter) {
+            $query->whereHas("resikos", function ($q) use ($statusFilter) {
+                $q->where("status", $statusFilter);
+            });
+        }
+
+        if ($divisiFilter) {
+            $query->whereHas("divisi", function ($q) use ($divisiFilter) {
+                $q->where("nama_divisi", $divisiFilter);
+            });
+            
+        }
+
+        if ($yearFilter) {
+            $query->whereHas("tindakan.realisasi", function ($q) use (
+                $yearFilter
+            ) {
+                $q->whereYear("tgl_penyelesaian", $yearFilter);
+            });
+        }
+
+        // Mengubah filter keyword untuk mencakup nama_tindakan, resiko, dan peluang
+        if ($keywordFilter) {
+            $query->where(function ($q) use ($keywordFilter) {
+                $q->where("issue", "like", "%" . $keywordFilter . "%")
+                    ->orWhereHas("tindakan", function ($q) use (
+                        $keywordFilter
+                    ) {
+                        $q->where(
+                            "nama_tindakan",
+                            "like",
+                            "%" . $keywordFilter . "%"
+                        );
+                    })
+                    ->orWhereHas("resikos", function ($q) use ($keywordFilter) {
+                        $q->where(
+                            "nama_resiko",
+                            "like",
+                            "%" . $keywordFilter . "%"
+                        );
+                    })
+                    ->orWhere("peluang", "like", "%" . $keywordFilter . "%");
+            });
+        }
+
+        if ($kategoriFilter) {
+            $query->whereHas("resikos", function ($q) use ($kategoriFilter) {
+                $q->where("kriteria", $kategoriFilter);
+            });
+        }
+
+        // $sortingTanggal = $request->input("sorting_tanggal");
+
+        // if ($sortingTanggal == 'terbaru') {
+        //     $query->orderByDesc("updated_at"); // Dari terbaru ke terlama
+        // } elseif ($sortingTanggal == 'terlama') {
+        //     $query->orderBy("updated_at"); // Dari terlama ke terbaru
+        // }
+
+        // dd($sortingTanggal);
+
+        // Ambil data yang sudah difilter
+        $data = $query->get();
+
+        $formattedData = [];
+
+        foreach ($data as $riskregister) {
+            // Calculate nilai_actual
+            $totalNilaiAkhir = Realisasi::where(
+                "id_riskregister",
+                $riskregister->id
+            )->sum("nilai_akhir");
+            $jumlahEntry = Realisasi::where(
+                "id_riskregister",
+                $riskregister->id
+            )->count();
+            $nilai_actual =
+                $jumlahEntry > 0
+                ? round($totalNilaiAkhir / $jumlahEntry, 2)
+                : 0;
+
+            $resikoData = $riskregister->resikos->map(function ($resiko) {
+                // Lookup desc_severity dari tabel kriteria
+                $kriteriaModel = \App\Models\Kriteria::where('nama_kriteria', $resiko->kriteria)->first();
+                $descSeverity  = '-';
+                if ($kriteriaModel) {
+                    $nilaiArr = array_map('trim', explode(',', str_replace(['"', '[', ']'], '', $kriteriaModel->nilai_kriteria)));
+                    $descArr  = array_map('trim', explode(',', str_replace(['"', '[', ']'], '', $kriteriaModel->desc_kriteria)));
+                    $sevIndex = array_search((string) $resiko->severity, $nilaiArr);
+                    if ($sevIndex !== false && isset($descArr[$sevIndex])) {
+                        $descSeverity = $descArr[$sevIndex];
+                    }
+                }
+
+                // Probability ISO 37001 di-hardcode (tidak disimpan di tabel kriteria)
+                $probabilityLabels = [
+                    1 => '1. Sangat Jarang',
+                    2 => '2. Jarang',
+                    3 => '3. Kadang Kadang',
+                    4 => '4. Sering',
+                    5 => '5. Sangat Sering',
+                ];
+                $descProbability = $probabilityLabels[(int) $resiko->probability] ?? '-';
+
+                return [
+                    "nama_resiko"      => $resiko->nama_resiko,
+                    "probability"      => $resiko->probability,
+                    "severity"         => $resiko->severity,
+                    "risk"             => $resiko->risk,
+                    "before"           => $resiko->before,
+                    "after"            => $resiko->after,
+                    "score"            => $resiko->probability * $resiko->severity,
+                    "scoreactual"      => $resiko->probabilityrisk * $resiko->severityrisk,
+                    "severityrisk"     => $resiko->severityrisk,
+                    "probabilityrisk"  => $resiko->probabilityrisk,
+                    "kriteria"         => $resiko->kriteria ?? '-',
+                    "desc_severity"    => $descSeverity,
+                    "desc_probability" => $descProbability,
+                ];
+            });
+
+            $highestScore = $resikoData->pluck("score")->max();
+
+            $formattedData[] = [
+                "id" => $riskregister->id,
+                "issue" => $riskregister->issue,
+                'aktifitas_kunci'  => $riskregister->aktifitas_kunci,
+                "inex" => $riskregister->inex,
+                "pihak" => $riskregister->pihak,
+                "keterangan" => $riskregister->keterangan,
+                "tindak" => $riskregister->tindakan->pluck("divisi.nama_divisi"),
+                "tindak_lanjut" => $riskregister->tindakan->pluck("nama_tindakan" ),
+                "acuan"            => $riskregister->tindakan->pluck("acuan"), 
+                "risiko" => $resikoData->pluck("nama_resiko"),
+                "peluang" => $riskregister->peluang,
+                "tingkatan" => $riskregister->resikos->pluck("tingkatan"),
+                "status" => $riskregister->resikos->pluck("status"),
+                "scores" => $resikoData->pluck("score"),
+                "scoreactual" => $resikoData->pluck("scoreactual"),
+                "risk" => $resikoData->pluck("risk"),
+                "before" => $resikoData->pluck("before"),
+                "after" => $resikoData->pluck("after"),
+                "probabilities" => $resikoData->pluck("probability"),
+                "severities" => $resikoData->pluck("severity"), 
+                "highest_score" => $highestScore,
+                "nilai_actual" => $nilai_actual,
+                "updated_at" => $riskregister->updated_at,
+                "review_at" => $riskregister->review_at,
+                "persentase_nilai_actual" =>
+                $jumlahEntry > 0
+                    ? round(($nilai_actual / 100) * 100, 2)
+                    : 0, // Adjust 100 if needed
+                "swot_id" => $riskregister->swot_id, 
+                "jenis_swot" => $riskregister->swot->jenis_swot ?? "-",
+                "kriteria_swot" => $riskregister->kriteria_swot,
+                "kategori_swot" => $riskregister->kategori_swot,
+                "kode_swot_full"  => $riskregister->kode_swot_full ?? "-", 
+                "kode_swot"       => $riskregister->kode_swot ?? "-",
+                "severitiesrisk"    => $resikoData->pluck("severityrisk"),
+                "probabilitiesrisk" => $resikoData->pluck("probabilityrisk"),
+                "kriteria_resiko"   => $resikoData->pluck("kriteria"),
+                "desc_severity"     => $resikoData->pluck("desc_severity"),
+                "desc_probability"  => $resikoData->pluck("desc_probability"),
+
+            ];
+        }
+
+        // Sort the data by highest score
+        $formattedData = collect($formattedData)
+            ->sortByDesc("highest_score")
+            ->values();
+
+        $sortingTanggal = $request->input("sorting_tanggal");
+        $sortingTingkatan = $request->input("sorting_tingkatan");
+
+        if ($sortingTanggal == "terbaru") {
+            $formattedData = $formattedData->sortByDesc("updated_at");
+        } elseif ($sortingTanggal == "terlama") {
+            $formattedData = $formattedData->sortBy("updated_at");
+        }
+
+        if ($sortingTingkatan == "high_to_low") {
+            $formattedData = $formattedData
+                ->sortByDesc(function ($item) {
+                    return [
+                        "HIGH" => 3,
+                        "MEDIUM" => 2,
+                        "LOW" => 1,
+                    ][$item["tingkatan"][0] ?? "LOW"];
+                })
+                ->values();
+        } elseif ($sortingTingkatan == "low_to_high") {
+            $formattedData = $formattedData
+                ->sortBy(function ($item) {
+                    return [
+                        "LOW" => 1,
+                        "MEDIUM" => 2,
+                        "HIGH" => 3,
+                    ][$item["tingkatan"][0] ?? "LOW"];
+                })
+                ->values();
+        }
+
+        // Filter to top 10 if the checkbox is enabled
+        if ($top10Filter) {
+            $formattedData = $formattedData->take(10);
+        }
+
+        // Get list of divisions for filtering in the view
+        $divisiList = Divisi::orderBy("nama_divisi", "asc")->get();
+        $query = Divisi::orderBy('nama_divisi', 'asc');
+
+        if (!empty($allowedDivisi)) {
+            $query->whereIn('id', $allowedDivisi);
+        }
+
+        $divisiListFilter = $query->get();
+
+        $defaultDivisiId = $divisiList->first()->id ?? null;
+
+        $divisi = Riskregister::all();
+
+        // dd($formattedData);
+
+        // Pass data to the view
+        return view(
+            "riskregister.biglist_iso37001",
+            compact("formattedData", "divisiList", "divisiListFilter", "defaultDivisiId", "divisi")
+        );
+    }
+    // tombol archive
+    public function archive(Request $request, $id)
+    {
+        $riskregister = Riskregister::findOrFail($id);
+
+        // Cek syarat: status CLOSE dan after sudah diisi
+        $resiko = $riskregister->resikos->first();
+
+        if (!$resiko || $resiko->status !== 'CLOSE' || is_null($resiko->after)) {
+            return back()->with('error', 'Data belum memenuhi syarat untuk dipindahkan ke report!');
+        }
+
+        $riskregister->update(['is_archived' => true]);
+
+        return back()->with('success', 'Data berhasil dipindahkan ke report! ✅');
+    }
+    public function unarchive(Request $request, $id)
+    {
+        $riskregister = Riskregister::findOrFail($id);
+        $riskregister->update(['is_archived' => false]);
+        return back()->with('success', 'Data berhasil dikembalikan dari report! ✅');
+    }
+
+    public function updateReviewAt(Request $request, $id)
+    {
+        $request->validate([
+            'review_at' => 'nullable|date',
+        ]);
+
+        $riskregister = Riskregister::findOrFail($id);
+        $riskregister->update([
+            'review_at' => $request->review_at ? Carbon::parse($request->review_at) : null,
+        ]);
+
+        return back()->with('success', 'Review At berhasil diperbarui! ✅');
+    }
+
 }
