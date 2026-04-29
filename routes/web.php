@@ -182,7 +182,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/ppk/store-2', [PpkController::class, 'store2'])->name('ppk.store2');
     Route::get('/formusulan/{id}', [PpkController::class, 'create3'])->name('ppk.create3');
     Route::post('/ppk/store-3', [PpkController::class, 'store3'])->name('ppk.store3');
-    Route::get('/ppk/export/{id}', [PpkController::class, 'exportSingle'])->name('ppk.export');
+    Route::get('/ppk/export/{id}', [PpkController::class, 'exportSingle'])->name('ppk.export.');
     Route::get('/kirimemail', [PpkController::class, 'email'])->name('ppk.email');
     Route::post('/ppk/send-email/{ppk}', [PpkController::class, 'kirimEmailVerifikasi'])->name('ppk.kirimEmailVerifikasi');
     Route::get('/ppk/{id}/detail', [PpkController::class, 'detail'])->name('ppk.detail');
@@ -197,7 +197,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/ppk/{id}/pdf', [PpkController::class, 'generatePdf'])->name('ppk.pdf');
     Route::get('/ppk/accept/{id}', [PpkController::class, 'accept'])->name('ppk.accept');
     Route::get('/adminppk', [PpkController::class, 'index2'])->name('ppk.index2');
-    Route::get('ppk/exportexcelPPK', [PpkController::class, 'export'])->name('ppk.export');
+    Route::get('ppk/exportexcelPPK', [PpkController::class, 'export'])->name('ppk.export.excel');
     Route::delete('/admin/ppk/{id}', [PpkController::class, 'destroy'])->name('ppk.destroy');
     Route::patch('/admin/ppk/{id}', [PpkController::class, 'updateStatus'])->name('ppk.updatestatus');
     Route::get('/ppk/createLa', [LaporanAuditController::class, 'createLa'])->name('ppk.createLa');
